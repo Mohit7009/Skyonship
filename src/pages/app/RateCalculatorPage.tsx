@@ -727,7 +727,7 @@ export const RateCalculatorPage: React.FC = () => {
             <Button
               variant="primary"
               size="lg"
-              style={{ minWidth: '260px', padding: '12px 32px', fontSize: '15px', fontWeight: '700', backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+              style={{ width: '100%', maxWidth: '320px', padding: '12px 32px', fontSize: '15px', fontWeight: '700', backgroundColor: '#0284c7', borderColor: '#0284c7' }}
               onClick={handleCalculateRates}
               disabled={isLoading}
             >

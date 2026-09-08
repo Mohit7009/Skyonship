@@ -611,7 +611,7 @@ export const CreateShipmentWizardPage: React.FC = () => {
 
       {/* HORIZONTAL STEP WIZARD BAR */}
       <Card style={{ padding: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', overflowX: 'auto', minWidth: 'max-content', width: '100%', WebkitOverflowScrolling: 'touch' }}>
           {WIZARD_STEPS.map((s) => {
             const isActive = currentStep === s.step;
             const isCompleted = currentStep > s.step;

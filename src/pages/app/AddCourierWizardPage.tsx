@@ -132,7 +132,7 @@ export const AddCourierWizardPage: React.FC = () => {
 
       {/* Stepper Progress Bar */}
       <Card style={{ padding: 'var(--space-4)', overflowX: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: '600px', gap: 'var(--space-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 'max-content', width: '100%', gap: 'var(--space-2)' }}>
           {steps.map((st, idx) => {
             const isCompleted = currentStep > st.num;
             const isCurrent = currentStep === st.num;

@@ -47,7 +47,7 @@ export const Drawer: React.FC<DrawerProps> = ({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth: '400px',
+          maxWidth: 'min(400px, 85vw)',
           height: '100%',
           backgroundColor: 'var(--color-surface)',
           borderLeft: isRight ? '1px solid var(--color-border)' : 'none',

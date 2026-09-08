@@ -102,7 +102,7 @@ export const AppLayout: React.FC = () => {
           borderBottom: '1px solid #1e293b',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px 16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <KeyRound size={14} style={{ color: '#38bdf8' }} />
             <span>Role: <strong>{currentRole?.name}</strong></span>

@@ -91,7 +91,7 @@ export const LoginPage: React.FC = () => {
             ⚡ 1-Click Quick Demo Access
           </span>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <Button
               variant="outline"
               size="sm"

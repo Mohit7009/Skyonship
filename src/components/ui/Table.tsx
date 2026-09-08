@@ -30,6 +30,7 @@ export function Table<T extends Record<string, unknown>>({
       style={{
         width: '100%',
         overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-lg)',
         backgroundColor: 'var(--color-surface)',

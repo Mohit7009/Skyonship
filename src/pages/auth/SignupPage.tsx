@@ -132,7 +132,7 @@ export const SignupPage: React.FC = () => {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           {/* Section 1: Business Profile */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
             <Input
               label="Company Name *"
               placeholder="Apex Logistics Pvt Ltd"
@@ -153,7 +153,7 @@ export const SignupPage: React.FC = () => {
           </div>
 
           {/* Section 2: Contact Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
             <Input
               label="Work Email Address *"
               type="email"
@@ -183,7 +183,7 @@ export const SignupPage: React.FC = () => {
             onChange={(e) => setBusinessType(e.target.value)}
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
             <Input
               label="GST Number (Optional)"
               placeholder="22AAAAA0000A1Z5"
@@ -202,7 +202,7 @@ export const SignupPage: React.FC = () => {
           </div>
 
           {/* Section 4: Credentials */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px' }}>
             <div style={{ position: 'relative' }}>
               <Input
                 label="Password *"

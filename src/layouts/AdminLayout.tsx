@@ -121,7 +121,7 @@ export const AdminLayout: React.FC = () => {
           borderBottom: '1px solid #312e81',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px 16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <KeyRound size={14} style={{ color: '#a855f7' }} />
             <span>Role: <strong>{currentRole?.name}</strong></span>

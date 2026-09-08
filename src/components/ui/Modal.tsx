@@ -55,7 +55,7 @@ export const Modal: React.FC<ModalProps> = ({
         onClick={(e) => e.stopPropagation()}
         style={{
           width: '100%',
-          maxWidth,
+          maxWidth: `min(${maxWidth}, 95vw)`,
           backgroundColor: 'var(--color-surface)',
           borderRadius: 'var(--radius-xl)',
           boxShadow: 'var(--shadow-xl)',

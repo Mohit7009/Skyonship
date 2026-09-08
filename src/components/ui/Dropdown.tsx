@@ -41,6 +41,7 @@ export const Dropdown: React.FC<DropdownProps> = ({ trigger, items }) => {
             right: 0,
             marginTop: 'var(--space-1)',
             minWidth: '160px',
+            maxWidth: '90vw',
             backgroundColor: 'var(--color-surface)',
             border: '1px solid var(--color-border)',
             borderRadius: 'var(--radius-md)',
