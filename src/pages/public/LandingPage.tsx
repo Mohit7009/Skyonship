@@ -718,72 +718,29 @@ export const LandingPage: React.FC = () => {
               {/* Ambient Radial Glow */}
               <div style={{ position: 'absolute', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
 
-              {/* Outer Laptop Container */}
-              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '480px' }}>
+              {/* Outer Laptop & Real Seller Photo Container */}
+              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '540px' }}>
                 
-                {/* SaaS Dashboard Laptop Frame */}
+                {/* 4K Real Seller Woman holding Laptop with Full Screen Courrier3 Dashboard */}
                 <div style={{
-                  backgroundColor: '#0f172a',
-                  borderRadius: '20px',
-                  padding: '12px',
-                  boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-                  border: '2px solid #334155'
+                  position: 'relative',
+                  borderRadius: '24px',
+                  overflow: 'visible',
+                  filter: 'drop-shadow(0 20px 30px rgba(15, 23, 42, 0.15))',
+                  display: 'flex',
+                  justify: 'center'
                 }}>
-                  {/* Screen Top Bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px 8px 12px', borderBottom: '1px solid #1e293b' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#eab308' }} />
-                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
-                    </div>
-                    <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>app.courrier3.com/dashboard</span>
-                    <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: '700' }}>● LIVE</div>
-                  </div>
-
-                  {/* Inner Dashboard Mockup Screen */}
-                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px', padding: '16px', marginTop: '8px' }}>
-                    
-                    {/* Dashboard Top Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                      <div>
-                        <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>Courrier3 Seller Hub</div>
-                        <div style={{ fontSize: '10px', color: '#64748b' }}>Active Tenant: D2C Enterprise</div>
-                      </div>
-                      <div style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '800' }}>
-                        Wallet: ₹48,250.00
-                      </div>
-                    </div>
-
-                    {/* Mini KPI Cards Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-                      <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>TODAY'S ORDERS</div>
-                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>1,284</div>
-                        <div style={{ fontSize: '9px', color: '#16a34a', fontWeight: '700' }}>↑ 18.4% vs yesterday</div>
-                      </div>
-                      <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>DELIVERY SLA</div>
-                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#2563eb' }}>99.4%</div>
-                        <div style={{ fontSize: '9px', color: '#2563eb', fontWeight: '700' }}>Air Express Active</div>
-                      </div>
-                    </div>
-
-                    {/* Live Courier Rate Routing Row */}
-                    <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                      <div style={{ fontSize: '10px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>AI Auto-Courier Allocation</div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700' }}>
-                          <span style={{ color: '#dc2626' }}>● Delhivery Surface</span>
-                          <span style={{ color: '#0f172a' }}>₹38.00 (Cheapest)</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700' }}>
-                          <span style={{ color: '#2563eb' }}>● Blue Dart Priority</span>
-                          <span style={{ color: '#0f172a' }}>₹68.00 (Fastest)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
+                  <img
+                    src="/images/seller_woman_laptop_4k.png"
+                    alt="Courrier3 Enterprise Seller Portal"
+                    style={{
+                      width: '100%',
+                      height: 'auto',
+                      maxHeight: '440px',
+                      objectFit: 'contain',
+                      borderRadius: '16px'
+                    }}
+                  />
                 </div>
 
                 {/* Floating 3D Elements around the Laptop */}
