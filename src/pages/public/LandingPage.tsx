@@ -719,13 +719,13 @@ export const LandingPage: React.FC = () => {
               <div style={{ position: 'absolute', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
 
               {/* Outer Laptop & Real Seller Photo Container */}
-              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '640px' }}>
+              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '700px' }}>
                 
-                {/* 4K Real Seller Woman holding Laptop with 100% Zero-Gap Dashboard Overlay */}
+                {/* 4K Real Seller Woman holding Laptop with Ultra-Sharp Sharpened Dashboard Overlay */}
                 <div style={{
                   position: 'relative',
                   overflow: 'visible',
-                  filter: 'drop-shadow(0 25px 35px rgba(15, 23, 42, 0.18))',
+                  filter: 'drop-shadow(0 25px 40px rgba(15, 23, 42, 0.2))',
                   display: 'flex',
                   justify: 'center'
                 }}>
@@ -735,10 +735,11 @@ export const LandingPage: React.FC = () => {
                     style={{
                       width: '100%',
                       height: 'auto',
-                      maxHeight: '520px',
+                      maxHeight: '560px',
                       objectFit: 'contain',
-                      transform: 'scale(1.08)',
-                      transformOrigin: 'center center'
+                      transform: 'scale(1.12)',
+                      transformOrigin: 'center center',
+                      imageRendering: '-webkit-optimize-contrast'
                     }}
                   />
                 </div>
