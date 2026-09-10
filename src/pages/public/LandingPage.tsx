@@ -719,26 +719,26 @@ export const LandingPage: React.FC = () => {
               <div style={{ position: 'absolute', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
 
               {/* Outer Laptop & Real Seller Photo Container */}
-              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '540px' }}>
+              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '640px' }}>
                 
-                {/* 4K Real Seller Woman holding Laptop with Full Screen Courrier3 Dashboard */}
+                {/* 4K Real Seller Woman holding Laptop with 100% Zero-Gap Dashboard Overlay */}
                 <div style={{
                   position: 'relative',
-                  borderRadius: '24px',
                   overflow: 'visible',
-                  filter: 'drop-shadow(0 20px 30px rgba(15, 23, 42, 0.15))',
+                  filter: 'drop-shadow(0 25px 35px rgba(15, 23, 42, 0.18))',
                   display: 'flex',
                   justify: 'center'
                 }}>
                   <img
-                    src="/images/seller_woman_laptop_4k.png"
+                    src="/images/seller_woman_laptop_transparent_4k.png"
                     alt="Courrier3 Enterprise Seller Portal"
                     style={{
                       width: '100%',
                       height: 'auto',
-                      maxHeight: '440px',
+                      maxHeight: '520px',
                       objectFit: 'contain',
-                      borderRadius: '16px'
+                      transform: 'scale(1.08)',
+                      transformOrigin: 'center center'
                     }}
                   />
                 </div>
