@@ -554,107 +554,161 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* 🌟 1.5 HIGH-CONTRAST NATIONAL CARRIER BRAND BADGES MARQUEE BANNER */}
-      <section
-        style={{
-          backgroundColor: '#0f172a',
-          borderTop: '1px solid #1e293b',
-          borderBottom: '1px solid #1e293b',
-          padding: '28px 0',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        {/* Subtle Side Blur Gradients */}
-        <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '100px', background: 'linear-gradient(90deg, #0f172a 0%, transparent 100%)', zIndex: 10, pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '100px', background: 'linear-gradient(270deg, #0f172a 0%, transparent 100%)', zIndex: 10, pointerEvents: 'none' }} />
-
-        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '11px', fontWeight: '800', color: '#38bdf8', letterSpacing: '1px', textTransform: 'uppercase', backgroundColor: 'rgba(56, 189, 248, 0.1)', padding: '4px 12px', borderRadius: '20px', border: '1px solid rgba(56, 189, 248, 0.2)' }}>
-              ⚡ 7 TOP NATIONAL CARRIERS INTEGRATED
+      {/* 🌟 1.5 REAL VENDOR LOGOS DELIVERY NETWORK MARQUEE BANNER */}
+      <section style={{ maxWidth: '1280px', margin: '0 auto', padding: 'var(--space-6) var(--space-6) 0 var(--space-6)', width: '100%' }}>
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #eff6ff 0%, #f0f9ff 50%, #e0f2fe 100%)',
+            border: '1px solid #bae6fd',
+            borderRadius: '20px',
+            padding: '14px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px',
+            boxShadow: '0 10px 25px -5px rgba(2, 132, 199, 0.08)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {/* Left Fixed Title Pill */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              paddingRight: '20px',
+              borderRight: '2px solid #cbd5e1',
+              flexShrink: 0,
+              zIndex: 15,
+            }}
+          >
+            <span style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1.1', letterSpacing: '-0.02em' }}>
+              Delivery
             </span>
-            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600' }}>
-              Direct API Connections • Auto-Routed Freight
+            <span style={{ fontSize: '18px', fontWeight: '900', color: '#0284c7', lineHeight: '1.1', letterSpacing: '-0.02em' }}>
+              Network
             </span>
           </div>
-          <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>
-            Hover to pause marquee
-          </span>
-        </div>
 
-        {/* Infinite Marquee Track */}
-        <div className="animate-marquee-track" style={{ gap: '20px' }}>
-          {[
-            { name: 'DELHIVERY', color: '#ef4444', dotColor: '#dc2626', icon: '🔴', tag: '29,000+ Pincodes', sub: 'Pan-India Air & Surface' },
-            { name: 'BLUE DART', color: '#3b82f6', dotColor: '#2563eb', icon: '🔵', tag: '24h Priority Air', sub: 'Fastest SLA Network' },
-            { name: 'XPRESSBEES', color: '#a855f7', dotColor: '#9333ea', icon: '🟡', tag: 'Lowest Freight Matrix', sub: 'Surface & Express' },
-            { name: 'SHADOWFAX', color: '#10b981', dotColor: '#059669', icon: '🟣', tag: 'Hyperlocal & Same-Day', sub: '4-Hour Metro Delivery' },
-            { name: 'DTDC COURIER', color: '#f97316', dotColor: '#ea580c', icon: '🟠', tag: 'Air Cargo Express', sub: 'National Priority Network' },
-            { name: 'ECOM EXPRESS', color: '#22c55e', dotColor: '#16a34a', icon: '🟢', tag: 'D2C E-Commerce', sub: 'Specialized Doorstep Delivery' },
-            { name: 'AMAZON SHIPPING', color: '#eab308', dotColor: '#ca8a04', icon: '📦', tag: 'Guaranteed SLA', sub: '2-Day Express Shipping' },
-            
-            // Duplicate set for seamless looping
-            { name: 'DELHIVERY', color: '#ef4444', dotColor: '#dc2626', icon: '🔴', tag: '29,000+ Pincodes', sub: 'Pan-India Air & Surface' },
-            { name: 'BLUE DART', color: '#3b82f6', dotColor: '#2563eb', icon: '🔵', tag: '24h Priority Air', sub: 'Fastest SLA Network' },
-            { name: 'XPRESSBEES', color: '#a855f7', dotColor: '#9333ea', icon: '🟡', tag: 'Lowest Freight Matrix', sub: 'Surface & Express' },
-            { name: 'SHADOWFAX', color: '#10b981', dotColor: '#059669', icon: '🟣', tag: 'Hyperlocal & Same-Day', sub: '4-Hour Metro Delivery' },
-            { name: 'DTDC COURIER', color: '#f97316', dotColor: '#ea580c', icon: '🟠', tag: 'Air Cargo Express', sub: 'National Priority Network' },
-            { name: 'ECOM EXPRESS', color: '#22c55e', dotColor: '#16a34a', icon: '🟢', tag: 'D2C E-Commerce', sub: 'Specialized Doorstep Delivery' },
-            { name: 'AMAZON SHIPPING', color: '#eab308', dotColor: '#ca8a04', icon: '📦', tag: 'Guaranteed SLA', sub: '2-Day Express Shipping' },
-          ].map((carrier, idx) => (
-            <div
-              key={idx}
-              style={{
-                backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(12px)',
-                borderRadius: '12px',
-                padding: '12px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '14px',
-                minWidth: '260px',
-                boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)',
-                transition: 'transform 0.2s, border-color 0.2s',
-              }}
-            >
-              {/* Brand Color Badge Pillar */}
-              <div
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                  border: `2px solid ${carrier.color}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '18px',
-                  boxShadow: `0 0 12px ${carrier.color}40`,
-                }}
-              >
-                {carrier.icon}
-              </div>
+          {/* Right Marquee Container */}
+          <div style={{ flex: 1, overflow: 'hidden', position: 'relative' }}>
+            {/* Fade Edges */}
+            <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '40px', background: 'linear-gradient(90deg, #eff6ff 0%, transparent 100%)', zIndex: 10, pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', top: 0, right: 0, bottom: 0, width: '40px', background: 'linear-gradient(270deg, #e0f2fe 0%, transparent 100%)', zIndex: 10, pointerEvents: 'none' }} />
 
-              {/* Carrier Details */}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#ffffff', letterSpacing: '0.5px' }}>
-                    {carrier.name}
+            <div className="animate-marquee-track" style={{ gap: '14px' }}>
+              {[
+                // Card 1: DP WORLD
+                <div key="dpworld" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: '900' }}>DP</div>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.5px' }}>DP WORLD</span>
+                </div>,
+
+                // Card 2: APML
+                <div key="apml" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <div style={{ width: '20px', height: '20px', backgroundColor: '#dc2626', borderRadius: '4px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '900' }}>★</div>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#991b1b', letterSpacing: '1px' }}>APML</span>
+                </div>,
+
+                // Card 3: SAMPARK INDIA
+                <div key="sampark" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 20px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <div style={{ width: '18px', height: '18px', backgroundColor: '#d97706', borderRadius: '3px' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>SAMPARK INDIA</span>
+                    <span style={{ fontSize: '9px', color: '#d97706', fontWeight: '700', lineHeight: '1.2' }}>LOGISTICS PVT LTD</span>
+                  </div>
+                </div>,
+
+                // Card 4: Trackon
+                <div key="trackon" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#dc2626', fontStyle: 'italic', letterSpacing: '-0.02em' }}>Trackon</span>
+                  <span style={{ color: '#ea580c', fontSize: '14px', fontWeight: '900' }}>►</span>
+                </div>,
+
+                // Card 5: XP India
+                <div key="xpindia" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '17px', fontWeight: '900', color: '#2563eb' }}>XP</span>
+                  <span style={{ fontSize: '11px', fontWeight: '800', color: '#ea580c', textTransform: 'uppercase' }}>India</span>
+                </div>,
+
+                // Card 6: BLUE DART
+                <div key="bluedart" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#003399', letterSpacing: '0.5px' }}>BLUE DART</span>
+                  <span style={{ color: '#16a34a', fontWeight: '900', fontSize: '16px' }}>/</span>
+                </div>,
+
+                // Card 7: DELHIVERY
+                <div key="delhivery" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    DELHI<span style={{ color: '#dc2626' }}>V</span>ERY
                   </span>
-                </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600', marginTop: '2px' }}>
-                  {carrier.sub}
-                </div>
-                <div style={{ marginTop: '4px' }}>
-                  <span style={{ fontSize: '10px', fontWeight: '800', color: carrier.color, backgroundColor: `${carrier.color}18`, padding: '2px 6px', borderRadius: '4px', border: `1px solid ${carrier.color}35` }}>
-                    {carrier.tag}
+                </div>,
+
+                // Card 8: ekart LOGISTICS
+                <div key="ekart" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '17px', fontWeight: '900', color: '#f59e0b', fontStyle: 'italic' }}>e</span>
+                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e3a8a' }}>kart</span>
+                </div>,
+
+                // Card 9: XPRESSBEES
+                <div key="xpressbees" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#7c3aed', letterSpacing: '0.5px' }}>XPRESS</span>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#f59e0b' }}>BEES</span>
+                </div>,
+
+                // Card 10: SHADOWFAX
+                <div key="shadowfax" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#059669', letterSpacing: '0.5px' }}>SHADOWFAX</span>
+                </div>,
+
+                // Card 11: DTDC
+                <div key="dtdc" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#ea580c', letterSpacing: '1px' }}>DTDC</span>
+                </div>,
+
+                // Card 12: ECOM EXPRESS
+                <div key="ecom" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '900', color: '#16a34a', letterSpacing: '0.5px' }}>ECOM EXPRESS</span>
+                </div>,
+
+                // DUPLICATE SET FOR SMOOTH INFINITE LOOPING
+                <div key="dpworld-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: '900' }}>DP</div>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.5px' }}>DP WORLD</span>
+                </div>,
+                <div key="apml-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <div style={{ width: '20px', height: '20px', backgroundColor: '#dc2626', borderRadius: '4px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '900' }}>★</div>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#991b1b', letterSpacing: '1px' }}>APML</span>
+                </div>,
+                <div key="trackon-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#dc2626', fontStyle: 'italic', letterSpacing: '-0.02em' }}>Trackon</span>
+                  <span style={{ color: '#ea580c', fontSize: '14px', fontWeight: '900' }}>►</span>
+                </div>,
+                <div key="bluedart-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#003399', letterSpacing: '0.5px' }}>BLUE DART</span>
+                  <span style={{ color: '#16a34a', fontWeight: '900', fontSize: '16px' }}>/</span>
+                </div>,
+                <div key="delhivery-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                    DELHI<span style={{ color: '#dc2626' }}>V</span>ERY
                   </span>
-                </div>
-              </div>
+                </div>,
+                <div key="ekart-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '17px', fontWeight: '900', color: '#f59e0b', fontStyle: 'italic' }}>e</span>
+                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e3a8a' }}>kart</span>
+                </div>,
+                <div key="xpressbees-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#7c3aed', letterSpacing: '0.5px' }}>XPRESS</span>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#f59e0b' }}>BEES</span>
+                </div>,
+                <div key="shadowfax-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#059669', letterSpacing: '0.5px' }}>SHADOWFAX</span>
+                </div>,
+                <div key="dtdc-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#ea580c', letterSpacing: '1px' }}>DTDC</span>
+                </div>,
+              ]}
             </div>
-          ))}
+          </div>
         </div>
       </section>
 
