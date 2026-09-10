@@ -19,6 +19,7 @@ import {
   Sliders,
   Check,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import {
   Button,
@@ -687,6 +688,275 @@ export const LandingPage: React.FC = () => {
                 </div>,
               ]}
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 🌟 1.5. WHY ONLINE SELLERS CHOOSE COURRIER3 SECTION */}
+      <section id="why-choose-us" style={{ backgroundColor: '#f8fafc', padding: 'var(--space-16) var(--space-6)', borderBottom: '1px solid var(--color-border)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          
+          {/* Section Header */}
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-12)' }}>
+            <Badge variant="brand" size="md" style={{ marginBottom: '12px' }}>
+              <Sparkles size={14} style={{ marginRight: '6px' }} /> Trusted By 5,000+ D2C Brands
+            </Badge>
+            <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.75rem)', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.02em' }}>
+              Why Online Sellers Choose Courrier3
+            </h2>
+            <p style={{ fontSize: '16px', color: '#64748b', maxWidth: '640px', margin: '10px auto 0 auto', fontWeight: '500' }}>
+              Streamline your e-commerce logistics with automated multi-courier routing, instant COD payouts, and zero setup fees.
+            </p>
+          </div>
+
+          {/* Main Grid: Left Visual Showcase | Right Feature Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-12)', alignItems: 'center' }}>
+            
+            {/* Left Column: SaaS Product Laptop Showcase with Floating 3D Elements */}
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px 10px' }}>
+              
+              {/* Ambient Radial Glow */}
+              <div style={{ position: 'absolute', width: '320px', height: '320px', background: 'radial-gradient(circle, rgba(37, 99, 235, 0.18) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: 0 }} />
+
+              {/* Outer Laptop Container */}
+              <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '480px' }}>
+                
+                {/* SaaS Dashboard Laptop Frame */}
+                <div style={{
+                  backgroundColor: '#0f172a',
+                  borderRadius: '20px',
+                  padding: '12px',
+                  boxShadow: '0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+                  border: '2px solid #334155'
+                }}>
+                  {/* Screen Top Bar */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 12px 8px 12px', borderBottom: '1px solid #1e293b' }}>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#eab308' }} />
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e' }} />
+                    </div>
+                    <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', letterSpacing: '0.5px' }}>app.courrier3.com/dashboard</span>
+                    <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: '700' }}>● LIVE</div>
+                  </div>
+
+                  {/* Inner Dashboard Mockup Screen */}
+                  <div style={{ backgroundColor: '#f8fafc', borderRadius: '12px', padding: '16px', marginTop: '8px' }}>
+                    
+                    {/* Dashboard Top Header */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: '800', color: '#0f172a' }}>Courrier3 Seller Hub</div>
+                        <div style={{ fontSize: '10px', color: '#64748b' }}>Active Tenant: D2C Enterprise</div>
+                      </div>
+                      <div style={{ backgroundColor: '#dbeafe', color: '#1d4ed8', padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '800' }}>
+                        Wallet: ₹48,250.00
+                      </div>
+                    </div>
+
+                    {/* Mini KPI Cards Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                      <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>TODAY'S ORDERS</div>
+                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a' }}>1,284</div>
+                        <div style={{ fontSize: '9px', color: '#16a34a', fontWeight: '700' }}>↑ 18.4% vs yesterday</div>
+                      </div>
+                      <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '9px', color: '#64748b', fontWeight: '700' }}>DELIVERY SLA</div>
+                        <div style={{ fontSize: '16px', fontWeight: '900', color: '#2563eb' }}>99.4%</div>
+                        <div style={{ fontSize: '9px', color: '#2563eb', fontWeight: '700' }}>Air Express Active</div>
+                      </div>
+                    </div>
+
+                    {/* Live Courier Rate Routing Row */}
+                    <div style={{ backgroundColor: '#ffffff', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '800', color: '#0f172a', marginBottom: '6px' }}>AI Auto-Courier Allocation</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700' }}>
+                          <span style={{ color: '#dc2626' }}>● Delhivery Surface</span>
+                          <span style={{ color: '#0f172a' }}>₹38.00 (Cheapest)</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', fontWeight: '700' }}>
+                          <span style={{ color: '#2563eb' }}>● Blue Dart Priority</span>
+                          <span style={{ color: '#0f172a' }}>₹68.00 (Fastest)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* Floating 3D Elements around the Laptop */}
+
+                {/* Floating 3D Parcel Box Top-Left */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-25px',
+                  left: '-20px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '10px 14px',
+                  boxShadow: '0 15px 30px rgba(15, 23, 42, 0.12)',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  zIndex: 10
+                }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563eb' }}>
+                    <Package size={20} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#0f172a' }}>Multi-Courier</div>
+                    <div style={{ fontSize: '10px', color: '#64748b', fontWeight: '600' }}>12+ Partners Active</div>
+                  </div>
+                </div>
+
+                {/* Floating 3D Heart/Like Feedback Badge Top-Right */}
+                <div style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  right: '-15px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '50%',
+                  width: '46px',
+                  height: '46px',
+                  boxShadow: '0 15px 30px rgba(225, 29, 72, 0.2)',
+                  border: '1px solid #fecdd3',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'center',
+                  fontSize: '20px',
+                  zIndex: 10
+                }}>
+                  ❤️
+                </div>
+
+                {/* Floating 3D Rupee/COD Badge Bottom-Left */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-25px',
+                  left: '-15px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '10px 14px',
+                  boxShadow: '0 15px 30px rgba(16, 185, 129, 0.15)',
+                  border: '1px solid #a7f3d0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  zIndex: 10
+                }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#ecfdf5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '15px' }}>
+                    ₹
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#0f172a' }}>T+1 COD Remittance</div>
+                    <div style={{ fontSize: '9px', color: '#059669', fontWeight: '700' }}>Daily Payouts</div>
+                  </div>
+                </div>
+
+                {/* Floating 3D Express Truck Bottom-Right */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '-20px',
+                  right: '-20px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '10px 14px',
+                  boxShadow: '0 15px 30px rgba(2, 132, 199, 0.15)',
+                  border: '1px solid #bae6fd',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  zIndex: 10
+                }}>
+                  <div style={{ width: '32px', height: '32px', borderRadius: '8px', backgroundColor: '#f0f9ff', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Truck size={18} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#0f172a' }}>29,000+ Pincodes</div>
+                    <div style={{ fontSize: '9px', color: '#0284c7', fontWeight: '700' }}>Pan-India Reach</div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Right Column: 3 Sleek Feature Highlight Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              
+              {/* Feature Card 01 */}
+              <div style={{
+                backgroundColor: '#eff6ff',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                border: '1px solid #bfdbfe',
+                boxShadow: '0 4px 12px rgba(37, 99, 235, 0.04)',
+                transition: 'all 0.2s ease-in-out',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#2563eb', backgroundColor: '#dbeafe', padding: '3px 9px', borderRadius: '6px' }}>01</span>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#2563eb', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Layers size={20} />
+                  </div>
+                  <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                    One Place, Many Couriers
+                  </h3>
+                </div>
+                <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: 0, fontWeight: '500' }}>
+                  Use many courier partners from one Courrier3 account. Compare live freight rates, check pincode coverage, book pickups, and track packages without jumping between different courier websites.
+                </p>
+              </div>
+
+              {/* Feature Card 02 */}
+              <div style={{
+                backgroundColor: '#f0fdf4',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                border: '1px solid #bbf7d0',
+                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.04)',
+                transition: 'all 0.2s ease-in-out',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#16a34a', backgroundColor: '#dcfce7', padding: '3px 9px', borderRadius: '6px' }}>02</span>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#16a34a', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={20} />
+                  </div>
+                  <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                    COD & Failed Delivery Help (NDR)
+                  </h3>
+                </div>
+                <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: 0, fontWeight: '500' }}>
+                  See your COD money clearly with automated T+1 payouts and fix failed delivery attempts early. That means more successful orders, fewer RTO returns, and zero money stuck in shipping.
+                </p>
+              </div>
+
+              {/* Feature Card 03 */}
+              <div style={{
+                backgroundColor: '#f5f3ff',
+                borderRadius: '16px',
+                padding: '24px 28px',
+                border: '1px solid #ddd6fe',
+                boxShadow: '0 4px 12px rgba(124, 58, 237, 0.04)',
+                transition: 'all 0.2s ease-in-out',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '900', color: '#7c3aed', backgroundColor: '#ede9fe', padding: '3px 9px', borderRadius: '6px' }}>03</span>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#7c3aed', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={20} />
+                  </div>
+                  <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                    Easy Store & API Connect
+                  </h3>
+                </div>
+                <p style={{ fontSize: '14px', color: '#334155', lineHeight: '1.6', margin: 0, fontWeight: '500' }}>
+                  Link Shopify, WooCommerce, or your custom website via REST API. Create bulk shipping labels, book doorstep pickups, and share live tracking updates automatically as your order count grows.
+                </p>
+              </div>
+
+            </div>
+
           </div>
         </div>
       </section>
