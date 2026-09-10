@@ -597,10 +597,9 @@ export const LandingPage: React.FC = () => {
 
             <div className="animate-marquee-track" style={{ gap: '14px' }}>
               {[
-                // Card 1: DP WORLD
-                <div key="dpworld" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: '900' }}>DP</div>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.5px' }}>DP WORLD</span>
+                // Card 1: DP WORLD (Real Official Logo Image)
+                <div key="dpworld" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/dpworld.png" alt="DP WORLD" style={{ height: '34px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
 
                 // Card 2: APML
@@ -630,17 +629,14 @@ export const LandingPage: React.FC = () => {
                   <span style={{ fontSize: '11px', fontWeight: '800', color: '#ea580c', textTransform: 'uppercase' }}>India</span>
                 </div>,
 
-                // Card 6: BLUE DART
-                <div key="bluedart" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#003399', letterSpacing: '0.5px' }}>BLUE DART</span>
-                  <span style={{ color: '#16a34a', fontWeight: '900', fontSize: '16px' }}>/</span>
+                // Card 6: BLUE DART (Real Official Logo Image)
+                <div key="bluedart" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/bluedart.png" alt="BLUE DART" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
 
-                // Card 7: DELHIVERY
-                <div key="delhivery" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    DELHI<span style={{ color: '#dc2626' }}>V</span>ERY
-                  </span>
+                // Card 7: DELHIVERY (Real Official Logo Image)
+                <div key="delhivery" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/delhivery.png" alt="DELHIVERY" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
 
                 // Card 8: ekart LOGISTICS
@@ -649,10 +645,9 @@ export const LandingPage: React.FC = () => {
                   <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e3a8a' }}>kart</span>
                 </div>,
 
-                // Card 9: XPRESSBEES
-                <div key="xpressbees" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#7c3aed', letterSpacing: '0.5px' }}>XPRESS</span>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#f59e0b' }}>BEES</span>
+                // Card 9: XPRESSBEES (Real Official Logo Image)
+                <div key="xpressbees" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/xpressbees.png" alt="XPRESSBEES" style={{ height: '26px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
 
                 // Card 10: SHADOWFAX
@@ -660,9 +655,9 @@ export const LandingPage: React.FC = () => {
                   <span style={{ fontSize: '14px', fontWeight: '900', color: '#059669', letterSpacing: '0.5px' }}>SHADOWFAX</span>
                 </div>,
 
-                // Card 11: DTDC
-                <div key="dtdc" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#ea580c', letterSpacing: '1px' }}>DTDC</span>
+                // Card 11: DTDC (Real Official Logo Image)
+                <div key="dtdc" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/dtdc.png" alt="DTDC" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
 
                 // Card 12: ECOM EXPRESS
@@ -671,40 +666,24 @@ export const LandingPage: React.FC = () => {
                 </div>,
 
                 // DUPLICATE SET FOR SMOOTH INFINITE LOOPING
-                <div key="dpworld-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                  <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'linear-gradient(135deg, #0284c7 0%, #10b981 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '10px', fontWeight: '900' }}>DP</div>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#0f172a', letterSpacing: '0.5px' }}>DP WORLD</span>
+                <div key="dpworld-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/dpworld.png" alt="DP WORLD" style={{ height: '34px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
                 <div key="apml-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                   <div style={{ width: '20px', height: '20px', backgroundColor: '#dc2626', borderRadius: '4px', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: '900' }}>★</div>
                   <span style={{ fontSize: '15px', fontWeight: '900', color: '#991b1b', letterSpacing: '1px' }}>APML</span>
                 </div>,
-                <div key="trackon-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#dc2626', fontStyle: 'italic', letterSpacing: '-0.02em' }}>Trackon</span>
-                  <span style={{ color: '#ea580c', fontSize: '14px', fontWeight: '900' }}>►</span>
+                <div key="bluedart-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/bluedart.png" alt="BLUE DART" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
-                <div key="bluedart-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#003399', letterSpacing: '0.5px' }}>BLUE DART</span>
-                  <span style={{ color: '#16a34a', fontWeight: '900', fontSize: '16px' }}>/</span>
+                <div key="delhivery-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/delhivery.png" alt="DELHIVERY" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
-                <div key="delhivery-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    DELHI<span style={{ color: '#dc2626' }}>V</span>ERY
-                  </span>
+                <div key="xpressbees-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/xpressbees.png" alt="XPRESSBEES" style={{ height: '26px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
-                <div key="ekart-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '17px', fontWeight: '900', color: '#f59e0b', fontStyle: 'italic' }}>e</span>
-                  <span style={{ fontSize: '16px', fontWeight: '900', color: '#1e3a8a' }}>kart</span>
-                </div>,
-                <div key="xpressbees-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#7c3aed', letterSpacing: '0.5px' }}>XPRESS</span>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#f59e0b' }}>BEES</span>
-                </div>,
-                <div key="shadowfax-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '14px', fontWeight: '900', color: '#059669', letterSpacing: '0.5px' }}>SHADOWFAX</span>
-                </div>,
-                <div key="dtdc-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '10px 22px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '900', color: '#ea580c', letterSpacing: '1px' }}>DTDC</span>
+                <div key="dtdc-2" style={{ backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)', padding: '8px 20px', height: '52px', minWidth: '130px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/images/carriers/dtdc.png" alt="DTDC" style={{ height: '28px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }} />
                 </div>,
               ]}
             </div>
