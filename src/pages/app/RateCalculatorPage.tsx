@@ -169,6 +169,22 @@ export const RateCalculatorPage: React.FC = () => {
       // -------------------------------------------------------------
       const b2bPartners = [
         {
+          courierId: 'shypfy-b2b',
+          courierName: 'Shypfy Freight',
+          serviceName: 'Shypfy Multi-Carrier B2B LTL',
+          logoBgColor: '#4f46e5',
+          logoTextColor: '#ffffff',
+          serviceType: 'Cargo' as const,
+          rating: 4.9,
+          transitTime: '2-3 Days',
+          ratePerKg: 4.80,
+          minFreight: 300,
+          weightDivider: 5000,
+          fuelPercent: 0.08,
+          docket: 20,
+          fm: 20,
+        },
+        {
           courierId: 'delhivery-b2b',
           courierName: 'Delhivery B2B Freight',
           serviceName: 'Delhivery Surface Express LTL',
@@ -340,6 +356,21 @@ export const RateCalculatorPage: React.FC = () => {
       // B2C EXPRESS COURIER GENERATION (Using B2C Engine Logic)
       // -------------------------------------------------------------
       const b2cPartners = [
+        {
+          courierId: 'shypfy-b2c',
+          courierName: 'Shypfy Express (via Delhivery)',
+          serviceName: 'Shypfy Smart Air & Surface',
+          logoBgColor: '#6366f1',
+          logoTextColor: '#ffffff',
+          serviceType: 'Express' as const,
+          rating: 4.9,
+          transitTime: '2-3 Days',
+          basePrice: 40,
+          additionalPricePer500g: 30,
+          weightDivider: 5000,
+          fuelPercent: 0.08,
+          docket: 10,
+        },
         {
           courierId: 'delhivery-b2c',
           courierName: 'Delhivery Express',

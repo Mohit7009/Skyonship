@@ -34,6 +34,7 @@ export type CapabilityType =
   | 'MANIFEST';
 
 export type CourierCode =
+  | 'SHYPFY'
   | 'DELHIVERY'
   | 'DTDC'
   | 'BLUE_DART'

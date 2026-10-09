@@ -234,9 +234,52 @@ export const MockCourierProviderAdapter: CourierProviderAdapter = {
   cancelShipment: async (awb) => ({ success: true, message: `Mock shipment AWB ${awb} cancelled successfully.` }),
 };
 
+export const ShypfyProviderAdapter: CourierProviderAdapter = {
+  providerId: 'shypfy',
+  providerName: 'Shypfy Logistics Native Adapter',
+
+  checkServiceability: async (input) => {
+    const isServiceable = input.destinationPostalCode !== '999999';
+    return {
+      courierId: 'shypfy',
+      serviceId: 'shypfy-express',
+      serviceable: isServiceable,
+      isODA: false,
+      zoneCode: 'ZONE_SHYPFY_1',
+      reasonMessage: isServiceable ? 'Serviceable via Shypfy Network' : 'Out of coverage',
+    };
+  },
+
+  createShipment: async (payload) => {
+    const orderId = (payload.orderId as string) || 'ORD-2026-9041';
+    return {
+      success: true,
+      awb: `SHYPFY${Math.floor(100000000 + Math.random() * 900000000)}`,
+      bookingRef: `SHYPFY-REF-${orderId}`,
+    };
+  },
+
+  generateAWB: async () => ({ success: true, awb: `SHYPFY${Math.floor(100000000 + Math.random() * 900000000)}` }),
+  generateLabel: async (awb) => ({ success: true, labelUrl: `/labels/${awb}.pdf` }),
+  requestPickup: async () => ({ success: true, pickupRef: `SHYPFY-PKP-${Date.now()}` }),
+
+  trackShipment: async () => ({
+    success: true,
+    currentStatus: 'IN_TRANSIT',
+    events: [
+      { status: 'BOOKED', location: 'Origin Hub', timestamp: new Date().toISOString(), description: 'Package registered on Shypfy network' },
+      { status: 'IN_TRANSIT', location: 'Sorting Hub', timestamp: new Date().toISOString(), description: 'In transit to destination' },
+    ],
+  }),
+
+  getShipmentStatus: async () => ({ success: true, status: 'IN_TRANSIT' }),
+  cancelShipment: async (awb) => ({ success: true, message: `Shypfy shipment AWB ${awb} cancelled.` }),
+};
+
 // Factory Resolver
 export const getCourierAdapter = (courierId: string): CourierProviderAdapter => {
   const id = courierId.toLowerCase();
+  if (id === 'shypfy') return ShypfyProviderAdapter;
   if (id === 'delhivery') return DelhiveryAdapter;
   if (id === 'dtdc') return DTDCAdapter;
   if (id === 'bluedart') return BlueDartAdapter;

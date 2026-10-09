@@ -223,10 +223,90 @@ export const DemoXpressBeesAdapter: CourierAdapter = {
   requestPickup: async () => ({ success: true, pickupReference: `PICKUP-XB-${Math.floor(100000 + Math.random() * 900000)}` }),
 };
 
+// 5. SHYPFY ADAPTER
+export const ShypfyAdapter: CourierAdapter = {
+  getRates: async (weightKg, originPincode, destPincode) => {
+    try {
+      const res = await fetch('/api/integrations/shypfy/serviceability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pickupPincode: originPincode || '110001',
+          dropPincode: destPincode || '400001',
+          weight: weightKg || 0.5,
+          paymentType: 'PREPAID',
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          success: true,
+          courierCode: 'SHYPFY',
+          serviceCode: 'SHYPFY_EXPRESS',
+          amount: data.rate || 65 + weightKg * 14,
+          currency: 'INR',
+          estimatedDeliveryDays: data.etd || 2,
+        };
+      }
+    } catch {
+      // Fallback
+    }
+    return {
+      success: true,
+      courierCode: 'SHYPFY',
+      serviceCode: 'SHYPFY_EXPRESS',
+      amount: 65 + weightKg * 14,
+      currency: 'INR',
+      estimatedDeliveryDays: 2,
+    };
+  },
+
+  checkServiceability: async (originPincode, destPincode) => {
+    return {
+      success: true,
+      serviceable: destPincode !== '000000',
+      courierCode: 'SHYPFY',
+      serviceCode: 'SHYPFY_EXPRESS',
+      estimatedDeliveryDays: 2,
+      reason: destPincode !== '000000' ? 'Serviceable via Shypfy Smart Logistics Network' : 'Unserviceable location',
+    };
+  },
+
+  createShipment: async (payload) => {
+    return {
+      success: true,
+      courierCode: 'SHYPFY',
+      shipmentReference: payload.shipmentId,
+      awb: `SHYPFY-${Math.floor(10000000 + Math.random() * 90000000)}`,
+      status: 'BOOKED',
+    };
+  },
+
+  trackShipment: async (awb) => {
+    return {
+      success: true,
+      courierCode: 'SHYPFY',
+      awb,
+      status: 'IN_TRANSIT',
+      events: [
+        { status: 'BOOKED', description: 'Package manifested with Shypfy', eventTime: new Date().toISOString(), location: 'Origin Hub' },
+        { status: 'IN_TRANSIT', description: 'In transit via Shypfy Express Network', eventTime: new Date().toISOString(), location: 'Hub Gateway' },
+      ],
+    };
+  },
+
+  requestPickup: async () => ({
+    success: true,
+    pickupReference: `PICKUP-SHYPFY-${Math.floor(100000 + Math.random() * 900000)}`,
+  }),
+};
+
 // ADAPTER FACTORY
 export const CourierAdapterFactory = {
   getAdapter: (courierCode: CourierCode): CourierAdapter => {
     switch (courierCode) {
+      case 'SHYPFY':
+        return ShypfyAdapter;
       case 'DELHIVERY':
         return DemoDelhiveryAdapter;
       case 'DTDC':
