@@ -113,27 +113,6 @@ export const AppLayout: React.FC = () => {
             <span>Tenant: <strong style={{ color: '#38bdf8' }}>{activeTenant?.companyName || 'Apex Logistics'} ({activeTenantId})</strong></span>
           </div>
         </div>
-
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-          <span style={{ color: '#94a3b8', fontSize: '11px' }}>Quick Switch Role:</span>
-          {roles.filter((r) => r.portal === 'SELLER').map((r) => (
-            <button
-              key={r.id}
-              onClick={() => setActiveRoleId(r.id)}
-              style={{
-                fontSize: '10px',
-                padding: '2px 6px',
-                borderRadius: '3px',
-                border: r.id === currentRole?.id ? '1px solid #38bdf8' : '1px solid #334155',
-                backgroundColor: r.id === currentRole?.id ? '#0284c7' : '#1e293b',
-                color: '#ffffff',
-                cursor: 'pointer',
-              }}
-            >
-              {r.name}
-            </button>
-          ))}
-        </div>
       </div>
 
       <AppShell

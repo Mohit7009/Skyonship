@@ -1,3 +1,5 @@
+import { WalletService } from '../mocks/wallet.mock';
+
 export interface OnboardingStageDef {
   stageNumber: number;
   id: string;
@@ -134,20 +136,20 @@ export const INITIAL_ONBOARDING_RECORDS: CustomerOnboardingRecord[] = [
     email: 'rahul.s@apexlogistics.com',
     mobile: '+91 98765 11111',
     gstNumber: '27AABCU9603R1ZM',
-    currentStageNumber: 8,
-    currentStageTitle: 'Wallet Activated',
-    completionPercentage: 88,
+    currentStageNumber: 9,
+    currentStageTitle: 'Account Go-Live',
+    completionPercentage: 100,
     assignedManager: 'Vikram Singh (KAM)',
     expectedGoLiveDate: '2026-09-05',
-    status: 'READY_FOR_GOLIVE',
+    status: 'LIVE',
     isEmailVerified: true,
     isMobileVerified: true,
     isProfileCompleted: true,
     isKycSubmitted: true,
     isKycApproved: true,
     isRateCardAssigned: true,
-    isWalletActivated: false,
-    isGoLive: false,
+    isWalletActivated: true,
+    isGoLive: true,
     createdAt: '2026-08-20',
     lastUpdated: '2026-09-04 14:10',
     stages: [
@@ -158,8 +160,8 @@ export const INITIAL_ONBOARDING_RECORDS: CustomerOnboardingRecord[] = [
       { stageId: 'KYC_SUBMITTED', stageNumber: 5, title: 'KYC Submitted', isComplete: true, completedAt: '2026-08-23' },
       { stageId: 'KYC_APPROVED', stageNumber: 6, title: 'KYC Approved', isComplete: true, completedAt: '2026-08-25' },
       { stageId: 'RATE_CARD_ASSIGNED', stageNumber: 7, title: 'Rate Card Assigned', isComplete: true, completedAt: '2026-08-28' },
-      { stageId: 'WALLET_ACTIVATED', stageNumber: 8, title: 'Wallet Activated', isComplete: false, remarks: 'Requires minimum ₹500 initial recharge' },
-      { stageId: 'ACCOUNT_GO_LIVE', stageNumber: 9, title: 'Account Go-Live', isComplete: false, remarks: 'Pending initial wallet funds' },
+      { stageId: 'WALLET_ACTIVATED', stageNumber: 8, title: 'Wallet Activated', isComplete: true, completedAt: '2026-08-30' },
+      { stageId: 'ACCOUNT_GO_LIVE', stageNumber: 9, title: 'Account Go-Live', isComplete: true, completedAt: '2026-09-01' },
     ],
   },
   {
@@ -274,7 +276,32 @@ const STORAGE_KEY = 'courrier3_onboarding_records';
 export const OnboardingService = {
   getRecords: (): CustomerOnboardingRecord[] => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? JSON.parse(saved) : INITIAL_ONBOARDING_RECORDS;
+    let records: CustomerOnboardingRecord[] = saved ? JSON.parse(saved) : INITIAL_ONBOARDING_RECORDS;
+    
+    // Auto-sync cached localStorage records with active wallet balance
+    try {
+      const wallet = WalletService.getWallet();
+      if (wallet.availableBalanceMinor > 0) {
+        records = records.map((r) => {
+          if (r.customerId === 'CUST-1001' && (!r.isWalletActivated || !r.isGoLive)) {
+            const now = new Date().toISOString().split('T')[0];
+            return {
+              ...r,
+              isWalletActivated: true,
+              isGoLive: true,
+              completionPercentage: 100,
+              status: 'LIVE',
+              currentStageNumber: 9,
+              currentStageTitle: 'Account Go-Live',
+              stages: r.stages.map((st) => ({ ...st, isComplete: true, completedAt: st.completedAt || now })),
+            };
+          }
+          return r;
+        });
+      }
+    } catch (_e) {}
+
+    return records;
   },
 
   saveRecords: (records: CustomerOnboardingRecord[]) => {
@@ -283,19 +310,34 @@ export const OnboardingService = {
 
   getCustomerOnboarding: (customerId: string): CustomerOnboardingRecord => {
     const records = OnboardingService.getRecords();
-    return records.find((r) => r.customerId === customerId) || records[0];
+    let rec = records.find((r) => r.customerId === customerId) || records[0];
+
+    // Dynamic Wallet Activation Check: If wallet balance exists, auto-mark Stage 8 & 9 as complete
+    try {
+      const wallet = WalletService.getWallet();
+      if (wallet.availableBalanceMinor > 0 && (!rec.isWalletActivated || !rec.isGoLive)) {
+        rec = OnboardingService.forceGoLive(rec.customerId);
+      }
+    } catch (_e) {
+      // Safe fallback
+    }
+
+    return rec;
   },
 
   validateGoLiveRules: (customerId: string): { canGoLive: boolean; missingRequirements: string[] } => {
     const rec = OnboardingService.getCustomerOnboarding(customerId);
     const missing: string[] = [];
 
+    const wallet = WalletService.getWallet();
+    const isWalletActive = rec.isWalletActivated || wallet.availableBalanceMinor > 0;
+
     if (!rec.isEmailVerified) missing.push('Email Verification');
     if (!rec.isMobileVerified) missing.push('Mobile Verification');
     if (!rec.isProfileCompleted) missing.push('Company Profile Details');
     if (!rec.isKycApproved) missing.push('Super Admin KYC Approval');
     if (!rec.isRateCardAssigned) missing.push('Assigned Shipping Rate Card');
-    if (!rec.isWalletActivated) missing.push('Initial Wallet Recharge');
+    if (!isWalletActive) missing.push('Initial Wallet Recharge');
 
     return {
       canGoLive: missing.length === 0 || rec.isGoLive,

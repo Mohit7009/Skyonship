@@ -114,6 +114,7 @@ export const Input: React.FC<InputProps> = ({
             color: disabled ? 'var(--color-text-disabled)' : 'var(--color-text-primary)',
             transition: 'all var(--transition-fast)',
             outline: 'none',
+            boxSizing: 'border-box',
             cursor: disabled ? 'not-allowed' : readOnly ? 'default' : 'text',
             ...style,
           }}

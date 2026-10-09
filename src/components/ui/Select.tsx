@@ -41,7 +41,7 @@ export const Select: React.FC<SelectProps> = ({
         id={selectId}
         disabled={disabled}
         style={{
-          height: '38px',
+          height: '40px',
           padding: '0 12px',
           fontSize: '14px',
           borderRadius: '8px',
@@ -50,6 +50,7 @@ export const Select: React.FC<SelectProps> = ({
           color: disabled ? '#94A3B8' : '#0F172A',
           cursor: disabled ? 'not-allowed' : 'pointer',
           outline: 'none',
+          boxSizing: 'border-box',
           ...style,
         }}
         {...props}
