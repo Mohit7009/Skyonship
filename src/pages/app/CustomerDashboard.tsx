@@ -185,48 +185,48 @@ export const CustomerDashboard: React.FC = () => {
   // 2. RECENT ORDERS DATA
   const recentOrdersData = [
     {
-      awb: 'DEL9840192',
+      awb: 'SHYPFY9840192',
       customer: 'Rahul Sharma',
-      courier: 'Delhivery Surface',
-      courierBg: '#0f172a',
+      courier: 'Shypfy Express',
+      courierBg: '#6366f1',
       status: 'Delivered',
       statusVariant: 'success' as const,
       amount: '₹ 450.00',
     },
     {
-      awb: 'BD4910284',
+      awb: 'SHYPFY4910284',
       customer: 'Ananya Roy',
-      courier: 'Blue Dart Air',
-      courierBg: '#dc2626',
+      courier: 'Shypfy Express',
+      courierBg: '#4f46e5',
       status: 'In Transit',
       statusVariant: 'info' as const,
       amount: '₹ 680.00',
     },
     {
-      awb: 'GAT1028491',
+      awb: 'SHYPFY1020491',
       customer: 'Vikram Mehta',
-      courier: 'Gati Cargo',
-      courierBg: '#1e3a8a',
-      status: 'NDR Pending',
-      statusVariant: 'warning' as const,
+      courier: 'Shypfy Freight',
+      courierBg: '#4338ca',
+      status: 'In Transit',
+      statusVariant: 'info' as const,
       amount: '₹ 1,120.00',
     },
     {
-      awb: 'XPB8391023',
+      awb: 'SHYPFY8391023',
       customer: 'Priya Singh',
-      courier: 'Xpressbees',
-      courierBg: '#c026d3',
+      courier: 'Shypfy Express',
+      courierBg: '#6366f1',
       status: 'In Transit',
       statusVariant: 'info' as const,
       amount: '₹ 380.00',
     },
     {
-      awb: 'TCI7482910',
+      awb: 'SHYPFY7482910',
       customer: 'Suresh Kumar',
-      courier: 'TCI Express',
-      courierBg: '#047857',
-      status: 'RTO Initiated',
-      statusVariant: 'danger' as const,
+      courier: 'Shypfy Freight',
+      courierBg: '#4f46e5',
+      status: 'Booked',
+      statusVariant: 'brand' as const,
       amount: '₹ 890.00',
     },
   ];
@@ -236,7 +236,7 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'act-1',
       title: 'Order Created',
-      description: 'Order #ORD-10848 created for Rahul Sharma (Mumbai)',
+      description: 'Order #ORD-10848 created via Shypfy Live API for Rahul Sharma (Mumbai)',
       time: '5 mins ago',
       icon: Package,
       iconColor: '#2563eb',
@@ -245,7 +245,7 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'act-2',
       title: 'Pickup Scheduled',
-      description: 'Pickup scheduled with Delhivery Surface for 4 parcels',
+      description: 'Pickup scheduled with Shypfy Express for 4 parcels',
       time: '20 mins ago',
       icon: Truck,
       iconColor: '#0284c7',
@@ -254,7 +254,7 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'act-3',
       title: 'Shipment Delivered',
-      description: 'AWB DEL9840192 delivered to Ananya Roy (Bangalore)',
+      description: 'AWB SHYPFY9840192 delivered to Ananya Roy (Bangalore)',
       time: '45 mins ago',
       icon: CheckCircle2,
       iconColor: '#16a34a',
@@ -262,12 +262,12 @@ export const CustomerDashboard: React.FC = () => {
     },
     {
       id: 'act-4',
-      title: 'NDR Received',
-      description: 'NDR raised for AWB BD4910284: Customer unreachable',
-      time: '2 hours ago',
-      icon: AlertTriangle,
-      iconColor: '#d97706',
-      bgColor: '#fffbeb',
+      title: 'Shypfy API Token Synced',
+      description: 'Shypfy Live API Token refreshed & cached successfully (HTTP 200 OK)',
+      time: '1 hour ago',
+      icon: CheckCircle2,
+      iconColor: '#6366f1',
+      bgColor: '#e0e7ff',
     },
     {
       id: 'act-5',
@@ -282,11 +282,8 @@ export const CustomerDashboard: React.FC = () => {
 
   // 4. COURIER USAGE ANALYTICS DATA
   const courierUsageData = [
-    { name: 'Delhivery', share: 38, count: 474, color: '#0f172a' },
-    { name: 'Blue Dart', share: 26, count: 324, color: '#dc2626' },
-    { name: 'Gati Freight', share: 18, count: 224, color: '#1e3a8a' },
-    { name: 'Xpressbees', share: 12, count: 150, color: '#c026d3' },
-    { name: 'TCI Express', share: 6, count: 76, color: '#047857' },
+    { name: 'Shypfy Express (via Delhivery)', share: 65, count: 812, color: '#6366f1' },
+    { name: 'Shypfy Freight LTL', share: 35, count: 437, color: '#4f46e5' },
   ];
 
   // Dynamic Chart Data based on Date Filter
