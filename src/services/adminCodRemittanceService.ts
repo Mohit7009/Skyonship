@@ -85,92 +85,11 @@ export interface RemittanceRuleConfig extends Record<string, unknown> {
 }
 
 // Initial Data Seed
-export const INITIAL_COD_RECEIVABLES: AdminCodReceivableRecord[] = [
-  {
-    id: 'rec-101',
-    shipmentId: 'SHP-ORD-2026-7734',
-    orderId: 'ORD-2026-7734',
-    tenantId: 'tenant-demo-01',
-    courierId: 'dtdc',
-    courierName: 'DTDC Express',
-    awbNumber: 'DTDC991823',
-    deliveredDate: '2026-08-18 10:15 AM',
-    codAmountINR: 4200.0,
-    codChargeINR: 50.0,
-    netEligibleINR: 4150.0,
-    status: 'REMITTED',
-    eligibleDate: '2026-08-18 10:15 AM',
-    remittanceId: 'REM-982103',
-  },
-  {
-    id: 'rec-102',
-    shipmentId: 'SHP-ORD-2026-8812',
-    orderId: 'ORD-2026-8812',
-    tenantId: 'tenant-demo-01',
-    courierId: 'bluedart',
-    courierName: 'Blue Dart Air',
-    awbNumber: 'BD749102834',
-    deliveredDate: 'In Transit',
-    codAmountINR: 4200.0,
-    codChargeINR: 50.0,
-    netEligibleINR: 4150.0,
-    status: 'NOT_ELIGIBLE',
-    eligibleDate: 'Pending Delivery',
-  },
-  {
-    id: 'rec-103',
-    shipmentId: 'SHP-ORD-2026-9901',
-    orderId: 'ORD-2026-9901',
-    tenantId: 'tenant-demo-02',
-    courierId: 'delhivery',
-    courierName: 'Delhivery Surface',
-    awbNumber: 'DEL99281029',
-    deliveredDate: '2026-08-19 14:20 PM',
-    codAmountINR: 3500.0,
-    codChargeINR: 40.0,
-    netEligibleINR: 3460.0,
-    status: 'ELIGIBLE',
-    eligibleDate: '2026-08-19 14:20 PM',
-  },
-];
+export const INITIAL_COD_RECEIVABLES: AdminCodReceivableRecord[] = [];
 
-export const INITIAL_ADMIN_REMITTANCES: AdminRemittanceRecord[] = [
-  {
-    id: 'rem-admin-101',
-    remittanceId: 'REM-982103',
-    tenantId: 'tenant-demo-01',
-    courierId: 'dtdc',
-    courierName: 'DTDC Express',
-    settlementPeriod: '2026-08-15 to 2026-08-18',
-    shipmentCount: 1,
-    grossCodAmountINR: 4200.0,
-    codChargesINR: 50.0,
-    otherAdjustmentsINR: 0,
-    recoveriesINR: 0,
-    netRemittanceINR: 4150.0,
-    status: 'COMPLETED',
-    bankReferenceId: 'UTR-HDFC-991823019',
-    notes: 'Batch settlement processed cleanly.',
-    createdAt: '2026-08-18 11:30 AM',
-    completedAt: '2026-08-18 11:30 AM',
-    shipmentIds: ['SHP-ORD-2026-7734'],
-  },
-];
+export const INITIAL_ADMIN_REMITTANCES: AdminRemittanceRecord[] = [];
 
-export const INITIAL_RECONCILIATION_EXCEPTIONS: CodReconciliationException[] = [
-  {
-    id: 'ex-101',
-    shipmentId: 'SHP-ORD-2026-6612',
-    courierName: 'Xpressbees Surface',
-    expectedAmountINR: 5000.0,
-    receivedAmountINR: 4500.0,
-    differenceINR: -500.0,
-    mismatchType: 'SHORT',
-    status: 'OPEN',
-    notes: 'Carrier short-remitted ₹500 against invoice collection value.',
-    createdAt: '2026-08-19 09:00 AM',
-  },
-];
+export const INITIAL_RECONCILIATION_EXCEPTIONS: CodReconciliationException[] = [];
 
 let RECEIVABLES_STORE = [...INITIAL_COD_RECEIVABLES];
 let REMITTANCE_STORE = [...INITIAL_ADMIN_REMITTANCES];

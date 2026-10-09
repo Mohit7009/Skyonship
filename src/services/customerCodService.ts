@@ -43,83 +43,9 @@ export interface MerchantEarlyCodConfig extends Record<string, unknown> {
   updatedAt: string;
 }
 
-export const INITIAL_COD_REMITTANCES: CodRemittanceRecord[] = [
-  {
-    id: 'rem-101',
-    remittanceId: 'REM-982103',
-    tenantId: 'tenant-demo-01',
-    shipmentCount: 2,
-    grossCodAmountINR: 4200.0,
-    deductionINR: 50.0,
-    earlyFeeINR: 0.0,
-    netRemittanceINR: 4150.0,
-    status: 'REMITTED',
-    payoutType: 'STANDARD_T7',
-    payoutDestination: 'BANK',
-    remittanceDate: '2026-08-18 11:30 AM',
-    bankReferenceId: 'UTR-HDFC-991823019',
-    createdAt: '2026-08-18 10:00 AM',
-  },
-];
+export const INITIAL_COD_REMITTANCES: CodRemittanceRecord[] = [];
 
-export const INITIAL_COD_TRANSACTIONS: CodTransactionRecord[] = [
-  {
-    id: 'cod-tx-101',
-    tenantId: 'tenant-demo-01',
-    shipmentId: 'SHP-ORD-2026-8812',
-    awbNumber: 'BD749102834',
-    orderId: 'ORD-2026-8812',
-    deliveredDate: 'In Transit',
-    codAmountINR: 4200.0,
-    netAmountINR: 4150.0,
-    status: 'PENDING_DELIVERY',
-  },
-  {
-    id: 'cod-tx-102',
-    tenantId: 'tenant-demo-01',
-    shipmentId: 'SHP-ORD-2026-7734',
-    awbNumber: 'DTDC991823',
-    orderId: 'ORD-2026-7734',
-    deliveredDate: '2026-08-18 10:15 AM',
-    codAmountINR: 4200.0,
-    netAmountINR: 4150.0,
-    remittanceId: 'REM-982103',
-    status: 'REMITTED',
-  },
-  {
-    id: 'cod-tx-103',
-    tenantId: 'tenant-demo-01',
-    shipmentId: 'SHP-ORD-2026-9011',
-    awbNumber: 'DEL99482109',
-    orderId: 'ORD-2026-9011',
-    deliveredDate: '2026-08-23 04:30 PM',
-    codAmountINR: 18500.0,
-    netAmountINR: 18315.0,
-    status: 'ELIGIBLE_FOR_REMITTANCE',
-  },
-  {
-    id: 'cod-tx-104',
-    tenantId: 'tenant-demo-01',
-    shipmentId: 'SHP-ORD-2026-9012',
-    awbNumber: 'BD33910884',
-    orderId: 'ORD-2026-9012',
-    deliveredDate: '2026-08-24 09:15 AM',
-    codAmountINR: 14750.0,
-    netAmountINR: 14602.5,
-    status: 'ELIGIBLE_FOR_REMITTANCE',
-  },
-  {
-    id: 'cod-tx-105',
-    tenantId: 'tenant-demo-01',
-    shipmentId: 'SHP-ORD-2026-9013',
-    awbNumber: 'XPR8830192',
-    orderId: 'ORD-2026-9013',
-    deliveredDate: '2026-08-24 01:20 PM',
-    codAmountINR: 15000.0,
-    netAmountINR: 14850.0,
-    status: 'ELIGIBLE_FOR_REMITTANCE',
-  },
-];
+export const INITIAL_COD_TRANSACTIONS: CodTransactionRecord[] = [];
 
 let REMITTANCE_STORE = [...INITIAL_COD_REMITTANCES];
 let COD_TX_STORE = [...INITIAL_COD_TRANSACTIONS];
