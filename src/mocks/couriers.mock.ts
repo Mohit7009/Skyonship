@@ -458,6 +458,20 @@ export const DEMO_COURIER_ACCOUNT_SERVICES: Record<string, unknown>[] = [
 
 export const DEMO_COURIER_CONNECTIONS: CourierConnection[] = [
   {
+    id: 'conn-shypfy-01',
+    courierId: 'shypfy',
+    courierName: 'Shypfy Logistics Network',
+    displayName: 'Shypfy Direct & Multi-Carrier API (Live Production)',
+    status: 'connected',
+    statusText: 'Connected & Active (Live API Token Cached)',
+    accountId: 'SHYPFY_6ab1297eda91d2307652c0a5',
+    warehouseId: 'wh-001',
+    lastSync: new Date().toLocaleString(),
+    enabledServices: ['surface', 'express', 'air'],
+    capabilities: DEMO_COURIER_PROVIDERS[0].capabilities,
+    createdAt: '2026-10-09',
+  },
+  {
     id: 'conn-001',
     courierId: 'bluedart',
     courierName: 'BlueDart Express',
