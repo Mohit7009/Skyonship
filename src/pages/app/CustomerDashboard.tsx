@@ -35,8 +35,8 @@ export const CustomerDashboard: React.FC = () => {
   const navigate = useNavigate();
 
   // Alert Dismiss States
-  const [showDisputesAlert, setShowDisputesAlert] = useState(true);
-  const [showNdrAlert, setShowNdrAlert] = useState(true);
+  const [showDisputesAlert, setShowDisputesAlert] = useState(false);
+  const [showNdrAlert, setShowNdrAlert] = useState(false);
   const [showWalletAlert, setShowWalletAlert] = useState(true);
 
   // Date Range Filter State for Charts & Metrics
@@ -51,9 +51,9 @@ export const CustomerDashboard: React.FC = () => {
 
   // Wallet Data
   const wallet = WalletService.getWallet();
-  const walletBalancePaise = wallet.availableBalanceMinor || 1485000;
+  const walletBalancePaise = wallet.availableBalanceMinor || 91500;
   const walletBalanceINR = (walletBalancePaise / 100).toFixed(2);
-  const isWalletLow = parseFloat(walletBalanceINR) < 1000;
+  const isWalletLow = parseFloat(walletBalanceINR) < 500;
 
   // Breadcrumbs
   const breadcrumbs = [
@@ -79,8 +79,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'todays-orders',
       title: "Today's Orders",
-      count: 48,
-      trend: '+12% vs yesterday',
+      count: 0,
+      trend: '0 orders today',
       isTrendPositive: true,
       subtitle: 'Dispatched today',
       threeDType: 'orders' as const,
@@ -92,8 +92,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'in-transit',
       title: 'In Transit',
-      count: 142,
-      trend: '+5.1% this week',
+      count: 0,
+      trend: '0 in transit',
       isTrendPositive: true,
       subtitle: 'Parcels on the move',
       threeDType: 'transit' as const,
@@ -105,8 +105,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'delivered',
       title: 'Delivered',
-      count: 1245,
-      trend: '+12.3% this month',
+      count: 0,
+      trend: '0 delivered',
       isTrendPositive: true,
       subtitle: 'Successfully fulfilled',
       threeDType: 'delivered' as const,
@@ -118,8 +118,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'cod-pending',
       title: 'COD Pending',
-      count: '₹42,500.00',
-      trend: 'Settlement T+1',
+      count: '₹0.00',
+      trend: 'No pending COD',
       isTrendPositive: true,
       subtitle: 'Pending cash payouts',
       threeDType: 'cod' as const,
@@ -183,114 +183,48 @@ export const CustomerDashboard: React.FC = () => {
   ];
 
   // 2. RECENT ORDERS DATA
-  const recentOrdersData = [
-    {
-      awb: 'SHYPFY9840192',
-      customer: 'Rahul Sharma',
-      courier: 'Shypfy Express',
-      courierBg: '#6366f1',
-      status: 'Delivered',
-      statusVariant: 'success' as const,
-      amount: '₹ 450.00',
-    },
-    {
-      awb: 'SHYPFY4910284',
-      customer: 'Ananya Roy',
-      courier: 'Shypfy Express',
-      courierBg: '#4f46e5',
-      status: 'In Transit',
-      statusVariant: 'info' as const,
-      amount: '₹ 680.00',
-    },
-    {
-      awb: 'SHYPFY1020491',
-      customer: 'Vikram Mehta',
-      courier: 'Shypfy Freight',
-      courierBg: '#4338ca',
-      status: 'In Transit',
-      statusVariant: 'info' as const,
-      amount: '₹ 1,120.00',
-    },
-    {
-      awb: 'SHYPFY8391023',
-      customer: 'Priya Singh',
-      courier: 'Shypfy Express',
-      courierBg: '#6366f1',
-      status: 'In Transit',
-      statusVariant: 'info' as const,
-      amount: '₹ 380.00',
-    },
-    {
-      awb: 'SHYPFY7482910',
-      customer: 'Suresh Kumar',
-      courier: 'Shypfy Freight',
-      courierBg: '#4f46e5',
-      status: 'Booked',
-      statusVariant: 'brand' as const,
-      amount: '₹ 890.00',
-    },
-  ];
+  const recentOrdersData: Array<{
+    awb: string;
+    customer: string;
+    courier: string;
+    courierBg: string;
+    status: string;
+    statusVariant: 'success' | 'info' | 'warning' | 'danger' | 'brand' | 'neutral';
+    amount: string;
+  }> = [];
 
   // 3. LIVE OPERATIONAL ACTIVITY FEED DATA
   const activityFeedData = [
     {
       id: 'act-1',
-      title: 'Order Created',
-      description: 'Order #ORD-10848 created via Shypfy Live API for Rahul Sharma (Mumbai)',
-      time: '5 mins ago',
-      icon: Package,
-      iconColor: '#2563eb',
-      bgColor: '#eff6ff',
-    },
-    {
-      id: 'act-2',
-      title: 'Pickup Scheduled',
-      description: 'Pickup scheduled with Shypfy Express for 4 parcels',
-      time: '20 mins ago',
-      icon: Truck,
-      iconColor: '#0284c7',
-      bgColor: '#f0f9ff',
-    },
-    {
-      id: 'act-3',
-      title: 'Shipment Delivered',
-      description: 'AWB SHYPFY9840192 delivered to Ananya Roy (Bangalore)',
-      time: '45 mins ago',
+      title: 'Shypfy Live API Active',
+      description: 'Shypfy Live API endpoint & auth token verified (HTTP 200 OK)',
+      time: 'Just now',
       icon: CheckCircle2,
       iconColor: '#16a34a',
       bgColor: '#f0fdf4',
     },
     {
-      id: 'act-4',
-      title: 'Shypfy API Token Synced',
-      description: 'Shypfy Live API Token refreshed & cached successfully (HTTP 200 OK)',
-      time: '1 hour ago',
-      icon: CheckCircle2,
-      iconColor: '#6366f1',
-      bgColor: '#e0e7ff',
-    },
-    {
-      id: 'act-5',
-      title: 'Wallet Recharged',
-      description: 'Wallet auto-credited with ₹5,000.00 via UPI Payment',
-      time: '4 hours ago',
-      icon: Wallet,
-      iconColor: '#7c3aed',
-      bgColor: '#faf5ff',
+      id: 'act-2',
+      title: 'Account Initialized',
+      description: 'Logistics merchant portal ready for shipping',
+      time: 'System',
+      icon: Package,
+      iconColor: '#0284c7',
+      bgColor: '#f0f9ff',
     },
   ];
 
   // 4. COURIER USAGE ANALYTICS DATA
   const courierUsageData = [
-    { name: 'Shypfy Express (via Delhivery)', share: 65, count: 812, color: '#6366f1' },
-    { name: 'Shypfy Freight LTL', share: 35, count: 437, color: '#4f46e5' },
+    { name: 'Shypfy Live API', share: 100, count: 0, color: '#6366f1' },
   ];
 
   // Dynamic Chart Data based on Date Filter
   const performanceChartStats = {
-    today: { created: 120, inTransit: 85, delivered: 94, rto: 2 },
-    '7d': { created: 1450, inTransit: 142, delivered: 1245, rto: 16 },
-    '30d': { created: 5800, inTransit: 380, delivered: 5120, rto: 64 },
+    today: { created: 0, inTransit: 0, delivered: 0, rto: 0 },
+    '7d': { created: 0, inTransit: 0, delivered: 0, rto: 0 },
+    '30d': { created: 0, inTransit: 0, delivered: 0, rto: 0 },
   }[chartDateRange];
 
   return (
@@ -599,8 +533,8 @@ export const CustomerDashboard: React.FC = () => {
           </div>
 
           <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-            <span>Success Rate: <strong style={{ color: '#16a34a' }}>98.6%</strong></span>
-            <span>Average Transit Time: <strong style={{ color: '#0f172a' }}>2.4 Business Days</strong></span>
+            <span>Success Rate: <strong style={{ color: '#16a34a' }}>100%</strong></span>
+            <span>Average Transit Time: <strong style={{ color: '#0f172a' }}>Ready</strong></span>
           </div>
         </Card>
 
@@ -631,12 +565,12 @@ export const CustomerDashboard: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px' }}>
               <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                 <span style={{ color: '#64748b', display: 'block', fontSize: '11px' }}>Hold Balance</span>
-                <strong style={{ color: '#0f172a', fontSize: '14px' }}>₹ 1,200.00</strong>
+                <strong style={{ color: '#0f172a', fontSize: '14px' }}>₹ 0.00</strong>
               </div>
 
               <div style={{ backgroundColor: '#f8fafc', padding: '10px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
                 <span style={{ color: '#64748b', display: 'block', fontSize: '11px' }}>Monthly Spend</span>
-                <strong style={{ color: '#0f172a', fontSize: '14px' }}>₹ 48,920.00</strong>
+                <strong style={{ color: '#0f172a', fontSize: '14px' }}>₹ 0.00</strong>
               </div>
             </div>
           </div>
@@ -780,7 +714,7 @@ export const CustomerDashboard: React.FC = () => {
             <span style={{ fontSize: '12px', color: '#64748b' }}>Shipment share percentage across top integrated logistics partners</span>
           </div>
 
-          <Badge variant="neutral">Total 1,248 Shipments</Badge>
+          <Badge variant="neutral">Total 0 Shipments</Badge>
         </div>
 
         {/* Multi-Segment Share Bar */}

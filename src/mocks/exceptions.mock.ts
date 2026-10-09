@@ -19,112 +19,16 @@ export const maskPhoneNumber = (phone: string): string => {
 };
 
 // INITIAL DEMO NDR CASES
-export const INITIAL_NDR_CASES: NDRCase[] = [
-  {
-    id: 'ndr-101',
-    shipmentId: 'SHP-9840192',
-    orderId: 'ORD-9840192',
-    awb: 'DEMO-AWB-98401928',
-    courierId: 'delhivery',
-    courierName: 'Delhivery Surface',
-    customerName: 'Aarav Sharma',
-    customerPhone: '+91 98111 22233',
-    maskedPhone: maskPhoneNumber('+91 98111 22233'),
-    destinationCity: 'Mumbai',
-    attemptNumber: 1,
-    reasonCode: 'CUSTOMER_UNAVAILABLE',
-    reason: 'Customer was not available at door during attempt #1',
-    status: 'ACTION_REQUIRED',
-    customerResponse: 'REQUEST_REATTEMPT',
-    merchantAction: 'REATTEMPT',
-    createdAt: '2026-08-20 14:00 PM',
-    updatedAt: '2026-08-20 16:30 PM',
-  },
-  {
-    id: 'ndr-102',
-    shipmentId: 'DEMO-9840193',
-    orderId: 'ORD-9840193',
-    awb: 'DEMO-AWB-98401939',
-    courierId: 'fedex',
-    courierName: 'FedEx Priority',
-    customerName: 'Priya Verma',
-    customerPhone: '+91 98222 33344',
-    maskedPhone: maskPhoneNumber('+91 98222 33344'),
-    destinationCity: 'Bengaluru',
-    attemptNumber: 2,
-    reasonCode: 'WRONG_ADDRESS',
-    reason: 'Incomplete house number provided',
-    status: 'OPEN',
-    customerResponse: 'NO_RESPONSE',
-    merchantAction: 'CONTACT_CUSTOMER',
-    createdAt: '2026-08-20 11:30 AM',
-    updatedAt: '2026-08-20 11:30 AM',
-  },
-];
+export const INITIAL_NDR_CASES: NDRCase[] = [];
 
 // INITIAL DEMO RTO CASES
-export const INITIAL_RTO_CASES: RTOCase[] = [
-  {
-    id: 'rto-101',
-    shipmentId: 'DEMO-9840195',
-    orderId: 'ORD-9840195',
-    awb: 'DEMO-AWB-98401955',
-    courierId: 'delhivery',
-    courierName: 'Delhivery Surface',
-    customerName: 'Vikram Singh',
-    maskedPhone: maskPhoneNumber('+91 98333 44455'),
-    destinationCity: 'Chennai',
-    reason: 'MAX_ATTEMPTS_REACHED',
-    reasonText: '3 Failed delivery attempts recorded',
-    status: 'IN_TRANSIT',
-    initiatedAt: '2026-08-19 10:00 AM',
-    inTransitAt: '2026-08-19 16:00 PM',
-    createdAt: '2026-08-19 10:00 AM',
-    updatedAt: '2026-08-19 16:00 PM',
-  },
-];
+export const INITIAL_RTO_CASES: RTOCase[] = [];
 
 // IN-MEMORY STORES
 const NDR_STORE: Map<string, NDRCase> = new Map();
 const RTO_STORE: Map<string, RTOCase> = new Map();
 const EVENT_STORE: Map<string, ExceptionEvent[]> = new Map();
 const ATTEMPT_STORE: Map<string, DeliveryAttempt[]> = new Map();
-
-INITIAL_NDR_CASES.forEach((n) => NDR_STORE.set(n.id, n));
-INITIAL_RTO_CASES.forEach((r) => RTO_STORE.set(r.id, r));
-
-// Initial timeline events
-EVENT_STORE.set('SHP-9840192', [
-  {
-    id: 'ev-1',
-    shipmentId: 'SHP-9840192',
-    eventType: 'DELIVERY_ATTEMPT_FAILED',
-    status: 'OPEN',
-    message: 'Delivery Attempt #1 failed: Customer Unavailable',
-    timestamp: '20 Aug 2026, 14:00 PM',
-  },
-  {
-    id: 'ev-2',
-    shipmentId: 'SHP-9840192',
-    eventType: 'ACTION_REQUIRED',
-    status: 'ACTION_REQUIRED',
-    message: 'Merchant action required: Customer requested reattempt',
-    timestamp: '20 Aug 2026, 16:30 PM',
-  },
-]);
-
-ATTEMPT_STORE.set('SHP-9840192', [
-  {
-    id: 'att-1',
-    shipmentId: 'SHP-9840192',
-    attemptNumber: 1,
-    attemptedAt: '20 Aug 2026, 14:00 PM',
-    status: 'FAILED',
-    reasonCode: 'CUSTOMER_UNAVAILABLE',
-    reason: 'Customer was not available at door during attempt #1',
-    notes: 'Agent tried calling twice, no response.',
-  },
-]);
 
 export const demoExceptionProvider = {
   getNDRCases: (filters?: ExceptionFilterState): NDRCase[] => {

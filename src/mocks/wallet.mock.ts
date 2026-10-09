@@ -15,7 +15,7 @@ export const INITIAL_WALLET: Wallet = {
   currency: 'INR',
   availableBalanceMinor: 91500, // ₹915.00
   reservedBalanceMinor: 0,
-  totalSpentMinor: 8500, // ₹85.00
+  totalSpentMinor: 0,
   totalRefundedMinor: 0,
   lowBalanceThresholdMinor: 50000, // ₹500.00 threshold
   status: 'ACTIVE',
@@ -23,45 +23,8 @@ export const INITIAL_WALLET: Wallet = {
   updatedAt: '2026-08-20 16:35 PM',
 };
 
-// INITIAL DEMO TRANSACTIONS
-export const INITIAL_TRANSACTIONS: WalletTransaction[] = [
-  {
-    id: 'tx-101',
-    tenantId: 'tenant-demo-01',
-    walletId: 'wal-demo-01',
-    type: 'RECHARGE',
-    direction: 'CREDIT',
-    amountMinor: 100000, // ₹1,000.00
-    currency: 'INR',
-    referenceType: 'RECHARGE',
-    referenceId: 'DEMO-RECHARGE-849201',
-    description: 'Wallet Balance Add (Demo Mode)',
-    balanceBeforeMinor: 0,
-    balanceAfterMinor: 100000,
-    status: 'POSTED',
-    idempotencyKey: 'recharge-849201',
-    createdAt: '2026-08-01 10:00 AM',
-    actorType: 'MERCHANT',
-  },
-  {
-    id: 'tx-102',
-    tenantId: 'tenant-demo-01',
-    walletId: 'wal-demo-01',
-    type: 'SHIPMENT_CHARGE',
-    direction: 'DEBIT',
-    amountMinor: 8500, // ₹85.00
-    currency: 'INR',
-    referenceType: 'SHIPMENT',
-    referenceId: 'SHP-9840192',
-    description: 'Shipment Freight Charge (Delhivery Surface • DEMO-AWB-98401928)',
-    balanceBeforeMinor: 100000,
-    balanceAfterMinor: 91500,
-    status: 'POSTED',
-    idempotencyKey: 'shipment-charge:SHP-9840192',
-    createdAt: '2026-08-20 16:35 PM',
-    actorType: 'SYSTEM',
-  },
-];
+// INITIAL TRANSACTIONS
+export const INITIAL_TRANSACTIONS: WalletTransaction[] = [];
 
 // STORES
 let WALLET_STORE: Wallet = { ...INITIAL_WALLET };
