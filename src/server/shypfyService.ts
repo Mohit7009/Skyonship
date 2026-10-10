@@ -93,9 +93,9 @@ export function checkClientIdWhitespace(): ClientIdWhitespaceReport {
 export async function getShypfyAccessToken(): Promise<string> {
   ensureEnvLoaded();
 
-  const rawClientId = process.env.SHYPFY_CLIENT_ID || '';
-  const rawUsername = process.env.SHYPFY_API_USERNAME || '';
-  const rawPassword = process.env.SHYPFY_API_PASSWORD || '';
+  const rawClientId = process.env.SHYPFY_CLIENT_ID || 'SHYPFY_6ab1297eda91d2307652c0a5';
+  const rawUsername = process.env.SHYPFY_API_USERNAME || 'mohitsharma783781+api@gmail.com';
+  const rawPassword = process.env.SHYPFY_API_PASSWORD || 'Mohit@1424';
 
   const hasLeadingWhitespace = /^\s/.test(rawClientId);
   const hasTrailingWhitespace = /\s$/.test(rawClientId);

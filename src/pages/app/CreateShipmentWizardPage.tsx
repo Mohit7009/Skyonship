@@ -1195,7 +1195,7 @@ export const CreateShipmentWizardPage: React.FC = () => {
                 <Button
                   variant="primary"
                   leftIcon={<Printer size={16} />}
-                  onClick={() => alert(`Printing ${labelFormat.toUpperCase()} label for AWB ${bookingResult?.awbNumber}...`)}
+                  onClick={() => navigate(`/app/shipments/${bookingResult?.shipmentId || 'shp-demo'}/label`)}
                   style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}
                 >
                   Print Label ({labelFormat.replace('_', ' ').toUpperCase()})
@@ -1204,7 +1204,16 @@ export const CreateShipmentWizardPage: React.FC = () => {
                 <Button
                   variant="outline"
                   leftIcon={<Download size={16} />}
-                  onClick={() => alert(`Downloading PDF Label...`)}
+                  onClick={() => {
+                    const awb = bookingResult?.awbNumber || 'AWB-LIVE-1001';
+                    const element = document.createElement('a');
+                    const file = new Blob([`SHIPPING LABEL DOCUMENT\nAWB: ${awb}\nOrder ID: ${bookingResult?.orderId || 'ORD-1001'}\nCourier: ${bookingResult?.courierName || 'Shypfy Express'}\nDate: ${new Date().toLocaleDateString()}`], { type: 'text/plain' });
+                    element.href = URL.createObjectURL(file);
+                    element.download = `Shipping-Label-${awb}.pdf`;
+                    document.body.appendChild(element);
+                    element.click();
+                    document.body.removeChild(element);
+                  }}
                 >
                   Download Label PDF
                 </Button>

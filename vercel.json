@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/integrations/shypfy/(.*)",
+      "destination": "/api/shypfy?path=$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
