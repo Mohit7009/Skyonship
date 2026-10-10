@@ -36,6 +36,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../../components/ui';
+import { CustomerShipmentService } from '../../services/customerShipmentService';
 
 export interface OrderRecord extends Record<string, unknown> {
   id: string;
@@ -158,7 +159,53 @@ export const CustomerOrdersPage: React.FC = () => {
 
   // Filtered & Sorted Orders
   const filteredOrders = useMemo(() => {
-    let list = DEMO_ORDERS_DATA.filter((item) => {
+    const dynamicShipments = CustomerShipmentService.getShipments('tenant-demo-01');
+    const dynamicOrders: OrderRecord[] = dynamicShipments.map((s) => ({
+      id: s.id,
+      orderId: s.orderId,
+      awbNumber: s.awbNumber || 'PENDING',
+      customerName: s.deliveryContact || 'Customer',
+      customerPhone: s.deliveryPhone || '',
+      customerEmail: (s as any).deliveryEmail || 'customer@example.com',
+      deliveryAddress: s.deliveryAddress || '',
+      deliveryPincode: s.deliveryPincode || '',
+      deliveryCity: s.deliveryCity || '',
+      courierName: s.courierName || 'Shypfy Express',
+      courierBg: s.courierName.toLowerCase().includes('blue') ? '#0284c7' : s.courierName.toLowerCase().includes('xpress') ? '#e11d48' : '#4f46e5',
+      serviceType: (s.serviceName?.includes('Air') ? 'Air' : s.serviceName?.includes('Express') ? 'Express' : 'Surface') as any,
+      mode: (s.mode || 'B2C') as any,
+      originCity: s.pickupCity || 'Origin Hub',
+      originPincode: s.pickupPincode || '',
+      warehouseName: (s as any).warehouseName || `${s.pickupCity} Warehouse`,
+      deadWeightKg: s.actualWeightKg || 0.5,
+      volumetricWeightKg: s.chargeableWeightKg || 0.5,
+      chargeableWeightKg: s.chargeableWeightKg || 0.5,
+      dimensionsCm: s.dimensionsCm || '10 x 10 x 10',
+      baseFreight: s.baseFreightINR || 0,
+      fuelSurcharge: s.fuelSurchargeINR || 0,
+      docketCharge: 15,
+      codCharge: s.codFeeINR || 0,
+      fmCharge: 15,
+      gstAmount: Math.round((s.totalCustomerChargeINR || 0) * 0.18 * 100) / 100,
+      totalAmount: s.totalCustomerChargeINR || 0,
+      paymentType: s.paymentMode === 'COD' ? 'COD' : 'Prepaid',
+      codAmount: s.codAmountINR || 0,
+      shipmentType: 'Forward',
+      status: s.bookingStatus === 'DELIVERED' ? 'Delivered' : s.bookingStatus === 'NDR' ? 'NDR' : s.bookingStatus.startsWith('RTO') ? 'RTO' : s.bookingStatus === 'CANCELLED' ? 'Cancelled' : s.bookingStatus === 'IN_TRANSIT' ? 'In Transit' : 'Booked',
+      createdDate: s.bookingDate || new Date().toLocaleDateString(),
+      timeline: s.trackingTimeline ? s.trackingTimeline.map((t) => ({
+        title: t.statusTitle,
+        description: t.description,
+        timestamp: t.timestamp,
+        completed: t.completed,
+      })) : [
+        { title: 'Booking Confirmed', description: 'Order registered cleanly', timestamp: s.bookingDate, completed: true }
+      ],
+    }));
+
+    const combinedList = [...dynamicOrders, ...DEMO_ORDERS_DATA];
+
+    let list = combinedList.filter((item) => {
       // Global Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();

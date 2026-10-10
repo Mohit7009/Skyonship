@@ -32,7 +32,7 @@ export interface CourierBookingResponse {
 
 export const CourierBookingAdapter = {
   bookShipment: async (input: CourierBookingInput): Promise<CourierBookingResponse> => {
-    if (input.courierId.toLowerCase() === 'shypfy') {
+    if (input.courierId.toLowerCase().includes('shypfy') || input.courierName.toLowerCase().includes('shypfy')) {
       try {
         const res = await fetch('/api/integrations/shypfy/shipment/create', {
           method: 'POST',
