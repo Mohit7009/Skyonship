@@ -105,7 +105,34 @@ export interface CustomerShipmentDetail extends Record<string, unknown> {
 
 export const INITIAL_CUSTOMER_SHIPMENTS: CustomerShipmentDetail[] = [];
 
-let SHIPMENT_STORE = [...INITIAL_CUSTOMER_SHIPMENTS];
+const SHIPMENT_KEY = 'COURRIER3_SHIPMENT_STORE';
+
+function loadShipmentsFromStorage(): CustomerShipmentDetail[] {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(SHIPMENT_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return [...INITIAL_CUSTOMER_SHIPMENTS];
+}
+
+function saveShipmentsToStorage(store: CustomerShipmentDetail[]) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(SHIPMENT_KEY, JSON.stringify(store));
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+let SHIPMENT_STORE = loadShipmentsFromStorage();
 const PROCESSED_EVENT_HASHES = new Set<string>();
 
 // Valid Transition Matrix Map
@@ -337,6 +364,7 @@ export const CustomerShipmentService = {
       completed: true,
     });
 
+    saveShipmentsToStorage(SHIPMENT_STORE);
     return { success: true, message: `Status updated from ${oldStatus} to ${newStatus}.`, shipment };
   },
 
@@ -367,6 +395,7 @@ export const CustomerShipmentService = {
     const targetTxId = shipment.transactionId || `tx-${shipment.shipmentId}`;
     const refundRes = WalletService.refund(targetTxId, refundAmountINR, reason);
 
+    saveShipmentsToStorage(SHIPMENT_STORE);
     return {
       success: true,
       message: `Shipment ${shipment.shipmentId} cancelled successfully. ₹${refundAmountINR.toFixed(2)} refunded to your merchant wallet.`,
@@ -378,6 +407,7 @@ export const CustomerShipmentService = {
   // Save new shipment record dynamically to store
   addShipmentRecord: (shipment: CustomerShipmentDetail): CustomerShipmentDetail => {
     SHIPMENT_STORE.unshift(shipment);
+    saveShipmentsToStorage(SHIPMENT_STORE);
     return shipment;
   },
 };

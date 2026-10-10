@@ -26,12 +26,47 @@ export const INITIAL_WALLET: Wallet = {
 // INITIAL TRANSACTIONS
 export const INITIAL_TRANSACTIONS: WalletTransaction[] = [];
 
-// STORES
-let WALLET_STORE: Wallet = { ...INITIAL_WALLET };
+// STORES & PERSISTENCE
+const WALLET_KEY = 'COURRIER3_WALLET_STORE';
+const TX_KEY = 'COURRIER3_TX_STORE';
+
+function loadWalletFromStorage(): Wallet {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(WALLET_KEY);
+      if (raw) return JSON.parse(raw);
+    }
+  } catch {}
+  return { ...INITIAL_WALLET };
+}
+
+function loadTxsFromStorage(): WalletTransaction[] {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(TX_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    }
+  } catch {}
+  return [...INITIAL_TRANSACTIONS];
+}
+
+function saveWalletState() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(WALLET_KEY, JSON.stringify(WALLET_STORE));
+      localStorage.setItem(TX_KEY, JSON.stringify(Array.from(TRANSACTION_STORE.values())));
+    }
+  } catch {}
+}
+
+let WALLET_STORE: Wallet = loadWalletFromStorage();
 const TRANSACTION_STORE: Map<string, WalletTransaction> = new Map();
 const CHARGE_STORE: Map<string, ShipmentCharge> = new Map();
 
-INITIAL_TRANSACTIONS.forEach((tx) => TRANSACTION_STORE.set(tx.id, tx));
+loadTxsFromStorage().forEach((tx) => TRANSACTION_STORE.set(tx.id, tx));
 
 export const WalletService = {
   getWallet: (_tenantId?: string): Wallet => {
@@ -116,6 +151,7 @@ export const WalletService = {
     };
 
     TRANSACTION_STORE.set(txId, newTx);
+    saveWalletState();
     return newTx;
   },
 
@@ -198,6 +234,7 @@ export const WalletService = {
     };
     CHARGE_STORE.set(shipmentId, chargeRecord);
 
+    saveWalletState();
     return { success: true, message: 'Shipment charge posted successfully.', transaction: newTx };
   },
 

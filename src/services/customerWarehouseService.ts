@@ -127,7 +127,30 @@ export const INITIAL_CUSTOMER_WAREHOUSES: CustomerWarehouse[] = [
   },
 ];
 
-let WAREHOUSE_STORE = [...INITIAL_CUSTOMER_WAREHOUSES];
+const WAREHOUSE_KEY = 'COURRIER3_WAREHOUSE_STORE';
+
+function loadWarehousesFromStorage(): CustomerWarehouse[] {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(WAREHOUSE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    }
+  } catch {}
+  return [...INITIAL_CUSTOMER_WAREHOUSES];
+}
+
+function saveWarehousesToStorage(store: CustomerWarehouse[]) {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.setItem(WAREHOUSE_KEY, JSON.stringify(store));
+    }
+  } catch {}
+}
+
+let WAREHOUSE_STORE = loadWarehousesFromStorage();
 
 // Pincode Lookup Auto-population Service
 export function lookupPincodeDetails(pincode: string): { city: string; state: string; zone: string } {
@@ -229,6 +252,7 @@ export const CustomerWarehouseService = {
     };
 
     WAREHOUSE_STORE.unshift(newWh);
+    saveWarehousesToStorage(WAREHOUSE_STORE);
     return {
       success: true,
       message: `Warehouse ${newWh.warehouseCode} (${newWh.warehouseName}) created successfully!`,
@@ -252,6 +276,7 @@ export const CustomerWarehouseService = {
 
     Object.assign(wh, updates);
     wh.updatedAt = new Date().toLocaleString();
+    saveWarehousesToStorage(WAREHOUSE_STORE);
 
     return {
       success: true,
