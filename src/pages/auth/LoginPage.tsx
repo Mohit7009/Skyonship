@@ -8,8 +8,8 @@ import { Alert } from '../../components/ui/Alert';
 import { authService } from '../../services/auth.service';
 
 export const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@merchant.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +30,7 @@ export const LoginPage: React.FC = () => {
       return;
     }
 
-    if (email.toLowerCase().includes('admin@courrier3.com')) {
+    if (email.toLowerCase().includes('admin@courrier3.com') || email.toLowerCase().includes('admin@skyonship.com')) {
       setErrorMessage('Admin Account Detected: Super Admin users must log in via the dedicated Admin Login Portal (/admin/login).');
       return;
     }
@@ -41,25 +41,14 @@ export const LoginPage: React.FC = () => {
       if (res.user) {
         localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
         navigate('/app');
+      } else {
+        setErrorMessage(res.message || 'Invalid merchant credentials. Please try again.');
       }
     } catch (err: any) {
       setErrorMessage('Invalid merchant credentials or sign-in failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickCustomerLogin = () => {
-    setEmail('admin@merchant.com');
-    setPassword('123456');
-    localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
-    navigate('/app');
-  };
-
-  const handleQuickAdminLogin = () => {
-    setEmail('admin@courrier3.com');
-    setPassword('123456');
-    navigate('/admin');
   };
 
   return (
@@ -83,35 +72,6 @@ export const LoginPage: React.FC = () => {
           <p style={{ fontSize: '14px', color: '#64748b', marginTop: '4px', margin: 0 }}>
             Sign in to manage your logistics & shipping operations across India.
           </p>
-        </div>
-
-        {/* Quick Demo Login Preset Buttons */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#f8fafc', padding: '14px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-            ⚡ 1-Click Quick Demo Access
-          </span>
-
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <Button
-              variant="outline"
-              size="sm"
-              fullWidth
-              onClick={handleQuickCustomerLogin}
-              style={{ fontSize: '12px', fontWeight: '700', justifyContent: 'center', height: '36px' }}
-            >
-              <UserCheck size={15} style={{ marginRight: '6px', color: '#2563eb' }} /> Merchant Portal
-            </Button>
-
-            <Button
-              variant="outline"
-              size="sm"
-              fullWidth
-              onClick={handleQuickAdminLogin}
-              style={{ fontSize: '12px', fontWeight: '700', justifyContent: 'center', height: '36px' }}
-            >
-              <ShieldCheck size={15} style={{ marginRight: '6px', color: '#7c3aed' }} /> Admin Portal
-            </Button>
-          </div>
         </div>
 
         {/* Error Alert Banner */}

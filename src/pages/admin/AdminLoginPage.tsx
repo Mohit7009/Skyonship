@@ -8,8 +8,8 @@ import { Card } from '../../components/ui/Card';
 import { authService } from '../../services/auth.service';
 
 export const AdminLoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@courrier3.com');
-  const [password, setPassword] = useState('123456');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 

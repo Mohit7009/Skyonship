@@ -13,14 +13,14 @@ export const INITIAL_WALLET: Wallet = {
   id: 'wal-demo-01',
   tenantId: 'tenant-demo-01',
   currency: 'INR',
-  availableBalanceMinor: 91500, // ₹915.00
+  availableBalanceMinor: 0, // ₹0.00 Fresh State
   reservedBalanceMinor: 0,
   totalSpentMinor: 0,
   totalRefundedMinor: 0,
   lowBalanceThresholdMinor: 50000, // ₹500.00 threshold
   status: 'ACTIVE',
-  createdAt: '2026-08-01 10:00 AM',
-  updatedAt: '2026-08-20 16:35 PM',
+  createdAt: new Date().toLocaleString(),
+  updatedAt: new Date().toLocaleString(),
 };
 
 // INITIAL TRANSACTIONS
