@@ -29,13 +29,13 @@ import { useTenant } from '../context/TenantContext';
 
 const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
   {
-    sectionLabel: 'OVERVIEW',
+    sectionLabel: 'Overview',
     items: [
       { label: 'Dashboard', path: '/admin', icon: ShieldCheck },
     ],
   },
   {
-    sectionLabel: 'ACCESS CONTROL',
+    sectionLabel: 'Access Control',
     items: [
       { label: 'Roles', path: '/admin/roles', icon: Lock },
       { label: 'Permissions Matrix', path: '/admin/permissions', icon: FileCheck },
@@ -43,7 +43,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'ACCOUNTS & USERS',
+    sectionLabel: 'Accounts & Users',
     items: [
       { label: 'Customers', path: '/admin/customers', icon: Users },
       { label: 'Onboarding Tracker', path: '/admin/onboarding', icon: Rocket },
@@ -51,7 +51,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'OPERATIONS',
+    sectionLabel: 'Operations',
     items: [
       { label: 'Platform Shipments', path: '/admin/shipments', icon: Package },
       { label: 'NDR & RTO', path: '/admin/ndr', icon: Package, badge: 'Alerts' },
@@ -60,7 +60,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'RATE CARDS',
+    sectionLabel: 'Rate Cards',
     items: [
       { label: 'B2B Rate Cards', path: '/admin/b2b-rates', icon: Layers },
       { label: 'B2C Rate Cards', path: '/admin/selling-rates', icon: Sliders },
@@ -68,7 +68,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'PARTNERS & NETWORK',
+    sectionLabel: 'Partners & Network',
     items: [
       { label: 'Courier Partners', path: '/admin/couriers', icon: Truck },
       { label: 'Courier Master', path: '/admin/couriers/master', icon: Truck },
@@ -76,7 +76,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'FINANCE',
+    sectionLabel: 'Finance',
     items: [
       { label: 'Customer Wallets', path: '/admin/customer-wallets', icon: Wallet },
       { label: 'COD Remittances', path: '/admin/cod/remittances', icon: IndianRupee },
@@ -84,7 +84,7 @@ const BASE_ADMIN_NAV_GROUPS: NavGroupConfig[] = [
     ],
   },
   {
-    sectionLabel: 'SYSTEM & LOGS',
+    sectionLabel: 'System & Logs',
     items: [
       { label: 'Notification Center', path: '/admin/notifications', icon: Bell },
       { label: 'Reports & Analytics', path: '/admin/reports', icon: BarChart2 },
@@ -111,17 +111,17 @@ export const AdminLayout: React.FC = () => {
         style={{
           backgroundColor: '#1e1b4b',
           color: '#ffffff',
-          padding: '6px 16px',
+          padding: '8px 20px',
           fontSize: '12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           flexWrap: 'wrap',
-          gap: '8px',
+          gap: '12px',
           borderBottom: '1px solid #312e81',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px 16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <KeyRound size={14} style={{ color: '#a855f7' }} />
             <span>Role: <strong>{currentRole?.name}</strong></span>
@@ -133,19 +133,20 @@ export const AdminLayout: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Tenant Scope:</span>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Tenant Scope:</span>
             <select
               value={activeTenantId}
               onChange={(e) => setActiveTenantId(e.target.value)}
               style={{
                 fontSize: '11px',
-                padding: '2px 6px',
-                borderRadius: '4px',
+                padding: '4px 8px',
+                borderRadius: '6px',
                 backgroundColor: '#334155',
                 color: '#ffffff',
                 border: '1px solid #475569',
+                cursor: 'pointer',
               }}
             >
               <option value="ALL">All Tenants (Super Admin View)</option>
@@ -157,25 +158,30 @@ export const AdminLayout: React.FC = () => {
             </select>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px' }}>Role:</span>
-            {roles.filter((r) => r.portal === 'ADMIN').map((r) => (
-              <button
-                key={r.id}
-                onClick={() => setActiveRoleId(r.id)}
-                style={{
-                  fontSize: '10px',
-                  padding: '2px 6px',
-                  borderRadius: '3px',
-                  border: r.id === currentRole?.id ? '1px solid #a855f7' : '1px solid #475569',
-                  backgroundColor: r.id === currentRole?.id ? '#a855f7' : '#334155',
-                  color: '#ffffff',
-                  cursor: 'pointer',
-                }}
-              >
-                {r.name}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Role View:</span>
+            <div style={{ display: 'flex', gap: '4px', backgroundColor: '#0f172a', padding: '3px', borderRadius: '8px' }}>
+              {roles.filter((r) => r.portal === 'ADMIN').map((r) => (
+                <button
+                  key={r.id}
+                  onClick={() => setActiveRoleId(r.id)}
+                  style={{
+                    fontSize: '11px',
+                    padding: '4px 10px',
+                    borderRadius: '6px',
+                    border: 'none',
+                    backgroundColor: r.id === currentRole?.id ? '#a855f7' : 'transparent',
+                    color: '#ffffff',
+                    fontWeight: r.id === currentRole?.id ? 700 : 500,
+                    cursor: 'pointer',
+                    boxShadow: r.id === currentRole?.id ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {r.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>

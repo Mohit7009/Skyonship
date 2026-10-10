@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   ShieldCheck,
   User,
+  FileText,
 } from 'lucide-react';
 import { AppShell } from '../components/common/AppShell';
 import type { NavGroupConfig } from '../components/common/Sidebar';
@@ -60,6 +61,7 @@ export const BASE_ENTERPRISE_B2B_NAV_GROUPS: NavGroupConfig[] = [
     categoryIcon: Calculator,
     items: [
       { label: 'Rate Calculator', path: '/app/rates', icon: Calculator },
+      { label: 'My Rate Card', path: '/app/my-rate-card', icon: FileText },
       { label: 'Warehouses', path: '/app/warehouses', icon: Warehouse },
     ],
   },

@@ -47,15 +47,12 @@ export const StatCard: React.FC<StatCardProps> = ({
       >
         <span
           style={{
-            fontSize: '11px',
+            fontSize: '12px',
             fontWeight: 700,
             color: 'var(--color-text-muted)',
             letterSpacing: '0.05em',
             textTransform: 'uppercase',
-            lineHeight: '1.2',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            lineHeight: '1.3',
           }}
         >
           {label}
@@ -82,7 +79,7 @@ export const StatCard: React.FC<StatCardProps> = ({
 
       {/* Middle Row: Large Value */}
       <div style={{ marginBottom: '12px' }}>
-        <h3
+        <div
           style={{
             fontSize: '28px',
             fontWeight: 700,
@@ -94,7 +91,7 @@ export const StatCard: React.FC<StatCardProps> = ({
           }}
         >
           {value}
-        </h3>
+        </div>
       </div>
 
       {/* Bottom Supporting Row */}
@@ -104,11 +101,9 @@ export const StatCard: React.FC<StatCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            fontSize: '11px',
-            lineHeight: 1.2,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            flexWrap: 'wrap',
+            fontSize: '12px',
+            lineHeight: 1.4,
           }}
         >
           {badgeText && (
@@ -120,9 +115,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             <span
               style={{
                 color: 'var(--color-text-secondary)',
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
+                fontSize: '12px',
               }}
             >
               {subtext}

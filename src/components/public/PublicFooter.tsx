@@ -61,51 +61,51 @@ export const PublicFooter: React.FC = () => {
           </div>
 
           {/* Column 1: PRODUCT */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h5 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
               PRODUCT
-            </h5>
-            <Link to="/features" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Features</Link>
-            <Link to="/integrations" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Integrations</Link>
-            <Link to="/tracking" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Tracking</Link>
-            <Link to="/pricing" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Pricing</Link>
+            </h3>
+            <Link to="/features" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Features</Link>
+            <Link to="/integrations" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Integrations</Link>
+            <Link to="/tracking" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Tracking</Link>
+            <Link to="/pricing" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Pricing</Link>
           </div>
 
           {/* Column 2: SOLUTIONS */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h5 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
               SOLUTIONS
-            </h5>
-            <Link to="/features" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>B2C Shipping</Link>
-            <Link to="/features" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>B2B Freight</Link>
-            <Link to="/features" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>White-Label Portal</Link>
+            </h3>
+            <Link to="/features" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>B2C Shipping</Link>
+            <Link to="/features" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>B2B Freight</Link>
+            <Link to="/features" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>White-Label Portal</Link>
           </div>
 
           {/* Column 3: COMPANY */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h5 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
               COMPANY
-            </h5>
-            <Link to="/about" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>About</Link>
-            <Link to="/contact" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Contact</Link>
+            </h3>
+            <Link to="/about" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>About</Link>
+            <Link to="/contact" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Contact</Link>
           </div>
 
           {/* Column 4: RESOURCES */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h5 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
               RESOURCES
-            </h5>
-            <Link to="/faq" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>FAQ</Link>
-            <Link to="/faq" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Documentation</Link>
+            </h3>
+            <Link to="/faq" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>FAQ</Link>
+            <Link to="/faq" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Documentation</Link>
           </div>
 
           {/* Column 5: LEGAL */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-            <h5 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h3 style={{ fontSize: 'var(--font-size-caption)', fontWeight: 'var(--font-weight-semibold)', color: '#ffffff', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
               LEGAL
-            </h5>
-            <Link to="/faq" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Privacy</Link>
-            <Link to="/faq" style={{ fontSize: 'var(--font-size-small)', color: 'var(--color-neutral-400)' }}>Terms</Link>
+            </h3>
+            <Link to="/faq" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Privacy</Link>
+            <Link to="/faq" style={{ fontSize: '14px', color: 'var(--color-neutral-400)', padding: '2px 0', textDecoration: 'none' }}>Terms</Link>
           </div>
         </div>
 

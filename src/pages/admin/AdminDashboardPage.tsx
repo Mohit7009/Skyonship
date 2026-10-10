@@ -110,7 +110,7 @@ export const AdminDashboardPage: React.FC = () => {
       </div>
 
       {/* PENDING ACTIONS BAR */}
-      <Card style={{ padding: 'var(--space-3)', borderLeft: '4px solid var(--color-warning)' }}>
+      <Card style={{ padding: 'var(--space-4)', borderLeft: '4px solid var(--color-warning)', marginTop: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <Clock size={18} style={{ color: 'var(--color-warning)' }} />

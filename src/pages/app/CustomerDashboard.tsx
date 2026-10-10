@@ -237,26 +237,15 @@ export const CustomerDashboard: React.FC = () => {
         breadcrumbs={breadcrumbs}
         style={{ marginBottom: '0px' }}
         actions={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon={<Wallet size={14} />}
-              onClick={() => navigate('/app/wallet')}
-              style={{ fontWeight: '600' }}
-            >
-              + Add Money
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              leftIcon={<Plus size={14} />}
-              onClick={() => navigate('/app/orders/create')}
-              style={{ backgroundColor: '#0284c7', borderColor: '#0284c7', fontWeight: '700' }}
-            >
-              Create Shipment
-            </Button>
-          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus size={14} />}
+            onClick={() => navigate('/app/orders/create')}
+            style={{ backgroundColor: '#0284c7', borderColor: '#0284c7', fontWeight: '700' }}
+          >
+            Create Shipment
+          </Button>
         }
       />
 
@@ -403,15 +392,23 @@ export const CustomerDashboard: React.FC = () => {
 
       {/* 4. 6 LARGE LOGISTICS ACTION CARDS GRID */}
       <div>
-        <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 14px 0' }}>
+        <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 14px 0' }}>
           Core Operational Actions
-        </h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px', width: '100%' }}>
+        </h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', width: '100%' }}>
           {mainActionCards.map((card) => {
             return (
               <div
                 key={card.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(card.path)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate(card.path);
+                  }
+                }}
                 style={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #e2e8f0',
@@ -440,9 +437,9 @@ export const CustomerDashboard: React.FC = () => {
                   <ThreeDIcon type={card.threeDType} size="md" />
 
                   <div>
-                    <h4 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
                       {card.title}
-                    </h4>
+                    </h3>
                     <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0', lineHeight: 1.4 }}>
                       {card.description}
                     </p>
