@@ -215,7 +215,7 @@ export const CustomerWarehouseService = {
       addressLine1: input.addressLine1,
       addressLine2: input.addressLine2,
       landmark: input.landmark,
-      pincode: input.pincode.trim(),
+      pincode: (input.pincode || '').replace(/\D/g, '').trim(),
       city: input.city,
       state: input.state,
       country: input.country || 'India',

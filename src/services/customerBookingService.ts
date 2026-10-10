@@ -89,10 +89,16 @@ export const CustomerBookingService = {
     const totalChargeINR = input.shippingChargeINR;
 
     // 1. Strict Server-Side Field Validation
-    if (!input.pickupPincode || !/^\d{6}$/.test(input.pickupPincode)) {
+    const cleanPickupPincode = (input.pickupPincode || '').replace(/\D/g, '').trim();
+    const cleanDeliveryPincode = (input.deliveryPincode || '').replace(/\D/g, '').trim();
+
+    input.pickupPincode = cleanPickupPincode;
+    input.deliveryPincode = cleanDeliveryPincode;
+
+    if (!cleanPickupPincode || !/^\d{6}$/.test(cleanPickupPincode)) {
       return { success: false, reason: 'VALIDATION_FAILED', message: 'Invalid origin pickup pincode.' };
     }
-    if (!input.deliveryPincode || !/^\d{6}$/.test(input.deliveryPincode)) {
+    if (!cleanDeliveryPincode || !/^\d{6}$/.test(cleanDeliveryPincode)) {
       return { success: false, reason: 'VALIDATION_FAILED', message: 'Invalid delivery pincode.' };
     }
     if (!input.deliveryContactName || !input.deliveryPhone || !input.deliveryAddressLine1) {
