@@ -2,6 +2,21 @@
 @import './reset.css';
 @import './typography.css';
 
+/* Global Compact SaaS Density & Scale */
+html {
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: 13px;
+  line-height: 1.4;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  zoom: 0.94; /* Compact SaaS Dashboard Zoom Scale */
+}
+
 /* Core Application Utility Helpers */
 
 .container {

@@ -81,21 +81,21 @@
   --color-info-border: #93C5FD;
   --color-info-text: #1D4ED8;
 
-  /* Large Readable SaaS Typography Hierarchy Scale */
+  /* Compact Enterprise SaaS Typography Hierarchy Scale */
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-heading: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', Consolas, monospace;
 
-  --font-size-display: 36px;    /* 36px Display Title */
-  --font-size-h1: 30px;         /* 30px Page Title */
-  --font-size-h2: 24px;         /* 24px Section Title */
-  --font-size-h3: 20px;         /* 20px Sub-heading */
-  --font-size-h4: 16px;         /* 16px Card Title */
-  --font-size-body-lg: 16px;    /* 16px Body Large */
-  --font-size-sidebar: 15px;    /* 15px Sidebar Menu */
-  --font-size-body: 14px;       /* 14px Body & Table Text */
-  --font-size-small: 13px;      /* 13px Table Header */
-  --font-size-caption: 12px;    /* 12px Caption */
+  --font-size-display: 28px;    /* 28px Display Title */
+  --font-size-h1: 22px;         /* 22px Page Title */
+  --font-size-h2: 18px;         /* 18px Section Title */
+  --font-size-h3: 15px;         /* 15px Sub-heading */
+  --font-size-h4: 14px;         /* 14px Card Title */
+  --font-size-body-lg: 14px;    /* 14px Body Large */
+  --font-size-sidebar: 13px;    /* 13px Sidebar Menu */
+  --font-size-body: 13px;       /* 13px Body & Table Text */
+  --font-size-small: 12px;      /* 12px Table Header */
+  --font-size-caption: 11px;    /* 11px Caption */
 
   --font-weight-regular: 400;
   --font-weight-medium: 500;
