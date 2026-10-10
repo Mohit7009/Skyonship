@@ -46,4 +46,6 @@ export interface LabelDataPayload {
   shipmentRef: string;
   trackingRef: string;
   qrCodeUrl?: string;
+  brandLogoUrl?: string;
+  brandName?: string;
 }

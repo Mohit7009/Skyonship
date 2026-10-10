@@ -132,6 +132,8 @@ export const LabelService = {
       shipmentRef: shipmentId || 'SHP-9840192',
       trackingRef: awb,
       qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=https://track.courrier.com/${awb}`,
+      brandLogoUrl: 'https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=120',
+      brandName: 'Skyonship Express',
     };
   },
 
