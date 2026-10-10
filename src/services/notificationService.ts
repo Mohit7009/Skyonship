@@ -53,65 +53,10 @@ export interface AdminNotificationSettings extends Record<string, unknown> {
 }
 
 // Default Initial Seed Notifications
-export const INITIAL_NOTIFICATIONS: AppNotification[] = [
-  // Customer Notifications
-  {
-    id: 'notif-c-101',
-    recipientId: 'tenant-demo-01',
-    recipientType: 'CUSTOMER',
-    title: 'Shipment Booking Confirmed',
-    message: 'Your shipment SHP-ORD-2026-9041 has been booked cleanly. AWB assignment pending.',
-    type: 'SHIPMENT',
-    referenceType: 'SHIPMENT',
-    referenceId: 'SHP-ORD-2026-9041',
-    isRead: false,
-    createdAt: '2026-08-21 16:35 PM',
-    eventId: 'evt-book-9041',
-  },
-  {
-    id: 'notif-c-102',
-    recipientId: 'tenant-demo-01',
-    recipientType: 'CUSTOMER',
-    title: 'Wallet Recharge Successful',
-    message: '₹1,000.00 has been credited to your merchant wallet balance via Gateway.',
-    type: 'WALLET',
-    referenceType: 'RECHARGE',
-    referenceId: 'RCH-8471902',
-    isRead: false,
-    createdAt: '2026-08-20 11:00 AM',
-    eventId: 'evt-rch-8471902',
-  },
-  // Admin Notifications
-  {
-    id: 'notif-a-101',
-    recipientId: 'admin',
-    recipientType: 'ADMIN',
-    title: 'Operational Dispatch Pending API',
-    message: 'Shipment SHP-ORD-2026-9041 is in PENDING_API status awaiting carrier API dispatch.',
-    type: 'WARNING',
-    referenceType: 'SHIPMENT',
-    referenceId: 'SHP-ORD-2026-9041',
-    isRead: false,
-    createdAt: '2026-08-21 16:36 PM',
-    eventId: 'evt-admin-pending-9041',
-  },
-  {
-    id: 'notif-a-102',
-    recipientId: 'admin',
-    recipientType: 'ADMIN',
-    title: 'Bulk Serviceability Import Completed',
-    message: '45,200 pincode coverage rules updated across 4 courier partners.',
-    type: 'SUCCESS',
-    referenceType: 'IMPORT',
-    referenceId: 'IMP-PIN-8812',
-    isRead: true,
-    createdAt: '2026-08-19 14:10 PM',
-    eventId: 'evt-admin-import-8812',
-  },
-];
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [];
 
-let NOTIFICATION_STORE = [...INITIAL_NOTIFICATIONS];
-const PROCESSED_EVENT_KEYS = new Set<string>(INITIAL_NOTIFICATIONS.map((n) => n.eventId || n.id));
+let NOTIFICATION_STORE: AppNotification[] = [];
+const PROCESSED_EVENT_KEYS = new Set<string>();
 
 let CUSTOMER_PREFERENCES: NotificationPreferences = {
   bookingUpdates: true,

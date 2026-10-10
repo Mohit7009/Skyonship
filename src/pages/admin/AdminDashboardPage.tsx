@@ -85,7 +85,7 @@ export const AdminDashboardPage: React.FC = () => {
         />
         <StatCard
           label="TODAY'S SHIPMENTS"
-          value="482"
+          value="0"
           subtext="Dispatched across couriers"
           badgeText="TODAY"
           badgeVariant="info"
@@ -93,7 +93,7 @@ export const AdminDashboardPage: React.FC = () => {
         />
         <StatCard
           label="WALLET COLLECTION"
-          value="₹4,85,000"
+          value="₹0.00"
           subtext="Combined customer balance"
           badgeText="FINANCE"
           badgeVariant="info"
@@ -101,7 +101,7 @@ export const AdminDashboardPage: React.FC = () => {
         />
         <StatCard
           label="COD PENDING"
-          value="₹1,24,500"
+          value="₹0.00"
           subtext="Awaiting carrier payout"
           badgeText="REMITTANCE"
           badgeVariant="warning"
@@ -119,7 +119,7 @@ export const AdminDashboardPage: React.FC = () => {
                 Pending Operational Actions
               </strong>
               <div style={{ fontSize: '11px', color: 'var(--color-text-muted)' }}>
-                1 Customer pending rate card assignment • 340 NDR exceptions pending merchant instructions
+                0 Customers pending rate card assignment • 0 NDR exceptions pending merchant instructions
               </div>
             </div>
           </div>
