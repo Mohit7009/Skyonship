@@ -742,14 +742,19 @@ export const RateCalculatorPage: React.FC = () => {
                   No B2C service available for this route.
                 </Card>
               ) : (
-                b2cResults.map((item) => (
-                  <CourierResultCard
-                    key={item.id}
-                    item={item}
-                    onViewBreakdown={() => setSelectedBreakdown(item)}
-                    onBook={() => handleSelectAndBook(item)}
-                  />
-                ))
+                (() => {
+                  const minPrice = Math.min(...b2cResults.map((r) => r.finalPrice));
+                  return b2cResults.map((item) => (
+                    <CourierResultCard
+                      key={item.id}
+                      item={item}
+                      isCheapest={item.finalPrice === minPrice}
+                      isFastest={item.serviceType === 'Air' || item.transitTime.includes('1-2')}
+                      onViewBreakdown={() => setSelectedBreakdown(item)}
+                      onBook={() => handleSelectAndBook(item)}
+                    />
+                  ));
+                })()
               )}
             </div>
 
@@ -770,14 +775,19 @@ export const RateCalculatorPage: React.FC = () => {
                   No B2B service available for this route.
                 </Card>
               ) : (
-                b2bResults.map((item) => (
-                  <CourierResultCard
-                    key={item.id}
-                    item={item}
-                    onViewBreakdown={() => setSelectedBreakdown(item)}
-                    onBook={() => handleSelectAndBook(item)}
-                  />
-                ))
+                (() => {
+                  const minPrice = Math.min(...b2bResults.map((r) => r.finalPrice));
+                  return b2bResults.map((item) => (
+                    <CourierResultCard
+                      key={item.id}
+                      item={item}
+                      isCheapest={item.finalPrice === minPrice}
+                      isFastest={item.serviceType === 'Air' || item.transitTime.includes('1-2')}
+                      onViewBreakdown={() => setSelectedBreakdown(item)}
+                      onBook={() => handleSelectAndBook(item)}
+                    />
+                  ));
+                })()
               )}
             </div>
 
@@ -953,18 +963,20 @@ export const RateCalculatorPage: React.FC = () => {
 // ====================================================================
 interface CourierResultCardProps {
   item: CourierRateItem;
+  isCheapest?: boolean;
+  isFastest?: boolean;
   onViewBreakdown: () => void;
   onBook: () => void;
 }
 
-const CourierResultCard: React.FC<CourierResultCardProps> = ({ item, onViewBreakdown, onBook }) => {
+const CourierResultCard: React.FC<CourierResultCardProps> = ({ item, isCheapest, isFastest, onViewBreakdown, onBook }) => {
   const badgeVariant = item.serviceType === 'Air' ? 'danger' : item.serviceType === 'Cargo' ? 'success' : 'info';
 
   return (
     <div
       style={{
         backgroundColor: '#ffffff',
-        border: '1px solid #cbd5e1',
+        border: isCheapest ? '2px solid #22c55e' : isFastest ? '2px solid #3b82f6' : '1px solid #cbd5e1',
         borderRadius: '10px',
         padding: '16px',
         display: 'flex',
@@ -972,8 +984,23 @@ const CourierResultCard: React.FC<CourierResultCardProps> = ({ item, onViewBreak
         justifyContent: 'space-between',
         boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
         transition: 'all 0.2s ease',
+        position: 'relative',
       }}
     >
+      {/* Recommendation Badge Overlays */}
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '8px' }}>
+        {isCheapest && (
+          <span style={{ fontSize: '10px', fontWeight: '800', backgroundColor: '#dcfce7', color: '#15803d', border: '1px solid #86efac', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+            🟢 CHEAPEST RATE
+          </span>
+        )}
+        {isFastest && (
+          <span style={{ fontSize: '10px', fontWeight: '800', backgroundColor: '#dbeafe', color: '#1e40af', border: '1px solid #93c5fd', padding: '2px 8px', borderRadius: '12px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+            ⚡ FASTEST DELIVERY
+          </span>
+        )}
+      </div>
+
       <div>
         {/* Top Bar: Logo, Name & Service Type Badge */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
@@ -1065,6 +1092,7 @@ const CourierResultCard: React.FC<CourierResultCardProps> = ({ item, onViewBreak
     </div>
   );
 };
+
 
 // Helper SVG Icon
 const CalculatorIcon = () => (
