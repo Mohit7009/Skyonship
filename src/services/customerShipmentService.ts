@@ -301,12 +301,40 @@ export const CustomerShipmentService = {
   },
 
   getShipmentById: (shipmentId: string, tenantId?: string): CustomerShipmentDetail | null => {
-    return (
-      SHIPMENT_STORE.find(
-        (s) => (!tenantId || tenantId === 'all' || s.tenantId === tenantId) &&
-          (s.shipmentId === shipmentId || s.awbNumber === shipmentId || s.id === shipmentId)
-      ) || null
+    if (!shipmentId) return null;
+    const target = shipmentId.trim().toLowerCase();
+
+    // Re-check storage to ensure fresh in-memory cache
+    if (SHIPMENT_STORE.length === 0) {
+      SHIPMENT_STORE = loadShipmentsFromStorage();
+    }
+
+    const matches = (s: CustomerShipmentDetail) =>
+      s.id?.toLowerCase() === target ||
+      s.shipmentId?.toLowerCase() === target ||
+      s.awbNumber?.toLowerCase() === target ||
+      s.orderId?.toLowerCase() === target;
+
+    // 1. Try matching with tenantId
+    let found = SHIPMENT_STORE.find(
+      (s) => (!tenantId || tenantId === 'all' || s.tenantId === tenantId) && matches(s)
     );
+
+    // 2. Fallback: match without tenantId
+    if (!found) {
+      found = SHIPMENT_STORE.find(matches);
+    }
+
+    // 3. Fallback: reload from storage in case another tab saved it
+    if (!found) {
+      const fresh = loadShipmentsFromStorage();
+      found = fresh.find(matches);
+      if (found) {
+        SHIPMENT_STORE = fresh;
+      }
+    }
+
+    return found || null;
   },
 
   // Admin Manual Status Update Engine

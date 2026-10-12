@@ -27,6 +27,7 @@ import type { CustomerOrder } from '../../types/orders';
 import { ORDER_STATUS_CONFIG } from '../../types/orders';
 import { DEMO_ORDER_ITEMS } from '../../mocks/orders.mock';
 import { formatCurrency } from '../../utils/formatters';
+import { CustomerShipmentService } from '../../services/customerShipmentService';
 
 export const OrderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,12 +37,19 @@ export const OrderDetailPage: React.FC = () => {
   const [actionAlert, setActionAlert] = useState<string | null>(null);
 
   useEffect(() => {
+    if (id) {
+      const real = CustomerShipmentService.getShipmentById(id);
+      if (real) {
+        navigate(`/app/shipment-control-center/${id}`, { replace: true });
+        return;
+      }
+    }
     const targetId = id || 'ord-10001';
     const match =
       DEMO_ORDER_ITEMS.find((o) => o.id === targetId || o.orderNumber === targetId) ||
       DEMO_ORDER_ITEMS[0];
     setOrder(match);
-  }, [id]);
+  }, [id, navigate]);
 
   if (!order) {
     return (

@@ -22,6 +22,9 @@ import {
   Copy,
   Check,
   ShieldCheck,
+  Eye,
+  Building2,
+  ExternalLink,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import {
@@ -36,7 +39,7 @@ import {
   Pagination,
   TableSkeleton,
 } from '../../components/ui';
-import { CustomerShipmentService } from '../../services/customerShipmentService';
+import { CustomerShipmentService, type CustomerShipmentDetail } from '../../services/customerShipmentService';
 
 export interface OrderRecord extends Record<string, unknown> {
   id: string;
@@ -89,6 +92,100 @@ export interface OrderRecord extends Record<string, unknown> {
 }
 
 export const DEMO_ORDERS_DATA: OrderRecord[] = [];
+
+export function mapShipmentToOrderRecord(s: CustomerShipmentDetail): OrderRecord {
+  const isExpress = s.serviceName?.toLowerCase().includes('express') || s.courierName?.toLowerCase().includes('express');
+  const isAir = s.serviceName?.toLowerCase().includes('air');
+  const serviceType: 'Surface' | 'Air' | 'Express' | 'Cargo' = isAir ? 'Air' : isExpress ? 'Express' : 'Surface';
+
+  const baseFreight = Number(s.baseFreightINR) || 0;
+  const fuelSurcharge = Number(s.fuelSurchargeINR) || 0;
+  const codCharge = Number(s.codFeeINR) || 0;
+  const totalAmount = Number(s.totalCustomerChargeINR) || (baseFreight + fuelSurcharge + codCharge);
+
+  // Exact GST amount calculation
+  const subtotal = baseFreight + fuelSurcharge + codCharge;
+  const gstAmount = Math.max(0, Math.round((totalAmount > subtotal ? totalAmount - subtotal : subtotal * 0.18) * 100) / 100);
+
+  const cleanCourierName = s.courierName || 'Delhivery Surface';
+
+  const statusStr = (s.bookingStatus as string) || '';
+  let status: OrderRecord['status'] = 'Booked';
+  if (statusStr === 'DELIVERED') status = 'Delivered';
+  else if (statusStr === 'NDR') status = 'NDR';
+  else if (statusStr.startsWith('RTO')) status = 'RTO';
+  else if (statusStr === 'CANCELLED') status = 'Cancelled';
+  else if (statusStr === 'IN_TRANSIT') status = 'In Transit';
+  else if (statusStr === 'PICKED_UP') status = 'Picked Up';
+  else if (statusStr === 'OUT_FOR_DELIVERY') status = 'OFD';
+  else if (statusStr === 'PICKUP_REQUESTED') status = 'Pickup Scheduled';
+  else status = 'Booked';
+
+  const timeline = s.trackingTimeline && s.trackingTimeline.length > 0
+    ? s.trackingTimeline.map((t) => ({
+        title: t.statusTitle || 'Status Update',
+        description: t.description || '',
+        timestamp: t.timestamp || s.bookingDate,
+        completed: !!t.completed,
+      }))
+    : [
+        {
+          title: 'Booking Confirmed',
+          description: `Shipment booked with ${cleanCourierName}. AWB: ${s.awbNumber || 'Assigned'}`,
+          timestamp: s.bookingDate,
+          completed: true,
+          active: true,
+        },
+        {
+          title: 'Ready for Pickup',
+          description: 'Package packed and ready for carrier pickup & handover.',
+          timestamp: s.bookingDate,
+          completed: false,
+        },
+      ];
+
+  return {
+    id: s.id,
+    orderId: s.orderId,
+    awbNumber: s.awbNumber || 'PENDING',
+    customerName: s.deliveryContact || 'Customer',
+    customerPhone: s.deliveryPhone || '',
+    customerEmail: (s as any).deliveryEmail || `${s.deliveryContact?.toLowerCase().replace(/\s+/g, '') || 'customer'}@example.com`,
+    deliveryAddress: s.deliveryAddress || '',
+    deliveryPincode: s.deliveryPincode || '',
+    deliveryCity: s.deliveryCity || '',
+
+    courierName: cleanCourierName,
+    courierBg: '#0284c7',
+    serviceType,
+    mode: (s.mode || 'B2C') as any,
+
+    originCity: s.pickupCity || 'Origin Hub',
+    originPincode: s.pickupPincode || '',
+    warehouseName: (s as any).warehouseName || `${s.pickupCity || 'Origin'} Warehouse`,
+
+    deadWeightKg: s.actualWeightKg || 0.5,
+    volumetricWeightKg: s.chargeableWeightKg || 0.5,
+    chargeableWeightKg: s.chargeableWeightKg || 0.5,
+    dimensionsCm: s.dimensionsCm || '10 × 10 × 10 CM',
+
+    baseFreight,
+    fuelSurcharge,
+    docketCharge: 0,
+    codCharge,
+    fmCharge: 0,
+    gstAmount,
+    totalAmount,
+
+    paymentType: s.paymentMode === 'COD' ? 'COD' : 'Prepaid',
+    codAmount: s.codAmountINR || 0,
+    shipmentType: 'Forward',
+
+    status,
+    createdDate: s.bookingDate || new Date().toLocaleDateString(),
+    timeline,
+  };
+}
 
 export const CustomerOrdersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -196,48 +293,7 @@ export const CustomerOrdersPage: React.FC = () => {
         ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
         : 'tenant-demo-01';
     const dynamicShipments = CustomerShipmentService.getShipments(activeTenantId);
-    const dynamicOrders: OrderRecord[] = dynamicShipments.map((s) => ({
-      id: s.id,
-      orderId: s.orderId,
-      awbNumber: s.awbNumber || 'PENDING',
-      customerName: s.deliveryContact || 'Customer',
-      customerPhone: s.deliveryPhone || '',
-      customerEmail: (s as any).deliveryEmail || 'customer@example.com',
-      deliveryAddress: s.deliveryAddress || '',
-      deliveryPincode: s.deliveryPincode || '',
-      deliveryCity: s.deliveryCity || '',
-      courierName: s.courierName || 'Shypfy Express',
-      courierBg: s.courierName.toLowerCase().includes('blue') ? '#0284c7' : s.courierName.toLowerCase().includes('xpress') ? '#e11d48' : '#4f46e5',
-      serviceType: (s.serviceName?.includes('Air') ? 'Air' : s.serviceName?.includes('Express') ? 'Express' : 'Surface') as any,
-      mode: (s.mode || 'B2C') as any,
-      originCity: s.pickupCity || 'Origin Hub',
-      originPincode: s.pickupPincode || '',
-      warehouseName: (s as any).warehouseName || `${s.pickupCity} Warehouse`,
-      deadWeightKg: s.actualWeightKg || 0.5,
-      volumetricWeightKg: s.chargeableWeightKg || 0.5,
-      chargeableWeightKg: s.chargeableWeightKg || 0.5,
-      dimensionsCm: s.dimensionsCm || '10 x 10 x 10',
-      baseFreight: s.baseFreightINR || 0,
-      fuelSurcharge: s.fuelSurchargeINR || 0,
-      docketCharge: 15,
-      codCharge: s.codFeeINR || 0,
-      fmCharge: 15,
-      gstAmount: Math.round((s.totalCustomerChargeINR || 0) * 0.18 * 100) / 100,
-      totalAmount: s.totalCustomerChargeINR || 0,
-      paymentType: s.paymentMode === 'COD' ? 'COD' : 'Prepaid',
-      codAmount: s.codAmountINR || 0,
-      shipmentType: 'Forward',
-      status: s.bookingStatus === 'DELIVERED' ? 'Delivered' : s.bookingStatus === 'NDR' ? 'NDR' : s.bookingStatus.startsWith('RTO') ? 'RTO' : s.bookingStatus === 'CANCELLED' ? 'Cancelled' : s.bookingStatus === 'IN_TRANSIT' ? 'In Transit' : 'Booked',
-      createdDate: s.bookingDate || new Date().toLocaleDateString(),
-      timeline: s.trackingTimeline ? s.trackingTimeline.map((t) => ({
-        title: t.statusTitle,
-        description: t.description,
-        timestamp: t.timestamp,
-        completed: t.completed,
-      })) : [
-        { title: 'Booking Confirmed', description: 'Order registered cleanly', timestamp: s.bookingDate, completed: true }
-      ],
-    }));
+    const dynamicOrders: OrderRecord[] = dynamicShipments.map(mapShipmentToOrderRecord);
 
     const combinedList = [...dynamicOrders, ...DEMO_ORDERS_DATA];
 
@@ -713,7 +769,22 @@ export const CustomerOrdersPage: React.FC = () => {
                   header: 'Courier Partner',
                   render: (r) => (
                     <div>
-                      <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', backgroundColor: r.courierBg, color: '#ffffff' }}>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          padding: '3px 8px',
+                          borderRadius: '6px',
+                          backgroundColor: '#f0f9ff',
+                          color: '#0284c7',
+                          border: '1px solid #bae6fd',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        <Truck size={12} style={{ color: '#0284c7' }} />
                         {r.courierName}
                       </span>
                     </div>
@@ -758,21 +829,42 @@ export const CustomerOrdersPage: React.FC = () => {
                   key: 'actions',
                   header: 'Actions',
                   render: (r) => (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/app/shipment-control-center/${r.id}`)}
-                        style={{ fontSize: '11px', padding: '4px 8px', color: '#0284c7', borderColor: '#0284c7', fontWeight: '700' }}
+                        onClick={() => setSelectedDrawerOrder(r)}
+                        style={{
+                          fontSize: '11px',
+                          padding: '4px 10px',
+                          color: '#0284c7',
+                          borderColor: '#0284c7',
+                          backgroundColor: '#f0f9ff',
+                          fontWeight: '700',
+                          borderRadius: '6px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
                       >
+                        <Eye size={12} />
                         View Details
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Control Center (Full Page)"
+                        onClick={() => navigate(`/app/shipment-control-center/${r.id}`)}
+                        style={{ padding: '4px 6px', color: '#0284c7' }}
+                      >
+                        <ExternalLink size={14} />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         title="Track Shipment"
                         onClick={() => navigate('/app/tracking')}
-                        style={{ padding: '4px', color: '#0284c7' }}
+                        style={{ padding: '4px 6px', color: '#0284c7' }}
                       >
                         <Truck size={14} />
                       </Button>
@@ -820,7 +912,7 @@ export const CustomerOrdersPage: React.FC = () => {
         position="right"
       >
         {selectedDrawerOrder && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '18px', fontSize: '12px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', fontSize: '12px' }}>
             
             {/* Order Header Summary */}
             <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -828,41 +920,73 @@ export const CustomerOrdersPage: React.FC = () => {
                 <strong style={{ fontSize: '16px', color: '#0284c7' }}>{selectedDrawerOrder.orderId}</strong>
                 <Badge variant={getStatusBadgeVariant(selectedDrawerOrder.status)}>{selectedDrawerOrder.status}</Badge>
               </div>
-              <div style={{ fontSize: '12px', color: '#475569', marginTop: '4px', fontFamily: 'monospace' }}>
-                AWB: <strong>{selectedDrawerOrder.awbNumber}</strong>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#475569', fontFamily: 'monospace' }}>
+                  AWB: <strong style={{ color: '#0f172a' }}>{selectedDrawerOrder.awbNumber}</strong>
+                </span>
+                <button
+                  onClick={(e) => handleCopyAwb(selectedDrawerOrder.awbNumber, e)}
+                  title="Copy AWB"
+                  style={{
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '4px',
+                    padding: '2px 6px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    color: copiedAwb === selectedDrawerOrder.awbNumber ? '#16a34a' : '#475569',
+                  }}
+                >
+                  {copiedAwb === selectedDrawerOrder.awbNumber ? <Check size={11} /> : <Copy size={11} />}
+                  {copiedAwb === selectedDrawerOrder.awbNumber ? 'Copied' : 'Copy'}
+                </button>
               </div>
-              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                Created: {selectedDrawerOrder.createdDate}
+              <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                Booked On: {selectedDrawerOrder.createdDate}
               </div>
             </div>
 
             {/* Customer Details */}
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#ffffff' }}>
               <div style={{ fontWeight: '700', color: '#334155', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <User size={14} style={{ color: '#0284c7' }} /> Customer Details
+                <User size={14} style={{ color: '#0284c7' }} /> Customer & Delivery Address
               </div>
               <div style={{ color: '#0f172a', fontWeight: '700' }}>{selectedDrawerOrder.customerName}</div>
               <div style={{ color: '#475569', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Phone size={12} /> {selectedDrawerOrder.customerPhone}
+                <Phone size={12} style={{ color: '#64748b' }} /> {selectedDrawerOrder.customerPhone || 'N/A'}
               </div>
-              <div style={{ color: '#64748b' }}>{selectedDrawerOrder.customerEmail}</div>
+              {selectedDrawerOrder.customerEmail && (
+                <div style={{ color: '#64748b' }}>{selectedDrawerOrder.customerEmail}</div>
+              )}
               <div style={{ color: '#334155', marginTop: '4px', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                <MapPin size={12} style={{ flexShrink: 0, marginTop: '2px', color: '#dc2626' }} />
+                <MapPin size={13} style={{ flexShrink: 0, marginTop: '2px', color: '#dc2626' }} />
                 <span>{selectedDrawerOrder.deliveryAddress}, {selectedDrawerOrder.deliveryCity} - <strong>{selectedDrawerOrder.deliveryPincode}</strong></span>
               </div>
             </div>
 
+            {/* Warehouse Origin */}
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#ffffff' }}>
+              <div style={{ fontWeight: '700', color: '#334155', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Building2 size={14} style={{ color: '#0284c7' }} /> Origin Warehouse Hub
+              </div>
+              <div style={{ color: '#0f172a', fontWeight: '700' }}>{selectedDrawerOrder.warehouseName}</div>
+              <div style={{ color: '#475569' }}>{selectedDrawerOrder.originCity} ({selectedDrawerOrder.originPincode})</div>
+            </div>
+
             {/* Courier & Weight Details */}
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#ffffff' }}>
               <div style={{ fontWeight: '700', color: '#334155', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Truck size={14} style={{ color: '#0284c7' }} /> Courier & Weight Specs
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748b' }}>Courier Partner:</span>
-                <strong style={{ color: '#0f172a' }}>{selectedDrawerOrder.courierName}</strong>
+                <strong style={{ color: '#0284c7' }}>{selectedDrawerOrder.courierName}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Service Type:</span>
+                <span style={{ color: '#64748b' }}>Service Mode:</span>
                 <span>{selectedDrawerOrder.mode} - {selectedDrawerOrder.serviceType}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -877,12 +1001,16 @@ export const CustomerOrdersPage: React.FC = () => {
                 <span>Chargeable Weight:</span>
                 <span>{selectedDrawerOrder.chargeableWeightKg} KG</span>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748b', fontSize: '11px' }}>
+                <span>Box Dimensions:</span>
+                <span>{selectedDrawerOrder.dimensionsCm}</span>
+              </div>
             </div>
 
             {/* Charge Breakdown */}
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#ffffff' }}>
               <div style={{ fontWeight: '700', color: '#334155', borderBottom: '1px solid #f1f5f9', paddingBottom: '4px' }}>
-                Charge Breakdown
+                Freight & Billing Breakdown
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748b' }}>Base Freight:</span>
@@ -892,10 +1020,6 @@ export const CustomerOrdersPage: React.FC = () => {
                 <span style={{ color: '#64748b' }}>Fuel Surcharge:</span>
                 <span>₹ {selectedDrawerOrder.fuelSurcharge.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>Docket & FM Charges:</span>
-                <span>₹ {(selectedDrawerOrder.docketCharge + selectedDrawerOrder.fmCharge).toFixed(2)}</span>
-              </div>
               {selectedDrawerOrder.codCharge > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: '#64748b' }}>COD Fee:</span>
@@ -903,17 +1027,20 @@ export const CustomerOrdersPage: React.FC = () => {
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#64748b' }}>GST (18%):</span>
+                <span style={{ color: '#64748b' }}>GST (18% Tax):</span>
                 <span>₹ {selectedDrawerOrder.gstAmount.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '4px', fontWeight: '800', marginTop: '2px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: '#f0f9ff', padding: '8px 10px', borderRadius: '6px', fontWeight: '800', marginTop: '4px', border: '1px solid #bae6fd' }}>
                 <span style={{ color: '#0f172a' }}>Total Amount:</span>
-                <span style={{ color: '#0284c7' }}>₹ {selectedDrawerOrder.totalAmount.toFixed(2)}</span>
+                <span style={{ color: '#0284c7', fontSize: '13px' }}>₹ {selectedDrawerOrder.totalAmount.toFixed(2)}</span>
+              </div>
+              <div style={{ fontSize: '11px', color: '#16a34a', fontWeight: '600', marginTop: '2px', textAlign: 'right' }}>
+                ✓ Debited via Skyonship Wallet
               </div>
             </div>
 
             {/* Vertical Tracking Timeline */}
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px' }}>
+            <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '14px', backgroundColor: '#ffffff' }}>
               <div style={{ fontWeight: '700', color: '#334155', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Clock size={14} style={{ color: '#16a34a' }} /> Tracking Timeline
               </div>
@@ -956,53 +1083,43 @@ export const CustomerOrdersPage: React.FC = () => {
             </div>
 
             {/* Quick Action Buttons inside Drawer */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
               <Button
                 variant="primary"
                 size="sm"
                 onClick={() => {
+                  const targetId = selectedDrawerOrder.id;
                   setSelectedDrawerOrder(null);
-                  navigate(`/app/orders/${selectedDrawerOrder.id}`);
+                  navigate(`/app/shipment-control-center/${targetId}`);
                 }}
-                style={{ backgroundColor: '#0284c7', borderColor: '#0284c7', gridColumn: 'span 2' }}
+                style={{ backgroundColor: '#0284c7', borderColor: '#0284c7', width: '100%', fontWeight: '700' }}
               >
-                Open Full Order Master Page →
+                Open Full Control Center Page →
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => alert(`Downloading label for AWB ${selectedDrawerOrder.awbNumber}...`)}
-              >
-                <Printer size={13} style={{ marginRight: '4px' }} /> Download Label
-              </Button>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigate(`/app/shipments/${selectedDrawerOrder.id}/label`);
+                  }}
+                  style={{ color: '#0284c7', borderColor: '#bae6fd', backgroundColor: '#f0f9ff' }}
+                >
+                  <Printer size={13} style={{ marginRight: '4px' }} /> Print Label
+                </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => alert(`Downloading invoice for Order ${selectedDrawerOrder.orderId}...`)}
-              >
-                <FileText size={13} style={{ marginRight: '4px' }} /> Download Invoice
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => alert(`Downloading POD for AWB ${selectedDrawerOrder.awbNumber}...`)}
-              >
-                <ShieldCheck size={13} style={{ marginRight: '4px' }} /> Download POD
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSelectedDrawerOrder(null);
-                  navigate('/app/tracking');
-                }}
-              >
-                <Truck size={13} style={{ marginRight: '4px' }} /> Track Shipment
-              </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigate('/app/tracking');
+                  }}
+                  style={{ color: '#0f172a' }}
+                >
+                  <Truck size={13} style={{ marginRight: '4px' }} /> Track Live
+                </Button>
+              </div>
             </div>
 
           </div>
