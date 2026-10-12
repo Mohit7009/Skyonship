@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Building2,
   PlusCircle,
@@ -8,6 +8,7 @@ import {
   Edit2,
   Star,
   Package,
+  ShieldCheck,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatCard } from '../../components/common/StatCard';
@@ -59,9 +60,29 @@ export const WarehousesPage: React.FC = () => {
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
+  const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
+
+  // Automatically sync with Supabase Cloud DB on mount
+  useEffect(() => {
+    CustomerWarehouseService.syncFromSupabase(tenantId)
+      .then((cloudList) => {
+        if (cloudList && cloudList.length > 0) {
+          setWarehouses([...cloudList]);
+          setIsCloudSynced(true);
+        }
+      })
+      .catch(() => {});
+  }, [tenantId]);
 
   const refreshData = () => {
-    setWarehouses([...CustomerWarehouseService.getWarehouses(tenantId)]);
+    CustomerWarehouseService.syncFromSupabase(tenantId)
+      .then((cloudList) => {
+        setWarehouses([...cloudList]);
+        setIsCloudSynced(true);
+      })
+      .catch(() => {
+        setWarehouses([...CustomerWarehouseService.getWarehouses(tenantId)]);
+      });
   };
 
   // Open Add Modal
@@ -217,9 +238,16 @@ export const WarehousesPage: React.FC = () => {
         description="Operate shipments from multiple physical pickup facilities across India. Configure custom origin addresses, pickup timings, and primary defaults."
         breadcrumbs={breadcrumbs}
         actions={
-          <Button variant="primary" size="sm" onClick={handleOpenAddModal}>
-            <PlusCircle size={14} style={{ marginRight: '6px' }} /> + Add Pickup Warehouse
-          </Button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {isCloudSynced && (
+              <Badge variant="success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px' }}>
+                <ShieldCheck size={12} /> Supabase Cloud Synced
+              </Badge>
+            )}
+            <Button variant="primary" size="sm" onClick={handleOpenAddModal}>
+              <PlusCircle size={14} style={{ marginRight: '6px' }} /> + Add Pickup Warehouse
+            </Button>
+          </div>
         }
       />
 

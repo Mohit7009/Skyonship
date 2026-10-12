@@ -1,5 +1,6 @@
 import { WalletService } from '../mocks/wallet.mock';
 import type { WalletTransaction } from '../types/wallet';
+import { SupabaseShipmentService } from './supabase/supabaseShipmentService';
 
 export type InternalShipmentStatus =
   | 'DRAFT'
@@ -365,6 +366,17 @@ export const CustomerShipmentService = {
     });
 
     saveShipmentsToStorage(SHIPMENT_STORE);
+
+    // Asynchronously synchronize status update with Supabase Cloud DB
+    SupabaseShipmentService.updateShipmentStatus(
+      shipment.shipmentId,
+      newStatus,
+      shipment.customerFacingStatus,
+      reason,
+      source,
+      shipment.tenantId
+    ).catch(() => {});
+
     return { success: true, message: `Status updated from ${oldStatus} to ${newStatus}.`, shipment };
   },
 
@@ -404,10 +416,42 @@ export const CustomerShipmentService = {
     };
   },
 
-  // Save new shipment record dynamically to store
+  // Save new shipment record dynamically to store and sync with Supabase Cloud DB
   addShipmentRecord: (shipment: CustomerShipmentDetail): CustomerShipmentDetail => {
     SHIPMENT_STORE.unshift(shipment);
     saveShipmentsToStorage(SHIPMENT_STORE);
+
+    // Asynchronously synchronize new shipment with Supabase Cloud DB
+    SupabaseShipmentService.insertShipment(shipment).catch(() => {});
+
     return shipment;
+  },
+
+  // Synchronize latest shipments from Supabase PostgreSQL Cloud DB
+  syncFromSupabase: async (tenantId = 'tenant-demo-01'): Promise<CustomerShipmentDetail[]> => {
+    try {
+      const cloudShipments = await SupabaseShipmentService.fetchShipments(tenantId);
+      if (cloudShipments && cloudShipments.length > 0) {
+        // Merge cloud shipments with local cache (cloud shipments take priority)
+        const cloudMap = new Map<string, CustomerShipmentDetail>();
+        cloudShipments.forEach((s) => {
+          cloudMap.set(s.shipmentId, s);
+        });
+
+        // Retain any local shipments not yet on cloud
+        const merged: CustomerShipmentDetail[] = [...cloudShipments];
+        SHIPMENT_STORE.forEach((local) => {
+          if (!cloudMap.has(local.shipmentId)) {
+            merged.push(local);
+          }
+        });
+
+        SHIPMENT_STORE = merged;
+        saveShipmentsToStorage(SHIPMENT_STORE);
+      }
+    } catch (err: any) {
+      console.warn('[CustomerShipmentService] Supabase sync warning:', err?.message);
+    }
+    return CustomerShipmentService.getShipments(tenantId);
   },
 };

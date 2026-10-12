@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -115,11 +115,43 @@ export const CustomerOrdersPage: React.FC = () => {
   // Side Drawer State for Order Details
   const [selectedDrawerOrder, setSelectedDrawerOrder] = useState<OrderRecord | null>(null);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(false);
+  const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
+  const [syncVersion, setSyncVersion] = useState<number>(0);
 
-  // Trigger brief shimmer loading on data refresh / filter updates
+  // Automatically synchronize with Supabase Cloud DB on mount
+  useEffect(() => {
+    const activeTenantId =
+      typeof window !== 'undefined' && window.localStorage
+        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+        : 'tenant-demo-01';
+
+    setIsLoadingData(true);
+    CustomerShipmentService.syncFromSupabase(activeTenantId)
+      .then(() => {
+        setIsCloudSynced(true);
+        setSyncVersion((v) => v + 1);
+      })
+      .finally(() => {
+        setIsLoadingData(false);
+      });
+  }, []);
+
+  // Trigger data refresh and re-sync from Supabase Cloud DB
   const handleRefreshData = () => {
     setIsLoadingData(true);
-    setTimeout(() => setIsLoadingData(false), 350);
+    const activeTenantId =
+      typeof window !== 'undefined' && window.localStorage
+        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+        : 'tenant-demo-01';
+
+    CustomerShipmentService.syncFromSupabase(activeTenantId)
+      .then(() => {
+        setIsCloudSynced(true);
+        setSyncVersion((v) => v + 1);
+      })
+      .finally(() => {
+        setIsLoadingData(false);
+      });
   };
 
   // Copy AWB Helper
@@ -264,7 +296,7 @@ export const CustomerOrdersPage: React.FC = () => {
     });
 
     return list;
-  }, [searchQuery, dateRange, courierFilter, statusFilter, warehouseFilter, paymentFilter, shipmentTypeFilter, modeFilter, sortBy]);
+  }, [searchQuery, dateRange, courierFilter, statusFilter, warehouseFilter, paymentFilter, shipmentTypeFilter, modeFilter, sortBy, syncVersion]);
 
   // Paginated Data
   const paginatedOrders = useMemo(() => {
@@ -331,6 +363,12 @@ export const CustomerOrdersPage: React.FC = () => {
         style={{ marginBottom: '0px' }}
         actions={
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {isCloudSynced && (
+              <Badge variant="success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px' }}>
+                <ShieldCheck size={12} /> Supabase Cloud Synced
+              </Badge>
+            )}
+
             <Button
               variant="outline"
               size="sm"

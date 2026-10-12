@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Package,
@@ -50,11 +50,25 @@ export const CustomerDashboard: React.FC = () => {
     setTimeout(() => setIsMetricsLoading(false), 250);
   };
 
+  const [, setSyncVersion] = useState<number>(0);
+
   // Active Tenant & Wallet Data
   const activeTenantId =
     typeof window !== 'undefined' && window.localStorage
       ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
       : 'tenant-demo-01';
+
+  // Synchronize shipments and wallet from Supabase Cloud DB on mount
+  useEffect(() => {
+    Promise.all([
+      CustomerShipmentService.syncFromSupabase(activeTenantId),
+      WalletService.syncFromSupabase(activeTenantId),
+    ])
+      .then(() => {
+        setSyncVersion((v) => v + 1);
+      })
+      .catch(() => {});
+  }, [activeTenantId]);
 
   const wallet = WalletService.getWallet(activeTenantId);
   const walletBalancePaise = wallet.availableBalanceMinor ?? 0;

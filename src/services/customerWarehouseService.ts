@@ -1,3 +1,5 @@
+import { SupabaseWarehouseService } from './supabase/supabaseWarehouseService';
+
 export interface PickupWarehouseSnapshot extends Record<string, unknown> {
   warehouseId: string;
   warehouseCode: string;
@@ -281,6 +283,15 @@ export const CustomerWarehouseService = {
 
     WAREHOUSE_STORE.unshift(newWh);
     saveWarehousesToStorage(WAREHOUSE_STORE);
+
+    // Asynchronously synchronize with Supabase Cloud DB
+    SupabaseWarehouseService.saveWarehouse(input).then((res) => {
+      if (res.success && res.warehouse) {
+        newWh.id = res.warehouse.id;
+        saveWarehousesToStorage(WAREHOUSE_STORE);
+      }
+    }).catch(() => {});
+
     return {
       success: true,
       message: `Warehouse ${newWh.warehouseCode} (${newWh.warehouseName}) created successfully!`,
@@ -306,6 +317,9 @@ export const CustomerWarehouseService = {
     wh.updatedAt = new Date().toLocaleString();
     saveWarehousesToStorage(WAREHOUSE_STORE);
 
+    // Asynchronously synchronize update with Supabase Cloud DB
+    SupabaseWarehouseService.updateWarehouse(id, updates, tenantId).catch(() => {});
+
     return {
       success: true,
       message: `Warehouse ${wh.warehouseCode} updated successfully. (Historical shipments preserve original snapshot).`,
@@ -322,6 +336,8 @@ export const CustomerWarehouseService = {
         w.isDefault = w.id === id;
       }
     });
+    saveWarehousesToStorage(WAREHOUSE_STORE);
+    SupabaseWarehouseService.updateWarehouse(id, { isDefault: true }, tenantId).catch(() => {});
 
     return {
       success: true,
@@ -342,10 +358,26 @@ export const CustomerWarehouseService = {
       remainingActive[0].isDefault = true;
     }
 
+    saveWarehousesToStorage(WAREHOUSE_STORE);
     return {
       success: true,
       message: `Warehouse ${wh.warehouseCode} deactivated. It can no longer be selected for new bookings, but historical shipments remain intact.`,
     };
+  },
+
+  // Sync latest warehouse records from Supabase PostgreSQL Cloud DB
+  syncFromSupabase: async (tenantId = 'tenant-demo-01'): Promise<CustomerWarehouse[]> => {
+    try {
+      const cloudWarehouses = await SupabaseWarehouseService.fetchWarehouses(tenantId);
+      if (cloudWarehouses && cloudWarehouses.length > 0) {
+        const existingOtherTenants = WAREHOUSE_STORE.filter((w) => w.tenantId !== tenantId);
+        WAREHOUSE_STORE = [...cloudWarehouses, ...existingOtherTenants];
+        saveWarehousesToStorage(WAREHOUSE_STORE);
+      }
+    } catch (err: any) {
+      console.warn('[CustomerWarehouseService] Supabase sync warning:', err?.message);
+    }
+    return CustomerWarehouseService.getWarehouses(tenantId);
   },
 
   // Freeze Pickup Warehouse Snapshot for Shipment Booking

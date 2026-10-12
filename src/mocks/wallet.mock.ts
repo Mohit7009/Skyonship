@@ -7,6 +7,7 @@ import type {
   ChargeBreakdown,
 } from '../types/wallet';
 import { parseINRToMinor } from '../utils/moneyFormat';
+import { SupabaseWalletService } from '../services/supabase/supabaseWalletService';
 
 // INITIAL DEMO WALLET RECORD
 export const INITIAL_WALLET: Wallet = {
@@ -202,6 +203,19 @@ export const WalletService = {
 
     txs.unshift(newTx);
     saveTxsToStorage(tid, txs);
+
+    // Asynchronously synchronize credit with Supabase Cloud DB
+    SupabaseWalletService.creditWalletRPC({
+      tenantId: tid,
+      amountMinor,
+      type: 'RECHARGE',
+      referenceType: 'RECHARGE',
+      referenceId: newTx.referenceId,
+      description: newTx.description,
+      idempotencyKey: newTx.idempotencyKey,
+      actorType: 'MERCHANT',
+    }).catch(() => {});
+
     return newTx;
   },
 
@@ -294,6 +308,16 @@ export const WalletService = {
       createdAt: nowStr,
     };
     CHARGE_STORE.set(shipmentId, chargeRecord);
+
+    // Asynchronously synchronize debit with Supabase Cloud DB via row-locked RPC
+    SupabaseWalletService.debitWalletRPC({
+      tenantId: tid,
+      amountMinor,
+      shipmentId,
+      orderId,
+      courierName,
+      idempotencyKey,
+    }).catch(() => {});
 
     return { success: true, message: 'Shipment charge posted successfully.', transaction: newTx };
   },
@@ -530,5 +554,26 @@ export const WalletService = {
 
   getShipmentCharge: (shipmentId: string): ShipmentCharge | null => {
     return CHARGE_STORE.get(shipmentId) || null;
+  },
+
+  // Synchronize latest wallet balance and transactions from Supabase Cloud DB
+  syncFromSupabase: async (tenantId?: string): Promise<Wallet> => {
+    const tid = tenantId || getActiveTenantId();
+    try {
+      const [cloudWallet, cloudTxs] = await Promise.all([
+        SupabaseWalletService.fetchWallet(tid),
+        SupabaseWalletService.fetchTransactions(tid),
+      ]);
+
+      if (cloudWallet) {
+        saveWalletToStorage(cloudWallet);
+      }
+      if (cloudTxs && cloudTxs.length > 0) {
+        saveTxsToStorage(tid, cloudTxs);
+      }
+    } catch (err: any) {
+      console.warn('[WalletService] Supabase sync warning:', err?.message);
+    }
+    return WalletService.getWallet(tid);
   },
 };

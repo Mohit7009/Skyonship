@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Wallet as WalletIcon,
   Plus,
@@ -7,6 +7,7 @@ import {
   ArrowDownLeft,
   Search,
   FileSpreadsheet,
+  ShieldCheck,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatCard } from '../../components/common/StatCard';
@@ -50,10 +51,28 @@ export const WalletPage: React.FC = () => {
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
+  const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
+
+  // Automatically sync with Supabase Cloud DB on mount
+  useEffect(() => {
+    WalletService.syncFromSupabase(tenantId)
+      .then((cloudWallet) => {
+        setWallet({ ...cloudWallet });
+        setIsCloudSynced(true);
+      })
+      .catch(() => {});
+  }, [tenantId]);
 
   // Refresh wallet & transactions
   const refreshData = () => {
-    setWallet(WalletService.getWallet(tenantId));
+    WalletService.syncFromSupabase(tenantId)
+      .then((cloudWallet) => {
+        setWallet({ ...cloudWallet });
+        setIsCloudSynced(true);
+      })
+      .catch(() => {
+        setWallet(WalletService.getWallet(tenantId));
+      });
   };
 
   // Summary Metrics
@@ -164,7 +183,12 @@ export const WalletPage: React.FC = () => {
         description="Manage your prepaid shipping balance, track automated dispatch debits, handle refunds, and inspect auditable transaction history."
         breadcrumbs={breadcrumbs}
         actions={
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            {isCloudSynced && (
+              <Badge variant="success" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '11px', padding: '4px 8px' }}>
+                <ShieldCheck size={12} /> Supabase Cloud Synced
+              </Badge>
+            )}
             <Button variant="outline" size="sm" onClick={handleExportCSV} leftIcon={<FileSpreadsheet size={15} />}>
               Export Ledger CSV
             </Button>
