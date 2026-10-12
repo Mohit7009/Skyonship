@@ -7,6 +7,7 @@ import {
   handleShypfyLabelEndpoint,
   handleShypfyTrackEndpoint,
   handleShypfyCancelEndpoint,
+  handleShypfyAddressesEndpoint,
 } from './src/server/shypfyTestEndpoint';
 
 /**
@@ -52,6 +53,8 @@ function shypfyServerPlugin(): Plugin {
         const urlObj = new URL(url, 'http://localhost');
         const trackingId = urlObj.searchParams.get('id') || '';
         result = await handleShypfyCancelEndpoint(trackingId);
+      } else if (url.startsWith('/api/integrations/shypfy/addresses') || url.startsWith('/api/integrations/shypfy/address')) {
+        result = await handleShypfyAddressesEndpoint();
       }
 
       if (result) {

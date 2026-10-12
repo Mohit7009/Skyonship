@@ -61,7 +61,18 @@ export const CourierBookingAdapter = {
           body: JSON.stringify({
             order_id: input.orderId || `ORD-${Date.now()}`,
             order_date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            originPincode: input.originPincode,
+            destinationPincode: input.destinationPincode,
             pickup_location: input.pickupLocation || 'Primary',
+            pickupAddress: input.pickupAddress,
+            pickupContactName: input.pickupContactName,
+            pickupPhone: input.pickupPhone,
+            pickupCity: input.pickupCity,
+            deliveryContactName: input.deliveryContactName,
+            deliveryPhone: input.deliveryPhone,
+            deliveryAddress: input.deliveryAddress,
+            deliveryCity: input.deliveryCity,
+            deliveryState: input.deliveryState,
             billing_customer_name: input.deliveryContactName || 'Customer',
             billing_address: input.deliveryAddress || 'Address Details',
             billing_city: input.deliveryCity || 'City',
@@ -79,7 +90,9 @@ export const CourierBookingAdapter = {
               },
             ],
             payment_method: normalizedPaymentMethod,
+            payment_mode: normalizedPaymentMethod,
             sub_total: input.sellingPriceINR || 500,
+            total_amount: input.sellingPriceINR || 500,
             length: input.length || 10,
             width: input.width || 10,
             height: input.height || 10,
@@ -134,7 +147,7 @@ export const CourierBookingAdapter = {
           };
         }
 
-        const awb = apiRes.data.awb_code || apiRes.data.tracking_id || apiRes.data.id;
+        const awb = apiRes.data.awb_code || apiRes.data.tracking_id || apiRes.data.id || apiRes.data.barcodes?.wbn;
         if (!awb) {
           return {
             success: false,

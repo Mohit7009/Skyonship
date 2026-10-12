@@ -232,19 +232,148 @@ export async function checkShypfyServiceability(input: ShypfyServiceabilityInput
   return await response.json();
 }
 
+/**
+ * Normalizes and translates any incoming shipment payload into 100% compliant Shypfy OpenAPI schema:
+ * https://storage.googleapis.com/fs-site.goswift.in/public_api_yamls/SHYPFY/spec.yaml
+ */
+export function buildShypfyShipmentPayload(input: Record<string, any>): Record<string, any> {
+  const rawPayment = input.payment_mode || input.payment_method || input.paymentType || 'Prepaid';
+  const paymentMode = normalizeShypfyPaymentType(rawPayment);
+
+  const totalAmount = Number(
+    input.total_amount || input.sub_total || input.invoiceValueINR || input.sellingPriceINR || 500
+  );
+  const codAmount = paymentMode === 'COD' ? Number(input.cod_amount || input.codAmount || totalAmount) : 0;
+  const taxableAmount = Number(input.taxable_amount || input.total_amount || totalAmount);
+  const taxValue = Number(input.tax_value || 0);
+
+  // Phone normalization: extract digits, ensure 10-digit integer
+  const rawPhone = String(
+    input.drop_location?.phone ||
+    input.billing_phone ||
+    input.deliveryPhone ||
+    input.customerPhone ||
+    '9876543210'
+  ).replace(/\D/g, '');
+  const customerPhoneInt = parseInt(rawPhone.slice(-10) || '9876543210', 10);
+
+  // Pincode normalization: 6-digit integer
+  const rawPin = String(
+    input.drop_location?.pin ||
+    input.billing_pincode ||
+    input.destinationPincode ||
+    input.deliveryPincode ||
+    '110001'
+  ).replace(/\D/g, '');
+  const dropPinInt = parseInt(rawPin || '110001', 10);
+
+  // Weight normalization: Shypfy expects integer in grams (e.g. 1000 for 1kg)
+  let rawWeight = Number(input.weight || input.actualWeight || input.chargeableWeight || 0.5);
+  if (rawWeight <= 30) {
+    rawWeight = Math.round(rawWeight * 1000);
+  }
+  const weightGrams = Math.max(1, Math.round(rawWeight));
+
+  const lengthCm = Math.max(1, Math.round(Number(input.length || 10)));
+  const widthCm = Math.max(1, Math.round(Number(input.width || 10)));
+  const heightCm = Math.max(1, Math.round(Number(input.height || 10)));
+
+  // Drop location
+  const dropLocation = {
+    name: String(
+      input.drop_location?.name ||
+      input.consignee_name ||
+      input.billing_customer_name ||
+      input.deliveryContactName ||
+      input.customerName ||
+      'Customer'
+    ),
+    phone: customerPhoneInt,
+    address: String(
+      input.drop_location?.address ||
+      input.billing_address ||
+      input.deliveryAddress ||
+      'Address Details'
+    ),
+    city: String(
+      input.drop_location?.city ||
+      input.billing_city ||
+      input.deliveryCity ||
+      'City'
+    ),
+    state: String(
+      input.drop_location?.state ||
+      input.billing_state ||
+      input.deliveryState ||
+      'State'
+    ),
+    country: 'India',
+    pin: dropPinInt,
+  };
+
+  // Pickup location alias resolution:
+  // Match known user registered aliases on Shypfy:
+  // 'SKYONSHIP' (173205), 'DIVYANSH ENTERPRISES' (134113), 'BARWALA' (134204),
+  // 'ELVIA CARE LIMITED' (133103), 'CONNET LIFE PHARMA PVT LTD' (110024)
+  const originPin = String(input.originPincode || input.pickupPincode || '').replace(/\D/g, '');
+  let alias = 'SKYONSHIP';
+  if (originPin === '134113') {
+    alias = 'DIVYANSH ENTERPRISES';
+  } else if (originPin === '173205') {
+    alias = 'SKYONSHIP';
+  } else if (originPin === '134204') {
+    alias = 'BARWALA';
+  } else if (originPin === '133103') {
+    alias = 'ELVIA CARE LIMITED';
+  } else if (originPin === '110024') {
+    alias = 'CONNET LIFE PHARMA PVT LTD';
+  } else if (typeof input.pickup_location === 'string' && input.pickup_location.trim().length > 0 && input.pickup_location !== 'Primary') {
+    alias = input.pickup_location.trim();
+  } else if (typeof input.pickupLocation === 'string' && input.pickupLocation.trim().length > 0 && input.pickupLocation !== 'Primary') {
+    alias = input.pickupLocation.trim();
+  } else if (input.pickup_location?.name) {
+    alias = input.pickup_location.name;
+  }
+
+  const pickupLocation = { name: alias };
+  const returnLocation = { name: alias };
+
+  return {
+    order_number: String(input.order_number || input.order_id || input.orderId || `ORD-${Date.now()}`),
+    invoice_number: String(input.invoice_number || input.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`),
+    invoice_date: String(input.invoice_date || input.invoiceDate || new Date().toISOString().slice(0, 10)),
+    seller_name: String(input.seller_name || alias),
+    seller_address: String(input.seller_address || input.pickupAddress || 'Warehouse Address'),
+    seller_gst_tin: String(input.seller_gst_tin || '06AAAAA0000A1Z5'),
+    consignee_name: dropLocation.name,
+    consignee_gst_amount: 0,
+    payment_mode: paymentMode,
+    category_of_goods: String(input.category_of_goods || 'General'),
+    products_desc: String(
+      input.products_desc ||
+      input.order_items?.[0]?.name ||
+      input.packageContents ||
+      'General Merchandise'
+    ),
+    total_amount: totalAmount,
+    cod_amount: codAmount,
+    taxable_amount: taxableAmount,
+    tax_value: taxValue,
+    commodity_value: String(taxableAmount),
+    quantity: Math.max(1, Number(input.quantity || input.numPackages || 1)),
+    weight: weightGrams,
+    length: lengthCm,
+    width: widthCm,
+    height: heightCm,
+    drop_location: dropLocation,
+    pickup_location: pickupLocation,
+    return_location: returnLocation,
+  };
+}
+
 export async function createShypfyShipment(payload: Record<string, any>): Promise<any> {
   const token = await getShypfyAccessToken();
-  const normalizedPayload = { ...payload };
-
-  if (normalizedPayload.payment_method) {
-    normalizedPayload.payment_method = normalizeShypfyPaymentType(normalizedPayload.payment_method);
-  }
-  if (normalizedPayload.paymentType) {
-    normalizedPayload.paymentType = normalizeShypfyPaymentType(normalizedPayload.paymentType);
-  }
-  if (normalizedPayload.payment_type) {
-    normalizedPayload.payment_type = normalizeShypfyPaymentType(normalizedPayload.payment_type);
-  }
+  const compliantPayload = buildShypfyShipmentPayload(payload);
 
   const response = await fetch(`${SHYPFY_BASE_URL}/api/v1/package/create`, {
     method: 'PUT',
@@ -252,12 +381,43 @@ export async function createShypfyShipment(payload: Record<string, any>): Promis
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(normalizedPayload),
+    body: JSON.stringify(compliantPayload),
   });
 
   if (!response.ok) {
     const errText = await response.text();
-    throw new Error(`Shypfy Create Shipment failed (${response.status}): ${errText}`);
+    let readableError = errText;
+    try {
+      const errJson = JSON.parse(errText);
+      const desc = errJson.description || errJson.message;
+      if (desc) {
+        if (desc.includes('Could not find a rate card with matching weight brackets')) {
+          readableError = `Shypfy Account Error: No active rate card / weight brackets configured for your account on ship.shypfy.com. Please activate your courier rate card on Shypfy dashboard or contact Shypfy support. (${desc})`;
+        } else {
+          readableError = `${desc} (${errJson.code || response.status})`;
+        }
+      }
+    } catch {
+      // not json
+    }
+    throw new Error(`Shypfy Create Shipment failed (${response.status}): ${readableError}`);
+  }
+
+  return await response.json();
+}
+
+export async function getShypfyAddresses(): Promise<any> {
+  const token = await getShypfyAccessToken();
+  const response = await fetch(`${SHYPFY_BASE_URL}/api/v2/addresses`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Shypfy fetch addresses failed (${response.status}): ${errText}`);
   }
 
   return await response.json();
@@ -459,6 +619,27 @@ export async function handleShypfyCancelEndpoint(trackingId: string): Promise<Sh
   }
 }
 
+export async function handleShypfyAddressesEndpoint(): Promise<ShypfyTestResponse> {
+  try {
+    const data = await getShypfyAddresses();
+    return {
+      success: true,
+      provider: 'Shypfy',
+      message: 'Addresses fetched successfully',
+      httpStatus: 200,
+      data,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      provider: 'Shypfy',
+      message: 'Address fetch failed',
+      httpStatus: 500,
+      error: err.message,
+    };
+  }
+}
+
 /**
  * Resolves the intended subpath from either:
  * 1. Vercel rewrite query parameter: req.query.path (e.g., /api/shypfy?path=shipment/create)
@@ -559,6 +740,8 @@ export default async function handler(req: any, res: any) {
         req.query?.id || req.query?.tracking_id || req.query?.awb || bodyData?.id || bodyData?.tracking_id || ''
       );
       result = await handleShypfyCancelEndpoint(trackingId);
+    } else if (subpath === 'addresses' || subpath === 'address' || subpath === 'warehouse/list' || subpath === 'warehouses') {
+      result = await handleShypfyAddressesEndpoint();
     } else {
       // Unknown route - strictly return 404. Never fall back to test endpoint!
       res.status(404).json({
