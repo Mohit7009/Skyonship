@@ -409,7 +409,7 @@ export const CustomerOrdersPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '1400px', margin: '0 auto', paddingBottom: '40px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', maxWidth: '1400px', margin: '0 auto', paddingBottom: '24px' }}>
       
       {/* 1. TOP ACTION BAR & HEADER */}
       <PageHeader
@@ -475,8 +475,8 @@ export const CustomerOrdersPage: React.FC = () => {
       />
 
       {/* 2. COLLAPSIBLE SMART FILTER SECTION */}
-      <Card style={{ padding: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <Card style={{ padding: '12px 14px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           
           {/* Global Search & Collapse Toggle Bar */}
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
@@ -661,7 +661,7 @@ export const CustomerOrdersPage: React.FC = () => {
       )}
 
       {/* 4. ORDERS DATA TABLE & EMPTY STATE */}
-      <Card style={{ padding: '16px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+      <Card style={{ padding: '12px 14px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
         {isLoadingData ? (
           <TableSkeleton rows={7} cols={8} />
         ) : filteredOrders.length === 0 ? (
@@ -688,25 +688,6 @@ export const CustomerOrdersPage: React.FC = () => {
           </div>
         ) : (
           <div>
-            {/* Table Sort Bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', fontSize: '12px', color: '#64748b' }}>
-              <span>Showing <strong>{paginatedOrders.length}</strong> of <strong>{filteredOrders.length}</strong> orders</span>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span>Sort By:</span>
-                <Select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  options={[
-                    { label: 'Created Date (Newest)', value: 'date' },
-                    { label: 'Amount (Highest)', value: 'amount' },
-                    { label: 'Status', value: 'status' },
-                  ]}
-                  style={{ width: '170px', padding: '2px 6px', fontSize: '12px' }}
-                />
-              </div>
-            </div>
-
             {/* Enterprise Orders Table */}
             <Table<OrderRecord>
               keyExtractor={(r) => r.id}
@@ -876,22 +857,25 @@ export const CustomerOrdersPage: React.FC = () => {
             />
 
             {/* Pagination Controls */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px', flexWrap: 'wrap', gap: '12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#64748b' }}>
-                <span>Show per page:</span>
-                <Select
-                  value={pageSize.toString()}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  options={[
-                    { value: '25', label: '25 orders' },
-                    { value: '50', label: '50 orders' },
-                    { value: '100', label: '100 orders' },
-                  ]}
-                  style={{ width: '110px', padding: '2px 6px' }}
-                />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '16px', fontSize: '12px', color: '#64748b' }}>
+                <span>Showing <strong>{paginatedOrders.length}</strong> of <strong>{filteredOrders.length}</strong> orders</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>Show per page:</span>
+                  <Select
+                    value={pageSize.toString()}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    options={[
+                      { value: '25', label: '25 orders' },
+                      { value: '50', label: '50 orders' },
+                      { value: '100', label: '100 orders' },
+                    ]}
+                    style={{ width: '110px', padding: '2px 6px' }}
+                  />
+                </div>
               </div>
 
               <Pagination

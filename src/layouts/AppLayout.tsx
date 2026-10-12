@@ -11,8 +11,6 @@ import {
   IndianRupee,
   CreditCard,
   Warehouse,
-  Building2,
-  KeyRound,
   LayoutDashboard,
   FileText,
 } from 'lucide-react';
@@ -76,41 +74,11 @@ export const AppLayout: React.FC = () => {
     return { ...group, items: allowedItems };
   }).filter((group) => group.items.length > 0);
 
-  const topBanner = (
-    <div
-      style={{
-        backgroundColor: '#0f172a',
-        color: '#ffffff',
-        padding: '6px 16px',
-        fontSize: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '8px',
-        borderBottom: '1px solid #1e293b',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px 16px', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <KeyRound size={14} style={{ color: '#38bdf8' }} />
-          <span>Role: <strong>{currentRole?.name}</strong></span>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid #334155', paddingLeft: '16px' }}>
-          <Building2 size={14} style={{ color: '#38bdf8' }} />
-          <span>Tenant: <strong style={{ color: '#38bdf8' }}>{activeTenant?.companyName || 'Apex Logistics'} ({activeTenantId})</strong></span>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <AppShell
       navigationGroups={filteredNavGroups}
       brandName="Skyonship"
       portalLabel="Merchant Portal"
-      topBanner={topBanner}
     >
       <div key={location.pathname} className="animate-fade-in" style={{ width: '100%' }}>
         <Outlet />
