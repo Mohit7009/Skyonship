@@ -24,8 +24,23 @@ export const Topbar: React.FC<TopbarProps> = ({
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
+  const activeTenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
+
+  const currentUser = (() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const raw = localStorage.getItem('courrier3_current_user');
+        if (raw) return JSON.parse(raw);
+      }
+    } catch {}
+    return null;
+  })();
+
   const isCustomerPortal = !portalName.toLowerCase().includes('admin');
-  const walletBalancePaise = WalletService.getWallet().availableBalanceMinor;
+  const walletBalancePaise = WalletService.getWallet(activeTenantId).availableBalanceMinor ?? 0;
   const walletBalanceINR = (walletBalancePaise / 100).toFixed(2);
 
   // Global Keyboard Shortcut: Ctrl + K / Cmd + K
@@ -187,7 +202,11 @@ export const Topbar: React.FC<TopbarProps> = ({
         )}
 
         <NotificationDropdown portalName={portalName} />
-        <UserProfileMenu portalName={portalName} />
+        <UserProfileMenu
+          portalName={portalName}
+          userName={currentUser?.fullName}
+          userEmail={currentUser?.workEmail}
+        />
       </div>
 
       {/* COMMAND PALETTE MODAL OVERLAY */}

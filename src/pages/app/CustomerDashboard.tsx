@@ -26,6 +26,7 @@ import {
   CardSkeleton,
 } from '../../components/ui';
 import { WalletService } from '../../mocks/wallet.mock';
+import { CustomerShipmentService } from '../../services/customerShipmentService';
 import { formatNumber } from '../../utils/formatters';
 
 import { OnboardingTrackerCard } from '../../components/app/OnboardingTrackerCard';
@@ -49,11 +50,30 @@ export const CustomerDashboard: React.FC = () => {
     setTimeout(() => setIsMetricsLoading(false), 250);
   };
 
-  // Wallet Data
-  const wallet = WalletService.getWallet();
-  const walletBalancePaise = wallet.availableBalanceMinor || 91500;
+  // Active Tenant & Wallet Data
+  const activeTenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
+
+  const wallet = WalletService.getWallet(activeTenantId);
+  const walletBalancePaise = wallet.availableBalanceMinor ?? 0;
   const walletBalanceINR = (walletBalancePaise / 100).toFixed(2);
   const isWalletLow = parseFloat(walletBalanceINR) < 500;
+
+  // Real-time Tenant Shipments Data
+  const tenantShipments = CustomerShipmentService.queryShipments({ tenantId: activeTenantId });
+
+  const todaysOrdersCount = tenantShipments.length;
+  const inTransitCount = tenantShipments.filter((s) =>
+    ['IN_TRANSIT', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'PICKUP_REQUESTED', 'BOOKING_CONFIRMED', 'AWB_ASSIGNED'].includes(
+      s.bookingStatus
+    )
+  ).length;
+  const deliveredCount = tenantShipments.filter((s) => s.bookingStatus === 'DELIVERED').length;
+  const codPendingTotal = tenantShipments
+    .filter((s) => s.paymentMode === 'COD' && s.bookingStatus !== 'DELIVERED')
+    .reduce((acc, curr) => acc + (curr.codAmountINR || 0), 0);
 
   // Breadcrumbs
   const breadcrumbs = [
@@ -67,9 +87,9 @@ export const CustomerDashboard: React.FC = () => {
       id: 'wallet-balance',
       title: 'Wallet Balance',
       count: `₹${formatNumber(parseFloat(walletBalanceINR))}`,
-      trend: 'Active Prepaid',
-      isTrendPositive: true,
-      subtitle: 'Available funds',
+      trend: parseFloat(walletBalanceINR) > 0 ? 'Active Prepaid Funds' : 'Recharge Required',
+      isTrendPositive: parseFloat(walletBalanceINR) > 0,
+      subtitle: 'Available shipping funds',
       threeDType: 'wallet' as const,
       cardBg: '#faf5ff',
       borderColor: '#ddd6fe',
@@ -79,9 +99,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'todays-orders',
       title: "Today's Orders",
-      count: 0,
-      trend: '0 orders today',
-      isTrendPositive: true,
+      count: todaysOrdersCount,
+      trend: todaysOrdersCount === 0 ? '0 orders today' : `${todaysOrdersCount} total booked`,
+      isTrendPositive: todaysOrdersCount > 0,
       subtitle: 'Dispatched today',
       threeDType: 'orders' as const,
       cardBg: '#eff6ff',
@@ -92,9 +112,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'in-transit',
       title: 'In Transit',
-      count: 0,
-      trend: '0 in transit',
-      isTrendPositive: true,
+      count: inTransitCount,
+      trend: inTransitCount === 0 ? '0 in transit' : `${inTransitCount} on route`,
+      isTrendPositive: inTransitCount > 0,
       subtitle: 'Parcels on the move',
       threeDType: 'transit' as const,
       cardBg: '#f0f9ff',
@@ -105,8 +125,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'delivered',
       title: 'Delivered',
-      count: 0,
-      trend: '0 delivered',
+      count: deliveredCount,
+      trend: deliveredCount === 0 ? '0 delivered' : `${deliveredCount} fulfilled`,
       isTrendPositive: true,
       subtitle: 'Successfully fulfilled',
       threeDType: 'delivered' as const,
@@ -118,8 +138,8 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'cod-pending',
       title: 'COD Pending',
-      count: '₹0.00',
-      trend: 'No pending COD',
+      count: `₹${formatNumber(codPendingTotal)}`,
+      trend: codPendingTotal === 0 ? 'No pending COD' : `₹${codPendingTotal.toFixed(2)} in pipeline`,
       isTrendPositive: true,
       subtitle: 'Pending cash payouts',
       threeDType: 'cod' as const,
@@ -182,7 +202,7 @@ export const CustomerDashboard: React.FC = () => {
     },
   ];
 
-  // 2. RECENT ORDERS DATA
+  // 2. RECENT ORDERS DATA (Dynamic from Real Merchant Shipments)
   const recentOrdersData: Array<{
     awb: string;
     customer: string;
@@ -191,7 +211,15 @@ export const CustomerDashboard: React.FC = () => {
     status: string;
     statusVariant: 'success' | 'info' | 'warning' | 'danger' | 'brand' | 'neutral';
     amount: string;
-  }> = [];
+  }> = tenantShipments.slice(0, 5).map((s) => ({
+    awb: s.awbNumber || 'PENDING',
+    customer: s.deliveryContact || 'Customer',
+    courier: s.courierName || 'Shypfy Live',
+    courierBg: s.courierName?.toLowerCase().includes('blue') ? '#0284c7' : s.courierName?.toLowerCase().includes('xpress') ? '#e11d48' : '#4f46e5',
+    status: CustomerShipmentService.getCustomerFacingStatus(s.bookingStatus),
+    statusVariant: (s.bookingStatus === 'DELIVERED' ? 'success' : s.bookingStatus === 'CANCELLED' ? 'danger' : 'brand') as any,
+    amount: `₹${(s.totalCustomerChargeINR || 0).toFixed(2)}`,
+  }));
 
   // 3. LIVE OPERATIONAL ACTIVITY FEED DATA
   const activityFeedData = [
@@ -603,42 +631,53 @@ export const CustomerDashboard: React.FC = () => {
             </button>
           </div>
 
-          <Table
-            columns={[
-              {
-                key: 'awb',
-                header: 'AWB',
-                render: (r) => <strong style={{ fontFamily: 'monospace', color: '#0284c7', fontSize: '12px' }}>{r.awb}</strong>,
-              },
-              {
-                key: 'customer',
-                header: 'Customer',
-                render: (r) => <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px' }}>{r.customer}</span>,
-              },
-              {
-                key: 'courier',
-                header: 'Courier',
-                render: (r) => (
-                  <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', backgroundColor: r.courierBg, color: '#ffffff' }}>
-                    {r.courier}
-                  </span>
-                ),
-              },
-              {
-                key: 'status',
-                header: 'Status',
-                render: (r) => <Badge variant={r.statusVariant}>{r.status}</Badge>,
-              },
-              {
-                key: 'amount',
-                header: 'Amount',
-                align: 'right',
-                render: (r) => <strong style={{ color: '#0f172a', fontSize: '12px' }}>{r.amount}</strong>,
-              },
-            ]}
-            data={recentOrdersData}
-            keyExtractor={(r) => r.awb}
-          />
+          {recentOrdersData.length === 0 ? (
+            <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
+              <Package size={32} style={{ color: '#94a3b8', margin: '0 auto 8px' }} />
+              <strong style={{ fontSize: '14px', color: '#1e293b', display: 'block' }}>No Recent Shipments</strong>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px 0' }}>Your orders will appear here automatically once you book dispatches.</p>
+              <Button variant="primary" size="sm" onClick={() => navigate('/app/orders/create')} style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}>
+                Book Your First Shipment
+              </Button>
+            </div>
+          ) : (
+            <Table
+              columns={[
+                {
+                  key: 'awb',
+                  header: 'AWB',
+                  render: (r) => <strong style={{ fontFamily: 'monospace', color: '#0284c7', fontSize: '12px' }}>{r.awb}</strong>,
+                },
+                {
+                  key: 'customer',
+                  header: 'Customer',
+                  render: (r) => <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px' }}>{r.customer}</span>,
+                },
+                {
+                  key: 'courier',
+                  header: 'Courier',
+                  render: (r) => (
+                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', backgroundColor: r.courierBg, color: '#ffffff' }}>
+                      {r.courier}
+                    </span>
+                  ),
+                },
+                {
+                  key: 'status',
+                  header: 'Status',
+                  render: (r) => <Badge variant={r.statusVariant}>{r.status}</Badge>,
+                },
+                {
+                  key: 'amount',
+                  header: 'Amount',
+                  align: 'right',
+                  render: (r) => <strong style={{ color: '#0f172a', fontSize: '12px' }}>{r.amount}</strong>,
+                },
+              ]}
+              data={recentOrdersData}
+              keyExtractor={(r) => r.awb}
+            />
+          )}
         </Card>
 
         {/* RIGHT: LIVE ACTIVITY FEED */}

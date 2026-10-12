@@ -16,7 +16,10 @@ import { useRbac } from '../../context/RbacContext';
 export const WalletRechargeWizardPage: React.FC = () => {
   const navigate = useNavigate();
   const { logActivity } = useRbac();
-  const tenantId = 'tenant-demo-01';
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
 
   // Step 1: Select Amount
   const [selectedPreset, setSelectedPreset] = useState<number | null>(1000);

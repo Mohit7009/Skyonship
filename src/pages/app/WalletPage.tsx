@@ -30,7 +30,10 @@ import { WalletService } from '../../mocks/wallet.mock';
 import { formatCurrency } from '../../utils/formatters';
 
 export const WalletPage: React.FC = () => {
-  const tenantId = 'tenant-demo-01';
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
 
   const [wallet, setWallet] = useState<Wallet>(() => WalletService.getWallet(tenantId));
   const [rechargeAmount, setRechargeAmount] = useState<string>('1000');
@@ -56,17 +59,20 @@ export const WalletPage: React.FC = () => {
   // Summary Metrics
   const summaryStats = useMemo(() => {
     return WalletService.getWalletSummaryStats(tenantId);
-  }, [wallet]);
+  }, [wallet, tenantId]);
 
   // Query Filtered Ledger Transactions
   const filteredTransactions = useMemo(() => {
-    return WalletService.getTransactions({
-      searchQuery,
-      status: statusFilter,
-      direction: 'all',
-      type: typeFilter,
-    });
-  }, [searchQuery, statusFilter, typeFilter, wallet]);
+    return WalletService.getTransactions(
+      {
+        searchQuery,
+        status: statusFilter,
+        direction: 'all',
+        type: typeFilter,
+      },
+      tenantId
+    );
+  }, [searchQuery, statusFilter, typeFilter, wallet, tenantId]);
 
   // Pagination Math
   const totalPages = Math.ceil(filteredTransactions.length / pageSize) || 1;
@@ -83,7 +89,7 @@ export const WalletPage: React.FC = () => {
       return;
     }
 
-    const tx = WalletService.recharge(amount, 'Razorpay Payment Gateway');
+    const tx = WalletService.recharge(amount, 'Razorpay Payment Gateway', tenantId);
     refreshData();
     setIsRechargeModalOpen(false);
 

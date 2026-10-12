@@ -79,7 +79,10 @@ const PINCODE_MAP: Record<string, { city: string; state: string }> = {
 const DRAFT_STORAGE_KEY = 'COURRIER3_CREATE_SHIPMENT_DRAFT';
 
 export const CreateShipmentWizardPage: React.FC = () => {
-  const tenantId = 'tenant-demo-01';
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
   const { logActivity } = useRbac();
 
   // Step State (1 to 6)
@@ -684,41 +687,52 @@ export const CreateShipmentWizardPage: React.FC = () => {
                 Select the origin dispatch warehouse where courier pickup agents will collect the package.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
-                {warehouses.map((wh) => {
-                  const isSelected = selectedWarehouseId === wh.id;
-                  return (
-                    <div
-                      key={wh.id}
-                      onClick={() => setSelectedWarehouseId(wh.id)}
-                      style={{
-                        padding: '16px',
-                        borderRadius: '10px',
-                        border: isSelected ? '2px solid #0284c7' : '1px solid #cbd5e1',
-                        backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '6px',
-                        boxShadow: isSelected ? '0 4px 12px rgba(2,132,199,0.1)' : 'none',
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <strong style={{ fontSize: '15px', color: '#0f172a' }}>{wh.warehouseName}</strong>
-                        {wh.isDefault && <Badge variant="brand">Default Hub</Badge>}
-                      </div>
+              {warehouses.length === 0 ? (
+                <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '10px', border: '1px dashed #cbd5e1' }}>
+                  <Building2 size={36} style={{ color: '#94a3b8', margin: '0 auto 8px' }} />
+                  <strong style={{ fontSize: '15px', color: '#1e293b', display: 'block' }}>No Pickup Warehouses Found</strong>
+                  <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 16px 0' }}>Please add an origin pickup warehouse where courier agents will collect packages.</p>
+                  <Button variant="primary" size="sm" leftIcon={<Plus size={14} />} onClick={() => setIsAddWhModalOpen(true)} style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}>
+                    + Add Origin Warehouse
+                  </Button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                  {warehouses.map((wh) => {
+                    const isSelected = selectedWarehouseId === wh.id;
+                    return (
+                      <div
+                        key={wh.id}
+                        onClick={() => setSelectedWarehouseId(wh.id)}
+                        style={{
+                          padding: '16px',
+                          borderRadius: '10px',
+                          border: isSelected ? '2px solid #0284c7' : '1px solid #cbd5e1',
+                          backgroundColor: isSelected ? '#f0f9ff' : '#ffffff',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                          boxShadow: isSelected ? '0 4px 12px rgba(2,132,199,0.1)' : 'none',
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong style={{ fontSize: '15px', color: '#0f172a' }}>{wh.warehouseName}</strong>
+                          {wh.isDefault && <Badge variant="brand">Default Hub</Badge>}
+                        </div>
 
-                      <div style={{ fontSize: '12px', color: '#475569' }}>
-                        {wh.addressLine1}, {wh.city}, {wh.state} - <strong>{wh.pincode}</strong>
-                      </div>
+                        <div style={{ fontSize: '12px', color: '#475569' }}>
+                          {wh.addressLine1}, {wh.city}, {wh.state} - <strong>{wh.pincode}</strong>
+                        </div>
 
-                      <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
-                        Contact: <strong>{wh.contactPerson}</strong> ({wh.phone})
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>
+                          Contact: <strong>{wh.contactPerson}</strong> ({wh.phone})
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </Card>
           )}
 

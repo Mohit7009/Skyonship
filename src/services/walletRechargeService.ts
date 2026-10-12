@@ -153,7 +153,7 @@ export const WalletRechargeService = {
     recharge.completedAt = new Date().toLocaleString();
 
     // Call Wallet Engine to Credit Merchant Wallet
-    const tx = WalletService.recharge(recharge.amountINR, recharge.paymentProvider);
+    const tx = WalletService.recharge(recharge.amountINR, recharge.paymentProvider, recharge.tenantId);
     recharge.walletTransactionId = tx.id;
 
     const wallet = WalletService.getWallet(recharge.tenantId);

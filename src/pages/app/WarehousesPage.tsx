@@ -27,7 +27,10 @@ import {
 } from '../../services/customerWarehouseService';
 
 export const WarehousesPage: React.FC = () => {
-  const tenantId = 'tenant-demo-01';
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
 
   const [warehouses, setWarehouses] = useState<CustomerWarehouse[]>(() =>
     CustomerWarehouseService.getWarehouses(tenantId)

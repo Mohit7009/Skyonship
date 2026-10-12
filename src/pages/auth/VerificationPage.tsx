@@ -139,15 +139,25 @@ export const VerificationPage: React.FC = () => {
               </div>
             </div>
 
-            <Button
-              variant="primary"
-              disabled={!isFullyVerified}
-              onClick={() => navigate('/app/onboarding')}
-              rightIcon={<ArrowRight size={16} />}
-              style={{ backgroundColor: isFullyVerified ? '#16a34a' : '#cbd5e1', borderColor: isFullyVerified ? '#16a34a' : '#cbd5e1' }}
-            >
-              Continue Onboarding
-            </Button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/app')}
+                style={{ fontSize: '12px', borderColor: '#94a3b8', color: '#334155' }}
+              >
+                Go to Dashboard
+              </Button>
+              <Button
+                variant="primary"
+                disabled={!isFullyVerified}
+                onClick={() => navigate('/app/onboarding')}
+                rightIcon={<ArrowRight size={16} />}
+                style={{ backgroundColor: isFullyVerified ? '#16a34a' : '#cbd5e1', borderColor: isFullyVerified ? '#16a34a' : '#cbd5e1' }}
+              >
+                Continue Onboarding
+              </Button>
+            </div>
           </div>
 
         </div>

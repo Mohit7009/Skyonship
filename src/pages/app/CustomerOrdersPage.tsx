@@ -159,7 +159,11 @@ export const CustomerOrdersPage: React.FC = () => {
 
   // Filtered & Sorted Orders
   const filteredOrders = useMemo(() => {
-    const dynamicShipments = CustomerShipmentService.getShipments('tenant-demo-01');
+    const activeTenantId =
+      typeof window !== 'undefined' && window.localStorage
+        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+        : 'tenant-demo-01';
+    const dynamicShipments = CustomerShipmentService.getShipments(activeTenantId);
     const dynamicOrders: OrderRecord[] = dynamicShipments.map((s) => ({
       id: s.id,
       orderId: s.orderId,

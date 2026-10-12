@@ -27,60 +27,100 @@ export const INITIAL_WALLET: Wallet = {
 export const INITIAL_TRANSACTIONS: WalletTransaction[] = [];
 
 // STORES & PERSISTENCE
-const WALLET_KEY = 'COURRIER3_WALLET_STORE';
-const TX_KEY = 'COURRIER3_TX_STORE';
-
-function loadWalletFromStorage(): Wallet {
+function getActiveTenantId(): string {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const raw = localStorage.getItem(WALLET_KEY);
+      const active = localStorage.getItem('courrier3_active_tenant_id');
+      if (active) return active;
+    }
+  } catch {}
+  return 'tenant-demo-01';
+}
+
+function getWalletStorageKey(tenantId: string) {
+  return tenantId === 'tenant-demo-01' ? 'COURRIER3_WALLET_STORE' : `COURRIER3_WALLET_STORE_${tenantId}`;
+}
+
+function getTxStorageKey(tenantId: string) {
+  return tenantId === 'tenant-demo-01' ? 'COURRIER3_TX_STORE' : `COURRIER3_TX_STORE_${tenantId}`;
+}
+
+function loadWalletFromStorage(tenantId: string): Wallet {
+  const key = getWalletStorageKey(tenantId);
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(key);
       if (raw) return JSON.parse(raw);
     }
   } catch {}
-  return { ...INITIAL_WALLET };
+  if (tenantId === 'tenant-demo-01') {
+    return { ...INITIAL_WALLET };
+  }
+  return {
+    id: `wal-${tenantId}`,
+    tenantId,
+    currency: 'INR',
+    availableBalanceMinor: 0, // ₹0.00 Fresh State for new merchant
+    reservedBalanceMinor: 0,
+    totalSpentMinor: 0,
+    totalRefundedMinor: 0,
+    lowBalanceThresholdMinor: 50000,
+    status: 'ACTIVE',
+    createdAt: new Date().toLocaleString(),
+    updatedAt: new Date().toLocaleString(),
+  };
 }
 
-function loadTxsFromStorage(): WalletTransaction[] {
+function saveWalletToStorage(wallet: Wallet) {
+  const key = getWalletStorageKey(wallet.tenantId);
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const raw = localStorage.getItem(TX_KEY);
+      localStorage.setItem(key, JSON.stringify(wallet));
+    }
+  } catch {}
+}
+
+function loadTxsFromStorage(tenantId: string): WalletTransaction[] {
+  const key = getTxStorageKey(tenantId);
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const raw = localStorage.getItem(key);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) return parsed;
       }
     }
   } catch {}
-  return [...INITIAL_TRANSACTIONS];
+  return tenantId === 'tenant-demo-01' ? [...INITIAL_TRANSACTIONS] : [];
 }
 
-function saveWalletState() {
+function saveTxsToStorage(tenantId: string, txs: WalletTransaction[]) {
+  const key = getTxStorageKey(tenantId);
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem(WALLET_KEY, JSON.stringify(WALLET_STORE));
-      localStorage.setItem(TX_KEY, JSON.stringify(Array.from(TRANSACTION_STORE.values())));
+      localStorage.setItem(key, JSON.stringify(txs));
     }
   } catch {}
 }
 
-let WALLET_STORE: Wallet = loadWalletFromStorage();
-const TRANSACTION_STORE: Map<string, WalletTransaction> = new Map();
 const CHARGE_STORE: Map<string, ShipmentCharge> = new Map();
 
-loadTxsFromStorage().forEach((tx) => TRANSACTION_STORE.set(tx.id, tx));
-
 export const WalletService = {
-  getWallet: (_tenantId?: string): Wallet => {
-    // Check low balance condition dynamically
-    if (WALLET_STORE.availableBalanceMinor <= WALLET_STORE.lowBalanceThresholdMinor && WALLET_STORE.status === 'ACTIVE') {
-      WALLET_STORE.status = 'LOW_BALANCE';
-    } else if (WALLET_STORE.availableBalanceMinor > WALLET_STORE.lowBalanceThresholdMinor && WALLET_STORE.status === 'LOW_BALANCE') {
-      WALLET_STORE.status = 'ACTIVE';
+  getWallet: (tenantId?: string): Wallet => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
+    if (wallet.availableBalanceMinor <= wallet.lowBalanceThresholdMinor && wallet.status === 'ACTIVE') {
+      wallet.status = 'LOW_BALANCE';
+    } else if (wallet.availableBalanceMinor > wallet.lowBalanceThresholdMinor && wallet.status === 'LOW_BALANCE') {
+      wallet.status = 'ACTIVE';
     }
-    return { ...WALLET_STORE };
+    return { ...wallet };
   },
 
-  getWalletSummaryStats: (_tenantId?: string) => {
-    const list = Array.from(TRANSACTION_STORE.values());
+  getWalletSummaryStats: (tenantId?: string) => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = WalletService.getWallet(tid);
+    const list = loadTxsFromStorage(tid);
     let totalAddedMinor = 0;
     let totalUsedMinor = 0;
 
@@ -93,16 +133,17 @@ export const WalletService = {
     });
 
     return {
-      availableBalanceINR: WALLET_STORE.availableBalanceMinor / 100,
+      availableBalanceINR: wallet.availableBalanceMinor / 100,
       totalAddedINR: totalAddedMinor / 100,
       totalUsedINR: totalUsedMinor / 100,
-      lowBalanceThresholdINR: WALLET_STORE.lowBalanceThresholdMinor / 100,
-      isLowBalance: WALLET_STORE.availableBalanceMinor <= WALLET_STORE.lowBalanceThresholdMinor,
+      lowBalanceThresholdINR: wallet.lowBalanceThresholdMinor / 100,
+      isLowBalance: wallet.availableBalanceMinor <= wallet.lowBalanceThresholdMinor,
     };
   },
 
-  getTransactions: (filters?: TransactionFilterState): WalletTransaction[] => {
-    const list = Array.from(TRANSACTION_STORE.values());
+  getTransactions: (filters?: TransactionFilterState, tenantId?: string): WalletTransaction[] => {
+    const tid = tenantId || getActiveTenantId();
+    const list = loadTxsFromStorage(tid);
     if (!filters) return list;
 
     return list.filter((item) => {
@@ -111,30 +152,39 @@ export const WalletService = {
       if (filters.type !== 'all' && item.type !== filters.type) return false;
       if (filters.searchQuery.trim()) {
         const q = filters.searchQuery.toLowerCase();
-        const match = item.id.toLowerCase().includes(q) || item.referenceId.toLowerCase().includes(q) || item.description.toLowerCase().includes(q);
+        const match =
+          item.id.toLowerCase().includes(q) ||
+          item.referenceId.toLowerCase().includes(q) ||
+          item.description.toLowerCase().includes(q);
         if (!match) return false;
       }
       return true;
     });
   },
 
-  getTransactionById: (id: string): WalletTransaction | null => {
-    return TRANSACTION_STORE.get(id) || Array.from(TRANSACTION_STORE.values()).find((t) => t.referenceId === id) || null;
+  getTransactionById: (id: string, tenantId?: string): WalletTransaction | null => {
+    const tid = tenantId || getActiveTenantId();
+    const list = loadTxsFromStorage(tid);
+    return list.find((t) => t.id === id || t.referenceId === id) || null;
   },
 
-  recharge: (amountINR: number, providerName = 'DemoPaymentProvider'): WalletTransaction => {
+  recharge: (amountINR: number, providerName = 'DemoPaymentProvider', tenantId?: string): WalletTransaction => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
     const amountMinor = parseINRToMinor(amountINR);
-    const balanceBefore = WALLET_STORE.availableBalanceMinor;
+    const balanceBefore = wallet.availableBalanceMinor;
     const balanceAfter = balanceBefore + amountMinor;
 
-    WALLET_STORE.availableBalanceMinor = balanceAfter;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor = balanceAfter;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
+    const txs = loadTxsFromStorage(tid);
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'RECHARGE',
       direction: 'CREDIT',
       amountMinor,
@@ -150,8 +200,8 @@ export const WalletService = {
       actorType: 'MERCHANT',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
-    saveWalletState();
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return newTx;
   },
 
@@ -161,39 +211,49 @@ export const WalletService = {
     courierId: string,
     courierName: string,
     amountINR: number,
-    breakdown?: Partial<ChargeBreakdown>
+    breakdown?: Partial<ChargeBreakdown>,
+    tenantId?: string
   ): { success: boolean; message: string; transaction: WalletTransaction | null } => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
+
     // 1. Wallet status check
-    if (WALLET_STORE.status === 'SUSPENDED') {
+    if (wallet.status === 'SUSPENDED') {
       return { success: false, message: 'Wallet is suspended. Debit operations are blocked.', transaction: null };
     }
 
     // 2. Double charge protection check
+    const txs = loadTxsFromStorage(tid);
     const idempotencyKey = `shipment-charge:${shipmentId}`;
-    const existing = Array.from(TRANSACTION_STORE.values()).find((t) => t.idempotencyKey === idempotencyKey);
+    const existing = txs.find((t) => t.idempotencyKey === idempotencyKey);
     if (existing) {
       return { success: false, message: 'Shipment has already been charged (Double charge protection).', transaction: existing };
     }
 
     // 3. Sufficient balance check
     const amountMinor = parseINRToMinor(amountINR);
-    if (WALLET_STORE.availableBalanceMinor < amountMinor) {
-      return { success: false, message: `Insufficient wallet balance. Required ₹${amountINR}, Available ₹${(WALLET_STORE.availableBalanceMinor / 100).toFixed(2)}.`, transaction: null };
+    if (wallet.availableBalanceMinor < amountMinor) {
+      return {
+        success: false,
+        message: `Insufficient wallet balance. Required ₹${amountINR}, Available ₹${(wallet.availableBalanceMinor / 100).toFixed(2)}.`,
+        transaction: null,
+      };
     }
 
     // 4. Atomic balance deduction
-    const balanceBefore = WALLET_STORE.availableBalanceMinor;
+    const balanceBefore = wallet.availableBalanceMinor;
     const balanceAfter = balanceBefore - amountMinor;
 
-    WALLET_STORE.availableBalanceMinor = balanceAfter;
-    WALLET_STORE.totalSpentMinor += amountMinor;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor = balanceAfter;
+    wallet.totalSpentMinor += amountMinor;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'SHIPMENT_CHARGE',
       direction: 'DEBIT',
       amountMinor,
@@ -209,13 +269,14 @@ export const WalletService = {
       actorType: 'SYSTEM',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
 
     // Record shipment charge breakdown
     const nowStr = new Date().toLocaleString();
     const chargeRecord: ShipmentCharge = {
       id: `chg-${Date.now()}`,
-      tenantId: 'tenant-demo-01',
+      tenantId: tid,
       shipmentId,
       orderId,
       courierId,
@@ -234,25 +295,28 @@ export const WalletService = {
     };
     CHARGE_STORE.set(shipmentId, chargeRecord);
 
-    saveWalletState();
     return { success: true, message: 'Shipment charge posted successfully.', transaction: newTx };
   },
 
-  reserve: (amountINR: number, referenceId: string): { success: boolean; message: string } => {
+  reserve: (amountINR: number, referenceId: string, tenantId?: string): { success: boolean; message: string } => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
     const amountMinor = parseINRToMinor(amountINR);
-    if (WALLET_STORE.availableBalanceMinor < amountMinor) {
+    if (wallet.availableBalanceMinor < amountMinor) {
       return { success: false, message: 'Insufficient balance to reserve funds for booking.' };
     }
 
-    WALLET_STORE.availableBalanceMinor -= amountMinor;
-    WALLET_STORE.reservedBalanceMinor += amountMinor;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor -= amountMinor;
+    wallet.reservedBalanceMinor += amountMinor;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
+    const txs = loadTxsFromStorage(tid);
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'RESERVATION',
       direction: 'DEBIT',
       amountMinor,
@@ -260,33 +324,38 @@ export const WalletService = {
       referenceType: 'RESERVATION',
       referenceId,
       description: `Hold reserved for booking (${referenceId})`,
-      balanceBeforeMinor: WALLET_STORE.availableBalanceMinor + amountMinor,
-      balanceAfterMinor: WALLET_STORE.availableBalanceMinor,
+      balanceBeforeMinor: wallet.availableBalanceMinor + amountMinor,
+      balanceAfterMinor: wallet.availableBalanceMinor,
       status: 'POSTED',
       idempotencyKey: `reserve:${referenceId}`,
       createdAt: new Date().toLocaleString(),
       actorType: 'SYSTEM',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return { success: true, message: 'Funds reserved successfully.' };
   },
 
-  releaseReservation: (amountINR: number, referenceId: string): { success: boolean; message: string } => {
+  releaseReservation: (amountINR: number, referenceId: string, tenantId?: string): { success: boolean; message: string } => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
     const amountMinor = parseINRToMinor(amountINR);
-    if (WALLET_STORE.reservedBalanceMinor < amountMinor) {
+    if (wallet.reservedBalanceMinor < amountMinor) {
       return { success: false, message: 'Reserved balance is smaller than requested release amount.' };
     }
 
-    WALLET_STORE.reservedBalanceMinor -= amountMinor;
-    WALLET_STORE.availableBalanceMinor += amountMinor;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.reservedBalanceMinor -= amountMinor;
+    wallet.availableBalanceMinor += amountMinor;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
+    const txs = loadTxsFromStorage(tid);
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'RESERVATION_RELEASE',
       direction: 'CREDIT',
       amountMinor,
@@ -294,32 +363,37 @@ export const WalletService = {
       referenceType: 'RESERVATION',
       referenceId,
       description: `Reservation hold released (${referenceId})`,
-      balanceBeforeMinor: WALLET_STORE.availableBalanceMinor - amountMinor,
-      balanceAfterMinor: WALLET_STORE.availableBalanceMinor,
+      balanceBeforeMinor: wallet.availableBalanceMinor - amountMinor,
+      balanceAfterMinor: wallet.availableBalanceMinor,
       status: 'POSTED',
       idempotencyKey: `release:${referenceId}`,
       createdAt: new Date().toLocaleString(),
       actorType: 'SYSTEM',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return { success: true, message: 'Reservation released successfully.' };
   },
 
-  withdraw: (amountINR: number, description: string): WalletTransaction => {
+  withdraw: (amountINR: number, description: string, tenantId?: string): WalletTransaction => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
     const amountMinor = parseINRToMinor(amountINR);
-    const balanceBefore = WALLET_STORE.availableBalanceMinor;
+    const balanceBefore = wallet.availableBalanceMinor;
     const balanceAfter = Math.max(0, balanceBefore - amountMinor);
 
-    WALLET_STORE.availableBalanceMinor = balanceAfter;
-    WALLET_STORE.totalSpentMinor += amountMinor;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor = balanceAfter;
+    wallet.totalSpentMinor += amountMinor;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
+    const txs = loadTxsFromStorage(tid);
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'ADJUSTMENT',
       direction: 'DEBIT',
       amountMinor,
@@ -335,16 +409,20 @@ export const WalletService = {
       actorType: 'SYSTEM',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return newTx;
   },
 
   refund: (
     targetTxId: string,
     refundAmountINR: number,
-    reason: string
+    reason: string,
+    tenantId?: string
   ): { success: boolean; message: string; transaction: WalletTransaction | null } => {
-    const originalTx = TRANSACTION_STORE.get(targetTxId);
+    const tid = tenantId || getActiveTenantId();
+    const txs = loadTxsFromStorage(tid);
+    const originalTx = txs.find((t) => t.id === targetTxId);
     if (!originalTx) return { success: false, message: 'Original transaction not found.', transaction: null };
 
     if (originalTx.direction !== 'DEBIT') {
@@ -356,18 +434,20 @@ export const WalletService = {
       return { success: false, message: 'Refund amount cannot exceed original debit transaction amount.', transaction: null };
     }
 
-    const balanceBefore = WALLET_STORE.availableBalanceMinor;
+    const wallet = loadWalletFromStorage(tid);
+    const balanceBefore = wallet.availableBalanceMinor;
     const balanceAfter = balanceBefore + refundAmountMinor;
 
-    WALLET_STORE.availableBalanceMinor = balanceAfter;
-    WALLET_STORE.totalRefundedMinor += refundAmountMinor;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor = balanceAfter;
+    wallet.totalRefundedMinor += refundAmountMinor;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'REFUND',
       direction: 'CREDIT',
       amountMinor: refundAmountMinor,
@@ -383,21 +463,25 @@ export const WalletService = {
       actorType: 'ADMIN',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return { success: true, message: 'Refund posted successfully.', transaction: newTx };
   },
 
   adjust: (
     amountINR: number,
     direction: 'CREDIT' | 'DEBIT',
-    reason: string
+    reason: string,
+    tenantId?: string
   ): { success: boolean; message: string; transaction: WalletTransaction | null } => {
     if (!reason || !reason.trim()) {
       return { success: false, message: 'Adjustment reason is required.', transaction: null };
     }
 
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
     const amountMinor = parseINRToMinor(amountINR);
-    const balanceBefore = WALLET_STORE.availableBalanceMinor;
+    const balanceBefore = wallet.availableBalanceMinor;
 
     if (direction === 'DEBIT' && balanceBefore < amountMinor) {
       return { success: false, message: 'Insufficient balance for debit adjustment.', transaction: null };
@@ -405,14 +489,16 @@ export const WalletService = {
 
     const balanceAfter = direction === 'CREDIT' ? balanceBefore + amountMinor : balanceBefore - amountMinor;
 
-    WALLET_STORE.availableBalanceMinor = balanceAfter;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
+    wallet.availableBalanceMinor = balanceAfter;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
 
+    const txs = loadTxsFromStorage(tid);
     const txId = `tx-${Date.now()}`;
     const newTx: WalletTransaction = {
       id: txId,
-      tenantId: 'tenant-demo-01',
-      walletId: WALLET_STORE.id,
+      tenantId: tid,
+      walletId: wallet.id,
       type: 'ADJUSTMENT',
       direction,
       amountMinor,
@@ -428,14 +514,18 @@ export const WalletService = {
       actorType: 'ADMIN',
     };
 
-    TRANSACTION_STORE.set(txId, newTx);
+    txs.unshift(newTx);
+    saveTxsToStorage(tid, txs);
     return { success: true, message: 'Adjustment posted successfully.', transaction: newTx };
   },
 
-  toggleWalletStatus: (status: WalletStatus): Wallet => {
-    WALLET_STORE.status = status;
-    WALLET_STORE.updatedAt = new Date().toLocaleString();
-    return { ...WALLET_STORE };
+  toggleWalletStatus: (status: WalletStatus, tenantId?: string): Wallet => {
+    const tid = tenantId || getActiveTenantId();
+    const wallet = loadWalletFromStorage(tid);
+    wallet.status = status;
+    wallet.updatedAt = new Date().toLocaleString();
+    saveWalletToStorage(wallet);
+    return { ...wallet };
   },
 
   getShipmentCharge: (shipmentId: string): ShipmentCharge | null => {
