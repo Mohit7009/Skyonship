@@ -5,7 +5,7 @@ import {
   handleShypfyLabelEndpoint,
   handleShypfyTrackEndpoint,
   handleShypfyCancelEndpoint,
-} from '../src/server/shypfyTestEndpoint.ts';
+} from '../src/server/shypfyTestEndpoint';
 
 /**
  * Resolves the intended subpath from either:

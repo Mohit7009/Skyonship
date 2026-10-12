@@ -7,7 +7,7 @@ import {
   handleShypfyLabelEndpoint,
   handleShypfyTrackEndpoint,
   handleShypfyCancelEndpoint,
-} from './src/server/shypfyTestEndpoint.ts';
+} from './src/server/shypfyTestEndpoint';
 
 /**
  * Server plugin to serve protected backend API endpoints for Shypfy Logistics

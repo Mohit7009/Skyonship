@@ -1,4 +1,4 @@
-import { normalizeShypfyPaymentType } from '../types/shypfy.ts';
+import { normalizeShypfyPaymentType } from '../types/shypfy';
 
 export interface CourierBookingInput {
   shipmentId?: string;

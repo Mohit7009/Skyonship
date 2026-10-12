@@ -6,7 +6,7 @@ import {
   getShypfyLabel,
   trackShypfyShipment,
   cancelShypfyShipment,
-} from './shypfyService.ts';
+} from './shypfyService';
 
 export interface ShypfyTestResponse {
   success: boolean;

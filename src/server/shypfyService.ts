@@ -5,7 +5,15 @@ import path from 'path';
  * Ensures server-side environment variables are loaded dynamically from .env on disk.
  * This guarantees the application reads the latest secrets even if updated after initial boot.
  */
+let envLoaded = false;
+
 function ensureEnvLoaded(): void {
+  if (envLoaded) return;
+  envLoaded = true;
+  // In Vercel serverless environment, environment variables are provided by the platform
+  if (process.env.VERCEL) {
+    return;
+  }
   try {
     const envPath = path.resolve(process.cwd(), '.env');
     if (fs.existsSync(envPath)) {
@@ -19,7 +27,7 @@ function ensureEnvLoaded(): void {
           if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
             val = val.slice(1, -1);
           }
-          if (key && val) {
+          if (key && val && !(key in process.env)) {
             process.env[key] = val;
           }
         }
@@ -29,6 +37,9 @@ function ensureEnvLoaded(): void {
     // Ignore read errors
   }
 }
+
+// Preload env on module initialization
+ensureEnvLoaded();
 
 export interface ShypfyTokenResponse {
   access_token: string;
@@ -93,9 +104,9 @@ export function checkClientIdWhitespace(): ClientIdWhitespaceReport {
 export async function getShypfyAccessToken(): Promise<string> {
   ensureEnvLoaded();
 
-  const rawClientId = process.env.SHYPFY_CLIENT_ID || 'SHYPFY_6ab1297eda91d2307652c0a5';
-  const rawUsername = process.env.SHYPFY_API_USERNAME || 'mohitsharma783781+api@gmail.com';
-  const rawPassword = process.env.SHYPFY_API_PASSWORD || 'Mohit@1424';
+  const rawClientId = process.env.SHYPFY_CLIENT_ID || '';
+  const rawUsername = process.env.SHYPFY_API_USERNAME || '';
+  const rawPassword = process.env.SHYPFY_API_PASSWORD || '';
 
   const hasLeadingWhitespace = /^\s/.test(rawClientId);
   const hasTrailingWhitespace = /\s$/.test(rawClientId);
@@ -114,8 +125,13 @@ export async function getShypfyAccessToken(): Promise<string> {
   console.log(`  - client ID trailing whitespace: ${hasTrailingWhitespace ? 'Yes' : 'No'}`);
 
   if (!clientId || !username || !password) {
-    console.error('[Shypfy Auth Service] Configuration Error: One or more required server-side environment variables are missing.');
-    throw new Error('Shypfy API environment variables are missing or incomplete');
+    const missing = [
+      !clientId ? 'SHYPFY_CLIENT_ID' : null,
+      !username ? 'SHYPFY_API_USERNAME' : null,
+      !password ? 'SHYPFY_API_PASSWORD' : null,
+    ].filter(Boolean).join(', ');
+    console.error(`[Shypfy Auth Service] Configuration Error: Required server-side environment variable(s) missing or incomplete: ${missing}`);
+    throw new Error(`Shypfy API environment variable(s) missing or incomplete: ${missing}`);
   }
 
   const now = Date.now();
@@ -189,8 +205,8 @@ export function resetShypfyTokenCache(): void {
   cachedToken = null;
 }
 
-export type { ShypfyPaymentType } from '../types/shypfy.ts';
-export { normalizeShypfyPaymentType } from '../types/shypfy.ts';
+import { normalizeShypfyPaymentType, type ShypfyPaymentType } from '../types/shypfy';
+export { normalizeShypfyPaymentType, type ShypfyPaymentType };
 
 export interface ShypfyServiceabilityInput {
   pickupPincode: string;

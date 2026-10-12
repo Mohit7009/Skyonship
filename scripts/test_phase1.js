@@ -18,9 +18,9 @@ globalThis.localStorage = {
 globalThis.window = globalThis;
 
 import assert from 'node:assert';
-import { normalizeShypfyPaymentType } from '../src/types/shypfy.ts';
-import { resolveShypfySubpath } from '../api/shypfy.ts';
-import { CourierBookingAdapter } from '../src/services/courierBookingAdapter.ts';
+import { normalizeShypfyPaymentType } from '../src/types/shypfy';
+import { resolveShypfySubpath } from '../api/shypfy';
+import { CourierBookingAdapter } from '../src/services/courierBookingAdapter';
 
 let passed = 0;
 let failed = 0;
@@ -114,7 +114,7 @@ runTest('Extracts path from direct URL if query param is absent', () => {
 // ---------------------------------------------------------------------------
 console.log('\n--- Suite 3: Vercel Handler Routing & 404 Fallback ---');
 
-import shypfyHandler from '../api/shypfy.ts';
+import shypfyHandler from '../api/shypfy';
 
 function createMockRes() {
   return {
@@ -272,8 +272,8 @@ await runAsyncTest('HTTP 200 with Shypfy real success: returns success:true, rea
 // ---------------------------------------------------------------------------
 console.log('\n--- Suite 5: Customer Booking Service Integration ---');
 
-import { CustomerBookingService } from '../src/services/customerBookingService.ts';
-import { WalletService } from '../src/mocks/wallet.mock.ts';
+import { CustomerBookingService } from '../src/services/customerBookingService';
+import { WalletService } from '../src/mocks/wallet.mock';
 
 const sampleCustomerInput = {
   tenantId: 'test-tenant-phase1',
@@ -337,6 +337,125 @@ await runAsyncTest('Customer booking propagates real Shypfy error and prevents w
 
 // Restore original fetch
 globalThis.fetch = originalFetch;
+
+// ---------------------------------------------------------------------------
+// SUITE 6: SERVERLESS ENTRY POINT BUNDLING VERIFICATION
+// ---------------------------------------------------------------------------
+console.log('\n--- Suite 6: Serverless Entry Point Bundling Verification ---');
+
+import { build as viteBuild } from 'vite';
+import fs from 'node:fs';
+import path from 'node:path';
+
+await runAsyncTest('Serverless entry point (api/shypfy.ts) bundles cleanly for Node runtime without module resolution errors', async () => {
+  const result = await viteBuild({
+    configFile: false,
+    build: {
+      ssr: 'api/shypfy.ts',
+      write: false,
+      rollupOptions: {
+        external: ['fs', 'path'],
+      },
+    },
+  });
+
+  assert.ok(result && result.output && result.output[0], 'Vite SSR build must produce output');
+  const code = result.output[0].code;
+  assert.ok(code.length > 500, 'Bundled output must contain server code');
+  assert.ok(code.includes('export { handler as default') || code.includes('export default'), 'Must export default handler');
+  assert.ok(!code.includes('.ts"'), 'Bundled output must not contain unresolved .ts file references');
+  assert.ok(!code.includes(".ts'"), 'Bundled output must not contain unresolved .ts file references');
+});
+
+// ---------------------------------------------------------------------------
+// SUITE 7: CLIENT ASSET SECURITY VERIFICATION (NO SECRETS IN DIST)
+// ---------------------------------------------------------------------------
+console.log('\n--- Suite 7: Client Asset Security Verification ---');
+
+runTest('Ensures no server passwords or secret tokens are bundled into client assets', () => {
+  const distAssetsDir = path.resolve(process.cwd(), 'dist', 'assets');
+  if (fs.existsSync(distAssetsDir)) {
+    const files = fs.readdirSync(distAssetsDir);
+    const jsFiles = files.filter(f => f.endsWith('.js'));
+    for (const f of jsFiles) {
+      const content = fs.readFileSync(path.join(distAssetsDir, f), 'utf-8');
+      if (process.env.SHYPFY_API_PASSWORD) {
+        assert.ok(!content.includes(process.env.SHYPFY_API_PASSWORD), `Secret password must never be bundled into client JS: ${f}`);
+      }
+      assert.ok(!content.includes('SHYPFY_API_PASSWORD'), `Password env var name must not appear in client JS: ${f}`);
+      assert.ok(!content.includes('SHYPFY_API_USERNAME'), `Username env var name must not appear in client JS: ${f}`);
+    }
+  }
+});
+
+// ---------------------------------------------------------------------------
+// SUITE 8: MISSING ENVIRONMENT VARIABLES FAIL-SAFE VERIFICATION
+// ---------------------------------------------------------------------------
+console.log('\n--- Suite 8: Missing Environment Variables Fail-Safe Verification ---');
+
+import { getShypfyAccessToken, resetShypfyTokenCache } from '../src/server/shypfyService';
+
+await runAsyncTest('Fails safely with clear missing variable error when required credentials are missing', async () => {
+  const safetyMockFetch = async () => {
+    throw new Error('Real network call blocked in test environment');
+  };
+  const prevFetch = globalThis.fetch;
+  globalThis.fetch = safetyMockFetch;
+
+  const savedId = process.env.SHYPFY_CLIENT_ID;
+  const savedUser = process.env.SHYPFY_API_USERNAME;
+  const savedPass = process.env.SHYPFY_API_PASSWORD;
+
+  try {
+    // 1. Missing SHYPFY_CLIENT_ID
+    resetShypfyTokenCache();
+    delete process.env.SHYPFY_CLIENT_ID;
+    let errId = null;
+    try {
+      await getShypfyAccessToken();
+    } catch (err) {
+      errId = err;
+    }
+    assert.ok(errId, 'Must throw error when SHYPFY_CLIENT_ID is missing');
+    assert.ok(errId.message.includes('SHYPFY_CLIENT_ID'), 'Error message must specify missing variable name');
+
+    // Restore SHYPFY_CLIENT_ID
+    process.env.SHYPFY_CLIENT_ID = savedId || 'mock_client_id';
+
+    // 2. Missing SHYPFY_API_USERNAME
+    resetShypfyTokenCache();
+    delete process.env.SHYPFY_API_USERNAME;
+    let errUser = null;
+    try {
+      await getShypfyAccessToken();
+    } catch (err) {
+      errUser = err;
+    }
+    assert.ok(errUser, 'Must throw error when SHYPFY_API_USERNAME is missing');
+    assert.ok(errUser.message.includes('SHYPFY_API_USERNAME'), 'Error message must specify missing variable name');
+
+    // Restore SHYPFY_API_USERNAME
+    process.env.SHYPFY_API_USERNAME = savedUser || 'mock_username';
+
+    // 3. Missing SHYPFY_API_PASSWORD
+    resetShypfyTokenCache();
+    delete process.env.SHYPFY_API_PASSWORD;
+    let errPass = null;
+    try {
+      await getShypfyAccessToken();
+    } catch (err) {
+      errPass = err;
+    }
+    assert.ok(errPass, 'Must throw error when SHYPFY_API_PASSWORD is missing');
+    assert.ok(errPass.message.includes('SHYPFY_API_PASSWORD'), 'Error message must specify missing variable name');
+  } finally {
+    if (savedId) process.env.SHYPFY_CLIENT_ID = savedId;
+    if (savedUser) process.env.SHYPFY_API_USERNAME = savedUser;
+    if (savedPass) process.env.SHYPFY_API_PASSWORD = savedPass;
+    globalThis.fetch = prevFetch;
+    resetShypfyTokenCache();
+  }
+});
 
 console.log('\n====================================================');
 console.log(`📊 TEST RESULTS: ${passed} Passed, ${failed} Failed`);
