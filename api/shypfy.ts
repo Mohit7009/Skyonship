@@ -338,6 +338,32 @@ export function buildShypfyShipmentPayload(input: Record<string, any>): Record<s
   const pickupLocation = { name: alias };
   const returnLocation = { name: alias };
 
+  // Courier Group & Service Type resolution based on user active Shypfy rate cards:
+  // e.g., 'Delhivery 500g', 'Delhivery 2kg', 'Delhivery 5Kg', 'Delhivery 10Kg',
+  // 'Amazon Transportation Services 500g', 'Amazon Transportation Services 2Kg',
+  // 'Ekart 500g', 'Ekart 2Kg'
+  let courierGroup = input.courier_group || input.courierGroup || '';
+  if (!courierGroup) {
+    const courierHint = String(input.courierName || input.courierId || input.serviceName || '').toLowerCase();
+    if (courierHint.includes('amazon')) {
+      if (weightGrams <= 500) courierGroup = 'Amazon Transportation Services 500g';
+      else if (weightGrams <= 2000) courierGroup = 'Amazon Transportation Services 2Kg';
+      else if (weightGrams <= 5000) courierGroup = 'Amazon Transportation Services 5Kg';
+      else courierGroup = 'Amazon Transportation Services 10 kg';
+    } else if (courierHint.includes('ekart')) {
+      if (weightGrams <= 500) courierGroup = 'Ekart 500g';
+      else courierGroup = 'Ekart 2Kg';
+    } else {
+      // Default to Delhivery (primary Shypfy courier partner)
+      if (weightGrams <= 500) courierGroup = 'Delhivery 500g';
+      else if (weightGrams <= 2000) courierGroup = 'Delhivery 2kg';
+      else if (weightGrams <= 5000) courierGroup = 'Delhivery 5Kg';
+      else courierGroup = 'Delhivery 10Kg';
+    }
+  }
+
+  const serviceType = String(input.serviceType || input.service_type || 'SURFACE').toUpperCase();
+
   return {
     order_number: String(input.order_number || input.order_id || input.orderId || `ORD-${Date.now()}`),
     invoice_number: String(input.invoice_number || input.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`),
@@ -365,9 +391,12 @@ export function buildShypfyShipmentPayload(input: Record<string, any>): Record<s
     length: lengthCm,
     width: widthCm,
     height: heightCm,
-    drop_location: dropLocation,
+    courier_group: courierGroup,
+    courierGroup: courierGroup,
+    serviceType: serviceType,
     pickup_location: pickupLocation,
     return_location: returnLocation,
+    drop_location: dropLocation,
   };
 }
 

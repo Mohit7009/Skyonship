@@ -61,6 +61,9 @@ export const CourierBookingAdapter = {
           body: JSON.stringify({
             order_id: input.orderId || `ORD-${Date.now()}`,
             order_date: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            courierId: input.courierId,
+            courierName: input.courierName,
+            serviceName: input.serviceName,
             originPincode: input.originPincode,
             destinationPincode: input.destinationPincode,
             pickup_location: input.pickupLocation || 'Primary',
