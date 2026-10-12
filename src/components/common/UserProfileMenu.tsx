@@ -65,8 +65,16 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
     };
   }, []);
 
+  interface MenuItemConfig {
+    id: string;
+    label: string;
+    icon: React.ElementType;
+    path: string;
+    badge?: string;
+  }
+
   // Truxcargo-style Customer Portal Menu Hierarchy
-  const customerMenuItems = [
+  const customerMenuItems: MenuItemConfig[] = [
     {
       id: 'profile',
       label: 'My Profile',
@@ -119,7 +127,7 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   ];
 
   // Super Admin Menu Items
-  const adminMenuItems = [
+  const adminMenuItems: MenuItemConfig[] = [
     {
       id: 'admin-profile',
       label: 'Admin Profile',
