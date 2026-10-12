@@ -104,97 +104,97 @@ export const AdminLayout: React.FC = () => {
     return { ...group, items: allowedItems };
   }).filter((group) => group.items.length > 0);
 
-  return (
-    <div>
-      {/* Top RBAC & Multi-Tenant Simulator Banner */}
-      <div
-        style={{
-          backgroundColor: '#1e1b4b',
-          color: '#ffffff',
-          padding: '8px 20px',
-          fontSize: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '12px',
-          borderBottom: '1px solid #312e81',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <KeyRound size={14} style={{ color: '#a855f7' }} />
-            <span>Role: <strong>{currentRole?.name}</strong></span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid #475569', paddingLeft: '16px' }}>
-            <Building2 size={14} style={{ color: '#38bdf8' }} />
-            <span>Active Tenant: <strong style={{ color: '#38bdf8' }}>{activeTenant?.companyName || activeTenantId} ({activeTenantId})</strong></span>
-          </div>
+  const topBanner = (
+    <div
+      style={{
+        backgroundColor: '#1e1b4b',
+        color: '#ffffff',
+        padding: '8px 20px',
+        fontSize: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+        borderBottom: '1px solid #312e81',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <KeyRound size={14} style={{ color: '#a855f7' }} />
+          <span>Role: <strong>{currentRole?.name}</strong></span>
         </div>
 
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Tenant Scope:</span>
-            <select
-              value={activeTenantId}
-              onChange={(e) => setActiveTenantId(e.target.value)}
-              style={{
-                fontSize: '11px',
-                padding: '4px 8px',
-                borderRadius: '6px',
-                backgroundColor: '#334155',
-                color: '#ffffff',
-                border: '1px solid #475569',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="ALL">All Tenants (Super Admin View)</option>
-              {tenants.map((t) => (
-                <option key={t.tenantId} value={t.tenantId}>
-                  {t.tenantId} - {t.companyName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Role View:</span>
-            <div style={{ display: 'flex', gap: '4px', backgroundColor: '#0f172a', padding: '3px', borderRadius: '8px' }}>
-              {roles.filter((r) => r.portal === 'ADMIN').map((r) => (
-                <button
-                  key={r.id}
-                  onClick={() => setActiveRoleId(r.id)}
-                  style={{
-                    fontSize: '11px',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    backgroundColor: r.id === currentRole?.id ? '#a855f7' : 'transparent',
-                    color: '#ffffff',
-                    fontWeight: r.id === currentRole?.id ? 700 : 500,
-                    cursor: 'pointer',
-                    boxShadow: r.id === currentRole?.id ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  {r.name}
-                </button>
-              ))}
-            </div>
-          </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', borderLeft: '1px solid #475569', paddingLeft: '16px' }}>
+          <Building2 size={14} style={{ color: '#38bdf8' }} />
+          <span>Active Tenant: <strong style={{ color: '#38bdf8' }}>{activeTenant?.companyName || activeTenantId} ({activeTenantId})</strong></span>
         </div>
       </div>
 
-      <AppShell
-        navigationGroups={filteredNavGroups}
-        brandName="Skyonship"
-        portalLabel="Super Admin Portal"
-      >
-        <div key={location.pathname} className="animate-fade-in">
-          <Outlet />
+      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Tenant Scope:</span>
+          <select
+            value={activeTenantId}
+            onChange={(e) => setActiveTenantId(e.target.value)}
+            style={{
+              fontSize: '11px',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              backgroundColor: '#334155',
+              color: '#ffffff',
+              border: '1px solid #475569',
+              cursor: 'pointer',
+            }}
+          >
+            <option value="ALL">All Tenants (Super Admin View)</option>
+            {tenants.map((t) => (
+              <option key={t.tenantId} value={t.tenantId}>
+                {t.tenantId} - {t.companyName}
+              </option>
+            ))}
+          </select>
         </div>
-      </AppShell>
+
+        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+          <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: 600 }}>Role View:</span>
+          <div style={{ display: 'flex', gap: '4px', backgroundColor: '#0f172a', padding: '3px', borderRadius: '8px' }}>
+            {roles.filter((r) => r.portal === 'ADMIN').map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setActiveRoleId(r.id)}
+                style={{
+                  fontSize: '11px',
+                  padding: '4px 10px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: r.id === currentRole?.id ? '#a855f7' : 'transparent',
+                  color: '#ffffff',
+                  fontWeight: r.id === currentRole?.id ? 700 : 500,
+                  cursor: 'pointer',
+                  boxShadow: r.id === currentRole?.id ? '0 1px 3px rgba(0,0,0,0.3)' : 'none',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {r.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
+  );
+
+  return (
+    <AppShell
+      navigationGroups={filteredNavGroups}
+      brandName="Skyonship"
+      portalLabel="Super Admin Portal"
+      topBanner={topBanner}
+    >
+      <div key={location.pathname} className="animate-fade-in" style={{ width: '100%' }}>
+        <Outlet />
+      </div>
+    </AppShell>
   );
 };

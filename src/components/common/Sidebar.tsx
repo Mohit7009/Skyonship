@@ -68,14 +68,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
-        height: '100vh',
-        position: 'sticky',
-        top: 0,
+        height: '100%',
+        maxHeight: '100vh',
         borderRight: '1px solid #1E293B',
         zIndex: 100,
         fontFamily: 'var(--font-sans)',
         transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        overflowX: 'hidden',
+        overflow: 'hidden',
       }}
     >
       {/* 1. BRAND HEADER & TOGGLE BUTTON */}

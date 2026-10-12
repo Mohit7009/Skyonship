@@ -10,6 +10,7 @@ export interface AppShellProps {
   portalLabel?: string;
   children?: React.ReactNode;
   contentLayout?: 'constrained' | 'full';
+  topBanner?: React.ReactNode;
 }
 
 export const AppShell: React.FC<AppShellProps> = ({
@@ -17,6 +18,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   brandName = 'Skyonship',
   portalLabel = 'Enterprise Logistics Portal',
   children,
+  topBanner,
 }) => {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('sidebar_collapsed') === 'true';
@@ -34,8 +36,22 @@ export const AppShell: React.FC<AppShellProps> = ({
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: 'var(--color-background)', overflowX: 'hidden' }}>
-      {/* Desktop Sidebar (Hidden on Mobile) */}
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        backgroundColor: 'var(--color-background)',
+        overflow: 'hidden',
+        zIndex: 1,
+      }}
+    >
+      {/* Desktop Sidebar (Hidden on Mobile) - Permanently pinned on left */}
       {!isMobile && (
         <Sidebar
           navigationGroups={navigationGroups}
@@ -69,27 +85,42 @@ export const AppShell: React.FC<AppShellProps> = ({
       <div
         style={{
           flex: 1,
+          minWidth: 0,
+          height: '100%',
           display: 'flex',
           flexDirection: 'column',
-          minWidth: 0,
+          overflow: 'hidden',
           transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         }}
       >
-        {/* Topbar Header */}
-        <Topbar
-          portalName={portalLabel}
-          onMenuToggle={isMobile ? () => setIsMobileDrawerOpen(true) : undefined}
-        />
+        {/* Top RBAC & Multi-Tenant Banner */}
+        {topBanner && (
+          <div style={{ flexShrink: 0 }}>
+            {topBanner}
+          </div>
+        )}
 
-        {/* Flexible Main Content Area */}
+        {/* Topbar Header */}
+        <div style={{ flexShrink: 0 }}>
+          <Topbar
+            portalName={portalLabel}
+            onMenuToggle={isMobile ? () => setIsMobileDrawerOpen(true) : undefined}
+          />
+        </div>
+
+        {/* Flexible Main Content Area - ONLY this container scrolls */}
         <main
           style={{
             flex: 1,
+            minHeight: 0,
+            height: '100%',
             padding: isMobile ? 'var(--space-3)' : 'var(--space-4)',
             width: '100%',
             maxWidth: '100%',
             margin: '0 auto',
             overflowY: 'auto',
+            overflowX: 'hidden',
+            boxSizing: 'border-box',
           }}
         >
           {children}

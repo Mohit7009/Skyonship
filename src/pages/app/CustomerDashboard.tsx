@@ -221,7 +221,6 @@ export const CustomerDashboard: React.FC = () => {
     awb: string;
     customer: string;
     courier: string;
-    courierBg: string;
     status: string;
     statusVariant: 'success' | 'info' | 'warning' | 'danger' | 'brand' | 'neutral';
     amount: string;
@@ -229,7 +228,6 @@ export const CustomerDashboard: React.FC = () => {
     awb: s.awbNumber || 'PENDING',
     customer: s.deliveryContact || 'Customer',
     courier: s.courierName || 'Shypfy Live',
-    courierBg: s.courierName?.toLowerCase().includes('blue') ? '#0284c7' : s.courierName?.toLowerCase().includes('xpress') ? '#e11d48' : '#4f46e5',
     status: CustomerShipmentService.getCustomerFacingStatus(s.bookingStatus),
     statusVariant: (s.bookingStatus === 'DELIVERED' ? 'success' : s.bookingStatus === 'CANCELLED' ? 'danger' : 'brand') as any,
     amount: `₹${(s.totalCustomerChargeINR || 0).toFixed(2)}`,
@@ -660,18 +658,48 @@ export const CustomerDashboard: React.FC = () => {
                 {
                   key: 'awb',
                   header: 'AWB',
-                  render: (r) => <strong style={{ fontFamily: 'monospace', color: '#0284c7', fontSize: '12px' }}>{r.awb}</strong>,
+                  render: (r) => (
+                    <span
+                      onClick={() => navigate('/app/orders')}
+                      style={{
+                        fontFamily: 'monospace',
+                        color: '#0284c7',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                      }}
+                      title="View Order Details"
+                    >
+                      {r.awb}
+                    </span>
+                  ),
                 },
                 {
                   key: 'customer',
                   header: 'Customer',
-                  render: (r) => <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px' }}>{r.customer}</span>,
+                  render: (r) => <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px', whiteSpace: 'nowrap' }}>{r.customer}</span>,
                 },
                 {
                   key: 'courier',
                   header: 'Courier',
                   render: (r) => (
-                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', backgroundColor: r.courierBg, color: '#ffffff' }}>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        padding: '3px 8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#f0f9ff',
+                        color: '#0284c7',
+                        border: '1px solid #bae6fd',
+                        whiteSpace: 'nowrap',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                    >
+                      <Truck size={12} style={{ color: '#0284c7' }} />
                       {r.courier}
                     </span>
                   ),
