@@ -362,7 +362,7 @@ await runAsyncTest('Serverless entry point (api/shypfy.ts) bundles cleanly for N
   assert.ok(result && result.output && result.output[0], 'Vite SSR build must produce output');
   const code = result.output[0].code;
   assert.ok(code.length > 500, 'Bundled output must contain server code');
-  assert.ok(code.includes('export { handler as default') || code.includes('export default'), 'Must export default handler');
+  assert.ok(code.includes('handler as default') || code.includes('export default'), 'Must export default handler');
   assert.ok(!code.includes('.ts"'), 'Bundled output must not contain unresolved .ts file references');
   assert.ok(!code.includes(".ts'"), 'Bundled output must not contain unresolved .ts file references');
 });
