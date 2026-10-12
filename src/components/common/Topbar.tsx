@@ -108,13 +108,13 @@ export const Topbar: React.FC<TopbarProps> = ({
       </div>
 
       {/* Center/Right Area: Search, Wallet Badge, Add Money, Notifications, Profile */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)' }}>
-        {/* DESKTOP GLOBAL SEARCH TRIGGER BAR */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        {/* GROUP 1: GLOBAL SEARCH */}
         {!isMobile && (
           <div
             onClick={() => setIsCommandPaletteOpen(true)}
             style={{
-              width: '280px',
+              width: '260px',
               height: '34px',
               backgroundColor: 'var(--color-surface-secondary)',
               border: '1px solid var(--color-border)',
@@ -130,12 +130,23 @@ export const Topbar: React.FC<TopbarProps> = ({
             title="Press Ctrl + K to open Global Command Search"
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={15} style={{ color: '#2563EB' }} />
-              <span style={{ fontSize: '12px' }}>Search AWB, LRN, Order ID, Customer...</span>
+              <Search size={15} style={{ color: '#0284c7' }} />
+              <span style={{ fontSize: '12px' }}>Search AWB, Order, Customer...</span>
             </div>
 
-            <kbd style={{ backgroundColor: 'var(--color-surface)', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: '4px', padding: '1px 5px', fontSize: '10px', fontWeight: 'bold' }}>
-              {isMac ? '⌘ K' : 'Ctrl K'}
+            <kbd
+              style={{
+                backgroundColor: 'rgba(100, 116, 139, 0.08)',
+                color: 'var(--color-text-muted, #64748b)',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '2px 6px',
+                fontSize: '10px',
+                fontWeight: '500',
+                fontFamily: 'inherit',
+              }}
+            >
+              {isMac ? '⌘K' : 'Ctrl K'}
             </kbd>
           </div>
         )}
@@ -160,7 +171,12 @@ export const Topbar: React.FC<TopbarProps> = ({
           </button>
         )}
 
-        {/* PROMINENT HEADER WALLET & RECHARGE BUTTON (CUSTOMER PORTAL ONLY) */}
+        {/* SUBTLE DIVIDER 1 */}
+        {isCustomerPortal && !isMobile && (
+          <div style={{ width: '1px', height: '22px', backgroundColor: '#e2e8f0' }} aria-hidden="true" />
+        )}
+
+        {/* GROUP 2: PROMINENT HEADER WALLET & RECHARGE BUTTON (CUSTOMER PORTAL ONLY) */}
         {isCustomerPortal && !isMobile && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div
@@ -178,12 +194,12 @@ export const Topbar: React.FC<TopbarProps> = ({
               }}
               title="Click to view Wallet & Ledger"
             >
-              <Wallet size={14} style={{ color: '#2563EB' }} />
+              <Wallet size={14} style={{ color: '#0284c7' }} />
               <div style={{ display: 'flex', flexDirection: 'column', textAlign: 'left', lineHeight: 1.1 }}>
                 <span style={{ fontSize: '10px', color: '#64748B', textTransform: 'uppercase', fontWeight: 'bold' }}>
                   Wallet Balance
                 </span>
-                <strong style={{ fontSize: '13px', color: '#2563EB' }}>
+                <strong style={{ fontSize: '13px', color: '#0284c7' }}>
                   ₹{walletBalanceINR}
                 </strong>
               </div>
@@ -192,21 +208,37 @@ export const Topbar: React.FC<TopbarProps> = ({
             <Button
               variant="primary"
               size="sm"
-              leftIcon={<Plus size={13} />}
+              leftIcon={<Plus size={13} aria-hidden="true" />}
               onClick={() => navigate('/app/wallet')}
-              style={{ height: '30px', fontSize: '12px', padding: '0 10px' }}
+              style={{
+                height: '32px',
+                fontSize: '12px',
+                fontWeight: '600',
+                padding: '0 12px',
+                backgroundColor: '#0284c7',
+                borderColor: '#0284c7',
+                borderRadius: '6px',
+              }}
             >
               + Add Money
             </Button>
           </div>
         )}
 
-        <NotificationDropdown portalName={portalName} />
-        <UserProfileMenu
-          portalName={portalName}
-          userName={currentUser?.fullName}
-          userEmail={currentUser?.workEmail}
-        />
+        {/* SUBTLE DIVIDER 2 */}
+        {!isMobile && (
+          <div style={{ width: '1px', height: '22px', backgroundColor: '#e2e8f0' }} aria-hidden="true" />
+        )}
+
+        {/* GROUP 3: NOTIFICATIONS & PROFILE */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <NotificationDropdown portalName={portalName} />
+          <UserProfileMenu
+            portalName={portalName}
+            userName={currentUser?.fullName}
+            userEmail={currentUser?.workEmail}
+          />
+        </div>
       </div>
 
       {/* COMMAND PALETTE MODAL OVERLAY */}

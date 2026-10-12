@@ -12,6 +12,7 @@ import {
   CreditCard,
   Globe,
   ShieldCheck,
+  Calculator,
 } from 'lucide-react';
 
 export type ThreeDIconType =
@@ -27,7 +28,8 @@ export type ThreeDIconType =
   | 'warehouse'
   | 'invoices'
   | 'globe'
-  | 'shield';
+  | 'shield'
+  | 'calculator';
 
 interface ThreeDIconProps {
   type: ThreeDIconType;
@@ -135,6 +137,13 @@ const ICON_CONFIG: Record<
     shadowColor: 'rgba(16, 185, 129, 0.35)',
     glowColor: '#d1fae5',
     borderHighlight: 'rgba(209, 250, 229, 0.6)',
+  },
+  calculator: {
+    icon: Calculator,
+    gradient: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+    shadowColor: 'rgba(2, 132, 199, 0.35)',
+    glowColor: '#e0f2fe',
+    borderHighlight: 'rgba(224, 242, 254, 0.6)',
   },
 };
 

@@ -191,12 +191,12 @@ export const CustomerDashboard: React.FC = () => {
       path: '/app/tracking',
     },
     {
-      id: 'wallet-recharge',
-      title: 'Wallet Recharge',
-      description: 'Add prepaid funds via UPI, NetBanking or Credit Card for instant credit.',
-      threeDType: 'recharge' as const,
-      btnText: 'Recharge Now →',
-      path: '/app/wallet/recharge',
+      id: 'rate-calculator',
+      title: 'Rate Calculator',
+      description: 'Calculate instant courier freight rates across 29,000+ Indian pincodes.',
+      threeDType: 'calculator' as const,
+      btnText: 'Calculate Rates →',
+      path: '/app/rates',
     },
     {
       id: 'warehouses',
@@ -323,24 +323,40 @@ export const CustomerDashboard: React.FC = () => {
 
           {/* Pending NDR Alert */}
           {showNdrAlert && (
-            <div style={{ padding: '12px 16px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '12px 16px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <AlertTriangle size={18} style={{ color: '#2563eb' }} />
+                <AlertTriangle size={18} style={{ color: '#0284c7', flexShrink: 0 }} />
                 <div>
-                  <strong style={{ fontSize: '13px', color: '#1e40af', display: 'block' }}>38 Pending NDR Cases Requiring Action</strong>
-                  <span style={{ fontSize: '11px', color: '#1d4ed8' }}>Delivery re-attempt instructions needed to prevent parcel return.</span>
+                  <strong style={{ fontSize: '13px', color: '#0369a1', display: 'block' }}>38 Pending NDR Cases Requiring Action</strong>
+                  <span style={{ fontSize: '12px', lineHeight: 1.4, color: '#0284c7' }}>Delivery re-attempt instructions needed to prevent parcel return.</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Button variant="outline" size="sm" onClick={() => navigate('/app/ndr')} style={{ fontSize: '11px', borderColor: '#93c5fd', color: '#1e40af' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Button variant="outline" size="sm" onClick={() => navigate('/app/ndr')} style={{ height: '30px', fontSize: '12px', fontWeight: '600', borderColor: '#93c5fd', color: '#0369a1', borderRadius: '6px' }}>
                   Take Action
                 </Button>
                 <button
+                  type="button"
                   onClick={() => setShowNdrAlert(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#1e40af', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#0369a1',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(2, 132, 199, 0.12)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   title="Dismiss Alert"
+                  aria-label="Dismiss pending NDR alert"
                 >
-                  <X size={16} />
+                  <X size={16} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -348,24 +364,45 @@ export const CustomerDashboard: React.FC = () => {
 
           {/* Low Wallet Balance Alert (Shown conditionally) */}
           {isWalletLow && showWalletAlert && (
-            <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ padding: '12px 16px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CreditCard size={18} style={{ color: '#dc2626' }} />
+                <CreditCard size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
                 <div>
                   <strong style={{ fontSize: '13px', color: '#991b1b', display: 'block' }}>Low Wallet Balance (₹{walletBalanceINR})</strong>
-                  <span style={{ fontSize: '11px', color: '#b91c1c' }}>Recharge your shipping wallet to ensure uninterrupted courier dispatch.</span>
+                  <span style={{ fontSize: '12px', lineHeight: 1.4, color: '#b91c1c' }}>Recharge your shipping wallet to ensure uninterrupted courier dispatch.</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Button variant="primary" size="sm" onClick={() => navigate('/app/wallet')} style={{ fontSize: '11px', backgroundColor: '#dc2626', borderColor: '#dc2626' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => navigate('/app/wallet')}
+                  style={{ height: '30px', fontSize: '12px', fontWeight: '600', backgroundColor: '#dc2626', borderColor: '#dc2626', borderRadius: '6px' }}
+                >
                   Recharge Now
                 </Button>
                 <button
+                  type="button"
                   onClick={() => setShowWalletAlert(false)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#991b1b', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#991b1b',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 0.12)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                   title="Dismiss Alert"
+                  aria-label="Dismiss low wallet balance alert"
                 >
-                  <X size={16} />
+                  <X size={16} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -430,12 +467,12 @@ export const CustomerDashboard: React.FC = () => {
       </div>
       )}
 
-      {/* 4. 6 LARGE LOGISTICS ACTION CARDS GRID */}
+      {/* 4. 6 LOGISTICS ACTION CARDS GRID (Compact & Efficient) */}
       <div>
-        <h2 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: '0 0 14px 0' }}>
+        <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.01em', margin: '0 0 12px 0' }}>
           Core Operational Actions
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', width: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px', width: '100%' }}>
           {mainActionCards.map((card) => {
             return (
               <div
@@ -452,42 +489,42 @@ export const CustomerDashboard: React.FC = () => {
                 style={{
                   backgroundColor: '#ffffff',
                   border: '1px solid #e2e8f0',
-                  borderRadius: '14px',
-                  padding: '20px',
+                  borderRadius: '10px',
+                  padding: '14px 16px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  gap: '14px',
+                  gap: '10px',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
-                  transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                  transition: 'transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.borderColor = '#0284c7';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.08)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.06)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
                   e.currentTarget.style.borderColor = '#e2e8f0';
-                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.03)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.02)';
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
-                  <ThreeDIcon type={card.threeDType} size="md" />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+                  <ThreeDIcon type={card.threeDType} size="sm" />
 
-                  <div>
-                    <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', margin: 0 }}>
                       {card.title}
                     </h3>
-                    <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                    <p style={{ fontSize: '11px', color: '#64748b', margin: '3px 0 0 0', lineHeight: 1.35 }}>
                       {card.description}
                     </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#2563eb', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-start', borderTop: '1px solid #f8fafc', paddingTop: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#0284c7', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {card.btnText}
                   </span>
                 </div>
@@ -770,7 +807,7 @@ export const CustomerDashboard: React.FC = () => {
                       <strong style={{ fontSize: '12px', color: '#0f172a' }}>{act.title}</strong>
                       <span style={{ fontSize: '10px', color: '#94a3b8' }}>{act.time}</span>
                     </div>
-                    <p style={{ fontSize: '11px', color: '#475569', margin: '2px 0 0 0', lineHeight: 1.3 }}>
+                    <p style={{ fontSize: '12px', color: '#475569', margin: '3px 0 0 0', lineHeight: 1.45 }}>
                       {act.description}
                     </p>
                   </div>
