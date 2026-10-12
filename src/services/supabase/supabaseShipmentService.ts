@@ -129,7 +129,7 @@ export const SupabaseShipmentService = {
         payment_mode: shipment.paymentMode || 'PREPAID',
         cod_amount_inr: Number(shipment.codAmountINR) || 0,
         base_freight_inr: Number(shipment.baseFreightINR) || 0,
-        fuelSurcharge_inr: Number(shipment.fuelSurchargeINR) || 0,
+        fuel_surcharge_inr: Number(shipment.fuelSurchargeINR) || 0,
         cod_fee_inr: Number(shipment.codFeeINR) || 0,
         total_customer_charge_inr: Number(shipment.totalCustomerChargeINR) || 0,
         booking_status: shipment.bookingStatus || 'BOOKING_CONFIRMED',
