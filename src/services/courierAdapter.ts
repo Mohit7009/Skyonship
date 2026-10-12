@@ -234,7 +234,7 @@ export const ShypfyAdapter: CourierAdapter = {
           pickupPincode: originPincode || '110001',
           dropPincode: destPincode || '400001',
           weight: weightKg || 0.5,
-          paymentType: 'PREPAID',
+          paymentType: 'Prepaid',
         }),
       });
       if (res.ok) {

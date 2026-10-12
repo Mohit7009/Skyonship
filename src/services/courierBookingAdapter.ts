@@ -1,3 +1,5 @@
+import { normalizeShypfyPaymentType } from '../types/shypfy.ts';
+
 export interface CourierBookingInput {
   shipmentId?: string;
   orderId: string;
@@ -7,7 +9,7 @@ export interface CourierBookingInput {
   serviceName: string;
   originPincode: string;
   destinationPincode: string;
-  paymentMode: 'PREPAID' | 'COD';
+  paymentMode: 'PREPAID' | 'COD' | string;
   actualWeight: number;
   chargeableWeight: number;
   sellingPriceINR: number;
@@ -45,8 +47,14 @@ export interface CourierBookingResponse {
 
 export const CourierBookingAdapter = {
   bookShipment: async (input: CourierBookingInput): Promise<CourierBookingResponse> => {
-    if (input.courierId.toLowerCase().includes('shypfy') || input.courierName.toLowerCase().includes('shypfy')) {
+    const isShypfy =
+      input.courierId.toLowerCase().includes('shypfy') ||
+      input.courierName.toLowerCase().includes('shypfy');
+
+    if (isShypfy) {
       try {
+        const normalizedPaymentMethod = normalizeShypfyPaymentType(input.paymentMode);
+
         const res = await fetch('/api/integrations/shypfy/shipment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -70,7 +78,7 @@ export const CourierBookingAdapter = {
                 selling_price: input.sellingPriceINR || 500,
               },
             ],
-            payment_method: input.paymentMode === 'COD' ? 'COD' : 'Prepaid',
+            payment_method: normalizedPaymentMethod,
             sub_total: input.sellingPriceINR || 500,
             length: input.length || 10,
             width: input.width || 10,
@@ -79,31 +87,102 @@ export const CourierBookingAdapter = {
           }),
         });
 
-        if (res.ok) {
-          const apiRes = await res.json();
-          if (apiRes.success && apiRes.data) {
-            const awb = apiRes.data.awb_code || apiRes.data.tracking_id || apiRes.data.id || `SHYPFY${Date.now()}`;
-            return {
-              success: true,
-              bookingId: `bk-${Date.now()}`,
-              awbNumber: String(awb),
-              courierId: 'shypfy',
-              courierName: 'Shypfy Logistics',
-              serviceName: input.serviceName || 'Shypfy Express',
-              status: 'BOOKED',
-              isMock: false,
-              bookingReference: apiRes.data.order_id || input.orderId,
-              message: 'Shipment successfully booked live on Shypfy Logistics Network',
-              bookedAt: new Date().toISOString(),
-            };
+        if (!res.ok) {
+          let errorDetail = `HTTP ${res.status} ${res.statusText}`;
+          try {
+            const errorJson = await res.json();
+            errorDetail = errorJson?.error || errorJson?.message || JSON.stringify(errorJson);
+          } catch {
+            try {
+              const text = await res.text();
+              if (text) errorDetail = text;
+            } catch {
+              // fallback to status text
+            }
           }
+
+          return {
+            success: false,
+            bookingId: '',
+            awbNumber: '',
+            courierId: input.courierId,
+            courierName: input.courierName || 'Shypfy Logistics',
+            serviceName: input.serviceName || 'Shypfy Express',
+            status: 'FAILED',
+            isMock: false,
+            bookingReference: input.orderId,
+            message: `Shypfy booking failed: ${errorDetail}`,
+            bookedAt: new Date().toISOString(),
+          };
         }
-      } catch (err) {
-        console.warn('Live Shypfy booking request failed, falling back to mode handler:', err);
+
+        const apiRes = await res.json();
+        if (!apiRes || !apiRes.success || !apiRes.data) {
+          const errMsg = apiRes?.error || apiRes?.message || 'Shypfy rejected shipment creation';
+          return {
+            success: false,
+            bookingId: '',
+            awbNumber: '',
+            courierId: input.courierId,
+            courierName: input.courierName || 'Shypfy Logistics',
+            serviceName: input.serviceName || 'Shypfy Express',
+            status: 'FAILED',
+            isMock: false,
+            bookingReference: input.orderId,
+            message: `Shypfy booking failed: ${errMsg}`,
+            bookedAt: new Date().toISOString(),
+          };
+        }
+
+        const awb = apiRes.data.awb_code || apiRes.data.tracking_id || apiRes.data.id;
+        if (!awb) {
+          return {
+            success: false,
+            bookingId: '',
+            awbNumber: '',
+            courierId: input.courierId,
+            courierName: input.courierName || 'Shypfy Logistics',
+            serviceName: input.serviceName || 'Shypfy Express',
+            status: 'FAILED',
+            isMock: false,
+            bookingReference: input.orderId,
+            message: 'Shypfy shipment created but no AWB / tracking ID returned',
+            bookedAt: new Date().toISOString(),
+          };
+        }
+
+        return {
+          success: true,
+          bookingId: `bk-${Date.now()}`,
+          awbNumber: String(awb),
+          courierId: input.courierId,
+          courierName: input.courierName || 'Shypfy Logistics',
+          serviceName: input.serviceName || 'Shypfy Express',
+          status: 'BOOKED',
+          isMock: false,
+          bookingReference: apiRes.data.order_id || input.orderId,
+          labelUrl: apiRes.data.label_url || apiRes.data.labelUrl,
+          message: 'Shipment successfully booked live on Shypfy Logistics Network',
+          bookedAt: new Date().toISOString(),
+        };
+      } catch (err: any) {
+        return {
+          success: false,
+          bookingId: '',
+          awbNumber: '',
+          courierId: input.courierId,
+          courierName: input.courierName || 'Shypfy Logistics',
+          serviceName: input.serviceName || 'Shypfy Express',
+          status: 'FAILED',
+          isMock: false,
+          bookingReference: input.orderId,
+          message: `Shypfy booking request failed: ${err?.message || 'Network error'}`,
+          bookedAt: new Date().toISOString(),
+        };
       }
     }
 
-    // Fallback / Demo Mode handler
+    // Fallback / Demo Mode handler for non-Shypfy simulated couriers ONLY
     const prefix = input.courierId.toUpperCase().slice(0, 3);
     const randomDigits = Math.floor(100000000 + Math.random() * 900000000);
     const awbNumber = `${prefix}${randomDigits}`;
@@ -118,11 +197,9 @@ export const CourierBookingAdapter = {
       courierName: input.courierName,
       serviceName: input.serviceName,
       status: 'BOOKED',
-      isMock: input.courierId.toLowerCase() !== 'shypfy',
+      isMock: true,
       bookingReference,
-      message: input.courierId.toLowerCase() === 'shypfy'
-        ? 'Shipment booked via Shypfy Logistics Network'
-        : 'Shipment booked successfully via Courier Integration Adapter (Development/Mock Mode)',
+      message: 'Shipment booked successfully via Courier Integration Adapter (Development/Mock Mode)',
       bookedAt: new Date().toISOString(),
     };
   },

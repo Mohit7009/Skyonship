@@ -189,6 +189,9 @@ export function resetShypfyTokenCache(): void {
   cachedToken = null;
 }
 
+export type { ShypfyPaymentType } from '../types/shypfy.ts';
+export { normalizeShypfyPaymentType } from '../types/shypfy.ts';
+
 export interface ShypfyServiceabilityInput {
   pickupPincode: string;
   dropPincode: string;
@@ -196,13 +199,14 @@ export interface ShypfyServiceabilityInput {
   width?: number;
   height?: number;
   weight: number;
-  paymentType: 'COD' | 'PREPAID';
+  paymentType: ShypfyPaymentType | string;
   codAmount?: number;
   invoiceAmount?: number;
 }
 
 export async function checkShypfyServiceability(input: ShypfyServiceabilityInput): Promise<any> {
   const token = await getShypfyAccessToken();
+  const normalizedPaymentType = normalizeShypfyPaymentType(input.paymentType);
   const response = await fetch(`${SHYPFY_BASE_URL}/data/v3/serviceability`, {
     method: 'POST',
     headers: {
@@ -216,7 +220,7 @@ export async function checkShypfyServiceability(input: ShypfyServiceabilityInput
       width: input.width || 10,
       height: input.height || 10,
       weight: input.weight || 0.5,
-      paymentType: input.paymentType,
+      paymentType: normalizedPaymentType,
       codAmount: input.codAmount || 0,
       invoiceAmount: input.invoiceAmount || 500,
     }),
@@ -232,13 +236,26 @@ export async function checkShypfyServiceability(input: ShypfyServiceabilityInput
 
 export async function createShypfyShipment(payload: Record<string, any>): Promise<any> {
   const token = await getShypfyAccessToken();
+  const normalizedPayload = { ...payload };
+
+  // Ensure payment fields conform strictly to Shypfy's enumeration: [COD, Pickup, Prepaid]
+  if (normalizedPayload.payment_method) {
+    normalizedPayload.payment_method = normalizeShypfyPaymentType(normalizedPayload.payment_method);
+  }
+  if (normalizedPayload.paymentType) {
+    normalizedPayload.paymentType = normalizeShypfyPaymentType(normalizedPayload.paymentType);
+  }
+  if (normalizedPayload.payment_type) {
+    normalizedPayload.payment_type = normalizeShypfyPaymentType(normalizedPayload.payment_type);
+  }
+
   const response = await fetch(`${SHYPFY_BASE_URL}/api/v1/package/create`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizedPayload),
   });
 
   if (!response.ok) {

@@ -169,7 +169,7 @@ export const CustomerBookingService = {
       return {
         success: false,
         reason: 'BOOKING_FAILED',
-        message: 'Courier booking failed. Wallet balance was not debited.',
+        message: bookingRes.message || 'Courier booking failed. Wallet balance was not debited.',
       };
     }
 
