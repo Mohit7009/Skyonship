@@ -520,7 +520,7 @@ export async function handleShypfyTestEndpoint(): Promise<ShypfyTestResponse> {
     return {
       success: true,
       provider: 'Shypfy',
-      message: 'Shypfy API authentication successful',
+      message: 'Shypfy API authentication successful (v2.3-courier-group-surface)',
       httpStatus: 200,
     };
   } catch (err) {

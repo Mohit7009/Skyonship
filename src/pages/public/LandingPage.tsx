@@ -727,7 +727,7 @@ export const LandingPage: React.FC = () => {
                   overflow: 'visible',
                   filter: 'drop-shadow(0 25px 40px rgba(15, 23, 42, 0.2))',
                   display: 'flex',
-                  justify: 'center'
+                  justifyContent: 'center'
                 }}>
                   <img
                     src="/images/seller_woman_laptop_transparent_4k.png"
@@ -783,7 +783,7 @@ export const LandingPage: React.FC = () => {
                   border: '1px solid #fecdd3',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
+                  justifyContent: 'center',
                   fontSize: '20px',
                   zIndex: 10
                 }}>

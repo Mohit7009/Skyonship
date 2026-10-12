@@ -5,6 +5,7 @@ import type {
   SignupPayload,
   AuthResponse,
   AuthUser,
+  UserRole,
 } from '../types/auth';
 
 /**
@@ -19,11 +20,11 @@ interface StoredRegisteredUser {
   fullName: string;
   workEmail: string;
   password?: string;
-  role: 'customer' | 'super_admin';
-  businessName: string;
+  role: UserRole;
+  businessName?: string;
   phoneNumber?: string;
   businessType?: string;
-  tenantId: string;
+  tenantId?: string;
   createdAt: string;
 }
 
@@ -159,7 +160,7 @@ export class AuthService implements IAuthService {
         };
         if (typeof window !== 'undefined' && window.localStorage) {
           localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
-          localStorage.setItem('courrier3_active_tenant_id', registered.tenantId);
+          localStorage.setItem('courrier3_active_tenant_id', registered.tenantId || '');
           localStorage.setItem('courrier3_current_user', JSON.stringify(authUser));
         }
         return {
@@ -252,7 +253,7 @@ export class AuthService implements IAuthService {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
-        localStorage.setItem('courrier3_active_tenant_id', registeredUser.tenantId);
+        localStorage.setItem('courrier3_active_tenant_id', registeredUser.tenantId || '');
         localStorage.setItem('courrier3_current_user', JSON.stringify(registeredUser));
       }
     } catch {}

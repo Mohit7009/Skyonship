@@ -55,6 +55,26 @@ export const CourierBookingAdapter = {
       try {
         const normalizedPaymentMethod = normalizeShypfyPaymentType(input.paymentMode);
 
+        const weightKg = Number(input.actualWeight || input.chargeableWeight || 0.5);
+        const weightGrams = Math.max(1, Math.round(weightKg <= 30 ? weightKg * 1000 : weightKg));
+
+        let courierGroup = 'Delhivery 2kg';
+        const courierHint = String(input.courierName || input.courierId || input.serviceName || '').toLowerCase();
+        if (courierHint.includes('amazon')) {
+          if (weightGrams <= 500) courierGroup = 'Amazon Transportation Services 500g';
+          else if (weightGrams <= 2000) courierGroup = 'Amazon Transportation Services 2Kg';
+          else if (weightGrams <= 5000) courierGroup = 'Amazon Transportation Services 5Kg';
+          else courierGroup = 'Amazon Transportation Services 10 kg';
+        } else if (courierHint.includes('ekart')) {
+          if (weightGrams <= 500) courierGroup = 'Ekart 500g';
+          else courierGroup = 'Ekart 2Kg';
+        } else {
+          if (weightGrams <= 500) courierGroup = 'Delhivery 500g';
+          else if (weightGrams <= 2000) courierGroup = 'Delhivery 2kg';
+          else if (weightGrams <= 5000) courierGroup = 'Delhivery 5Kg';
+          else courierGroup = 'Delhivery 10Kg';
+        }
+
         const res = await fetch('/api/integrations/shypfy/shipment/create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -64,6 +84,10 @@ export const CourierBookingAdapter = {
             courierId: input.courierId,
             courierName: input.courierName,
             serviceName: input.serviceName,
+            courier_group: courierGroup,
+            courierGroup: courierGroup,
+            serviceType: 'SURFACE',
+            service_type: 'SURFACE',
             originPincode: input.originPincode,
             destinationPincode: input.destinationPincode,
             pickup_location: input.pickupLocation || 'Primary',
@@ -99,7 +123,7 @@ export const CourierBookingAdapter = {
             length: input.length || 10,
             width: input.width || 10,
             height: input.height || 10,
-            weight: input.actualWeight || 0.5,
+            weight: weightGrams,
           }),
         });
 

@@ -7,7 +7,8 @@ export const filterDemoOrders = (
   filters: OrderFilterState
 ): CustomerOrder[] => {
   return items.filter((item) => {
-    if (filters.status !== 'all' && item.orderStatus !== filters.status && item.shipmentStatus !== filters.status) {
+    const statusFilter = (filters as any).status || filters.orderStatus;
+    if (statusFilter && statusFilter !== 'all' && item.orderStatus !== statusFilter && item.shipmentStatus !== statusFilter) {
       return false;
     }
 

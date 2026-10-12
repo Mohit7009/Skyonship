@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Wallet,
   CheckCircle2,
@@ -80,6 +80,7 @@ const PINCODE_MAP: Record<string, { city: string; state: string }> = {
 const DRAFT_STORAGE_KEY = 'COURRIER3_CREATE_SHIPMENT_DRAFT';
 
 export const CreateShipmentWizardPage: React.FC = () => {
+  const navigate = useNavigate();
   const location = useLocation();
   const navState = (location.state as any) || {};
 

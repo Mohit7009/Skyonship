@@ -393,7 +393,7 @@ export const TrackingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'timeline' | 'details' | 'financials' | 'activity' | 'admin'>('timeline');
 
   // Search Logic with Real CustomerShipmentService & Shypfy API fallback
-  const activeRecord = useMemo(() => {
+  const activeRecord = useMemo<TrackingShipmentRecord | null>(() => {
     if (!searchInput.trim()) return DEMO_TRACKING_DATABASE[0];
     const q = searchInput.trim();
 
