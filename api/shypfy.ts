@@ -1,3 +1,4 @@
+// Vercel serverless production endpoint for Shypfy Logistics
 import fs from 'node:fs';
 import path from 'node:path';
 
