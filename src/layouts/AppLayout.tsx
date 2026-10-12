@@ -14,8 +14,6 @@ import {
   Building2,
   KeyRound,
   LayoutDashboard,
-  ShieldCheck,
-  User,
   FileText,
 } from 'lucide-react';
 import { AppShell } from '../components/common/AppShell';
@@ -63,15 +61,6 @@ export const BASE_ENTERPRISE_B2B_NAV_GROUPS: NavGroupConfig[] = [
       { label: 'Rate Calculator', path: '/app/rates', icon: Calculator },
       { label: 'My Rate Card', path: '/app/my-rate-card', icon: FileText },
       { label: 'Warehouses', path: '/app/warehouses', icon: Warehouse },
-    ],
-  },
-  {
-    sectionLabel: 'ACCOUNT',
-    categoryIcon: User,
-    items: [
-      { label: 'Profile', path: '/app/settings/profile', icon: Building2 },
-      { label: 'KYC', path: '/app/settings/kyc', icon: ShieldCheck },
-      { label: 'Bank Details', path: '/app/settings/bank', icon: CreditCard },
     ],
   },
 ];
