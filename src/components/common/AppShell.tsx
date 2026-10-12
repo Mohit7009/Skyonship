@@ -14,10 +14,9 @@ export interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({
   navigationGroups,
-  brandName = 'Shipping SaaS',
-  portalLabel = 'Customer Portal',
+  brandName = 'Skyonship',
+  portalLabel = 'Enterprise Logistics Portal',
   children,
-  contentLayout = 'constrained',
 }) => {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState<boolean>(() => {
     return localStorage.getItem('sidebar_collapsed') === 'true';
@@ -35,7 +34,7 @@ export const AppShell: React.FC<AppShellProps> = ({
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: 'var(--color-background)' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', backgroundColor: 'var(--color-background)', overflowX: 'hidden' }}>
       {/* Desktop Sidebar (Hidden on Mobile) */}
       {!isMobile && (
         <Sidebar
@@ -66,8 +65,16 @@ export const AppShell: React.FC<AppShellProps> = ({
         </Drawer>
       )}
 
-      {/* Main Structural Wrapper */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      {/* Main Structural Wrapper - Automatically stretches & resizes smoothly */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minWidth: 0,
+          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
         {/* Topbar Header */}
         <Topbar
           portalName={portalLabel}
@@ -80,7 +87,7 @@ export const AppShell: React.FC<AppShellProps> = ({
             flex: 1,
             padding: isMobile ? 'var(--space-3)' : 'var(--space-4)',
             width: '100%',
-            maxWidth: contentLayout === 'constrained' ? '1280px' : '100%',
+            maxWidth: '100%',
             margin: '0 auto',
             overflowY: 'auto',
           }}

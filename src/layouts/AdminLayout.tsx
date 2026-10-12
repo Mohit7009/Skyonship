@@ -188,7 +188,7 @@ export const AdminLayout: React.FC = () => {
 
       <AppShell
         navigationGroups={filteredNavGroups}
-        brandName="Courier Aggregator"
+        brandName="Skyonship"
         portalLabel="Super Admin Portal"
       >
         <div key={location.pathname} className="animate-fade-in">

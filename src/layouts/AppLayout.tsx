@@ -119,8 +119,8 @@ export const AppLayout: React.FC = () => {
 
       <AppShell
         navigationGroups={filteredNavGroups}
-        brandName="Courier Aggregator"
-        portalLabel="Enterprise Logistics Portal"
+        brandName="Skyonship"
+        portalLabel="Merchant Portal"
       >
         <div key={location.pathname} className="animate-fade-in">
           <Outlet />
