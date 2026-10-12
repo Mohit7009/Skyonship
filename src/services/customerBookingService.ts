@@ -136,6 +136,7 @@ export const CustomerBookingService = {
     }
 
     // 3. Courier Booking Adapter Execution (AWB & Reference Generation)
+    const firstPkg = input.packages?.[0];
     const bookingRes = await CourierBookingAdapter.bookShipment({
       orderId: input.orderId,
       courierId: input.courierId,
@@ -147,8 +148,21 @@ export const CustomerBookingService = {
       paymentMode: input.paymentMode === 'cod' ? 'COD' : 'PREPAID',
       actualWeight: input.actualWeightKg,
       chargeableWeight: input.chargeableWeightKg,
-      sellingPriceINR: totalChargeINR,
+      sellingPriceINR: input.invoiceValueINR || totalChargeINR,
       estimatedDays: '2–4 Days',
+      pickupLocation: input.pickupContactName || 'Primary',
+      pickupContactName: input.pickupContactName,
+      pickupPhone: input.pickupPhone,
+      pickupAddress: input.pickupAddressLine1,
+      pickupCity: input.pickupCity,
+      deliveryContactName: input.deliveryContactName,
+      deliveryPhone: input.deliveryPhone,
+      deliveryAddress: [input.deliveryAddressLine1, input.deliveryAddressLine2].filter(Boolean).join(', '),
+      deliveryCity: input.deliveryCity,
+      deliveryState: input.deliveryState,
+      length: firstPkg?.lengthCm || 10,
+      width: firstPkg?.widthCm || 10,
+      height: firstPkg?.heightCm || 10,
     });
 
     if (!bookingRes.success) {
@@ -174,7 +188,8 @@ export const CustomerBookingService = {
         fuelSurchargeMinor: Math.round(input.fuelSurchargeINR * 100),
         codFeeMinor: Math.round(input.codFeeINR * 100),
         totalMinor: Math.round(totalChargeINR * 100),
-      }
+      },
+      tenantId
     );
 
     if (!debitRes.success) {

@@ -163,6 +163,18 @@ export const RateCalculatorPage: React.FC = () => {
       // Generate Clean B2C Partners
       const b2cPartners = [
         {
+          courierId: 'shypfy',
+          courierName: 'Shypfy Express (via Delhivery)',
+          serviceName: 'Shypfy Smart Air & Surface Network',
+          logoBgColor: '#059669',
+          logoTextColor: '#ffffff',
+          serviceType: 'Express' as const,
+          rating: 4.9,
+          transitTime: '2-3 Days',
+          basePrice: 35,
+          additionalPricePer500g: 25,
+        },
+        {
           courierId: 'delhivery-express',
           courierName: 'Delhivery Surface Express',
           serviceName: 'Standard Surface Shipping',
@@ -259,9 +271,9 @@ export const RateCalculatorPage: React.FC = () => {
       // Generate Clean B2B Partners
       const b2bPartners = [
         {
-          courierId: 'shypfy-ltl-cargo',
-          courierName: 'Delhivery LTL Heavy Freight',
-          serviceName: 'Commercial Cargo Transport',
+          courierId: 'shypfy',
+          courierName: 'Shypfy Freight Network (via Delhivery)',
+          serviceName: 'Commercial Multi-Carrier LTL Freight',
           logoBgColor: '#16a34a',
           logoTextColor: '#ffffff',
           serviceType: 'Cargo' as const,

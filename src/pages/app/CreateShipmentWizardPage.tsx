@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Wallet,
   CheckCircle2,
@@ -79,6 +80,9 @@ const PINCODE_MAP: Record<string, { city: string; state: string }> = {
 const DRAFT_STORAGE_KEY = 'COURRIER3_CREATE_SHIPMENT_DRAFT';
 
 export const CreateShipmentWizardPage: React.FC = () => {
+  const location = useLocation();
+  const navState = (location.state as any) || {};
+
   const tenantId =
     typeof window !== 'undefined' && window.localStorage
       ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
@@ -112,35 +116,55 @@ export const CreateShipmentWizardPage: React.FC = () => {
   const [newWhCity, setNewWhCity] = useState('New Delhi');
   const [newWhState, setNewWhState] = useState('Delhi');
 
-  // Step 2: Receiver Details
-  const [receiverName, setReceiverName] = useState('Rahul Sharma');
-  const [receiverPhone, setReceiverPhone] = useState('9876543210');
-  const [altPhone, setAltPhone] = useState('9811234567');
-  const [receiverCompany, setReceiverCompany] = useState('Sharma Retail Enterprises');
-  const [receiverEmail, setReceiverEmail] = useState('rahul.sharma@example.com');
-  const [deliveryAddress1, setDeliveryAddress1] = useState('Flat 402, Sunshine Heights, Koramangala');
-  const [deliveryAddress2, setDeliveryAddress2] = useState('Near Forum Mall');
-  const [landmark, setLandmark] = useState('Opposite Passport Seva Kendra');
-  const [deliveryPincode, setDeliveryPincode] = useState('560038');
-  const [deliveryCity, setDeliveryCity] = useState('Bengaluru');
-  const [deliveryState, setDeliveryState] = useState('Karnataka');
+  // Step 2: Receiver Details (Prefilled if available from state, else clean for seller)
+  const initialToPincode = navState.toPincode || '';
+  const initialCity = initialToPincode && PINCODE_MAP[initialToPincode]?.city ? PINCODE_MAP[initialToPincode].city : '';
+  const initialState = initialToPincode && PINCODE_MAP[initialToPincode]?.state ? PINCODE_MAP[initialToPincode].state : '';
+
+  const [receiverName, setReceiverName] = useState('');
+  const [receiverPhone, setReceiverPhone] = useState('');
+  const [altPhone, setAltPhone] = useState('');
+  const [receiverCompany, setReceiverCompany] = useState('');
+  const [receiverEmail, setReceiverEmail] = useState('');
+  const [deliveryAddress1, setDeliveryAddress1] = useState('');
+  const [deliveryAddress2, setDeliveryAddress2] = useState('');
+  const [landmark, setLandmark] = useState('');
+  const [deliveryPincode, setDeliveryPincode] = useState(initialToPincode);
+  const [deliveryCity, setDeliveryCity] = useState(initialCity);
+  const [deliveryState, setDeliveryState] = useState(initialState);
 
   // Step 3: Package Details, Shipment Type, Payment Mode, Insurance
-  const [shipmentCategory, setShipmentCategory] = useState<'document' | 'parcel' | 'b2b_freight'>('parcel');
-  const [deadWeight, setDeadWeight] = useState<string>('2.5');
-  const [pkgLength, setPkgLength] = useState<string>('30');
-  const [pkgWidth, setPkgWidth] = useState<string>('20');
-  const [pkgHeight, setPkgHeight] = useState<string>('15');
+  const [shipmentCategory, setShipmentCategory] = useState<'document' | 'parcel' | 'b2b_freight'>(() =>
+    navState.mode === 'B2B' ? 'b2b_freight' : 'parcel'
+  );
+  const [deadWeight, setDeadWeight] = useState<string>(() =>
+    navState.actualWeight ? String(navState.actualWeight) : '1.0'
+  );
+  const [pkgLength, setPkgLength] = useState<string>(() =>
+    navState.lengthCm ? String(navState.lengthCm) : '20'
+  );
+  const [pkgWidth, setPkgWidth] = useState<string>(() =>
+    navState.widthCm ? String(navState.widthCm) : '15'
+  );
+  const [pkgHeight, setPkgHeight] = useState<string>(() =>
+    navState.heightCm ? String(navState.heightCm) : '10'
+  );
   const [numPackages, setNumPackages] = useState<number>(1);
-  const [invoiceValue, setInvoiceValue] = useState<string>('1500');
+  const [invoiceValue, setInvoiceValue] = useState<string>(() =>
+    navState.invoiceValue ? String(navState.invoiceValue) : '1000'
+  );
   const [contentsDescription, setContentsDescription] = useState<string>('Apparel & Fashion Accessories');
   
   const [orderId] = useState(() => `ORD-${Date.now().toString().slice(-5)}`);
-  const [paymentMode, setPaymentMode] = useState<'prepaid' | 'cod'>('cod');
-  const [codAmount, setCodAmount] = useState('1500');
+  const [paymentMode, setPaymentMode] = useState<'prepaid' | 'cod'>(() =>
+    navState.paymentType?.toLowerCase() === 'cod' ? 'cod' : 'prepaid'
+  );
+  const [codAmount, setCodAmount] = useState(() =>
+    navState.codAmount ? String(navState.codAmount) : ''
+  );
   
   const [insuranceEnabled, setInsuranceEnabled] = useState(false);
-  const [insuredValue, setInsuredValue] = useState('1500');
+  const [insuredValue, setInsuredValue] = useState('1000');
 
   // Multi-box List
   const [packages, setPackages] = useState<MultiPackageFormItem[]>([
@@ -148,10 +172,10 @@ export const CreateShipmentWizardPage: React.FC = () => {
       id: 'pkg-1',
       packageNumber: 1,
       packageType: 'Box',
-      actualWeightKg: 2.5,
-      lengthCm: 30,
-      widthCm: 20,
-      heightCm: 15,
+      actualWeightKg: navState.actualWeight ? Number(navState.actualWeight) : 1.0,
+      lengthCm: navState.lengthCm ? Number(navState.lengthCm) : 20,
+      widthCm: navState.widthCm ? Number(navState.widthCm) : 15,
+      heightCm: navState.heightCm ? Number(navState.heightCm) : 10,
       quantity: 1,
       packageContents: 'Apparel & Fashion Accessories',
     },
@@ -463,12 +487,6 @@ export const CreateShipmentWizardPage: React.FC = () => {
   const validateStep5 = (): boolean => {
     setFormError(null);
     if (!selectedCourier || !quoteBreakdown) return false;
-
-    const goLiveCheck = OnboardingService.validateGoLiveRules('CUST-1001');
-    if (!goLiveCheck.canGoLive) {
-      setFormError(`Account Go-Live activation is pending. Unfulfilled requirements: ${goLiveCheck.missingRequirements.join(', ')}.`);
-      return false;
-    }
 
     if (walletBalanceINR < quoteBreakdown.totalPayable) {
       setFormError(`Insufficient Wallet Balance. Required ₹${quoteBreakdown.totalPayable.toFixed(2)}, Available ₹${walletBalanceINR.toFixed(2)}. Please recharge your wallet.`);

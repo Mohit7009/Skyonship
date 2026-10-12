@@ -104,11 +104,19 @@ let ASSIGNMENT_STORE = [...INITIAL_RATE_ASSIGNMENTS];
 
 export const CustomerRateAssignmentService = {
   getAssignments: (tenantId?: string, mode?: 'B2B' | 'B2C'): CustomerRateAssignment[] => {
-    return ASSIGNMENT_STORE.filter((item) => {
+    const list = ASSIGNMENT_STORE.filter((item) => {
       if (tenantId && tenantId !== 'all' && item.tenantId !== tenantId) return false;
       if (mode && item.mode !== mode) return false;
       return true;
     });
+    if (list.length === 0 && tenantId && tenantId !== 'all') {
+      return ASSIGNMENT_STORE.filter((item) => {
+        if (item.tenantId !== 'tenant-demo-01') return false;
+        if (mode && item.mode !== mode) return false;
+        return true;
+      });
+    }
+    return list;
   },
 
   assignRateCard: (input: CustomerRateAssignmentInput): CustomerRateAssignment => {
@@ -187,9 +195,15 @@ export const CustomerRateAssignmentService = {
     paymentType: 'PREPAID' | 'COD' = 'PREPAID',
     codAmountPaise = 0
   ): EligibleCourierResult[] => {
-    const activeAssignments = ASSIGNMENT_STORE.filter(
+    let activeAssignments = ASSIGNMENT_STORE.filter(
       (a) => a.tenantId === tenantId && a.mode === mode && a.status === 'ACTIVE'
     );
+
+    if (activeAssignments.length === 0) {
+      activeAssignments = ASSIGNMENT_STORE.filter(
+        (a) => (a.tenantId === 'tenant-demo-01' || a.isDefault) && a.mode === mode && a.status === 'ACTIVE'
+      );
+    }
 
     const results: EligibleCourierResult[] = [];
 

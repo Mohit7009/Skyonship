@@ -22,6 +22,7 @@ import {
   Badge,
   Input,
 } from '../../components/ui';
+import { CustomerShipmentService } from '../../services/customerShipmentService';
 
 export interface TrackingTimelineEvent {
   id: string;
@@ -391,15 +392,112 @@ export const TrackingPage: React.FC = () => {
   const [copiedAwb, setCopiedAwb] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'timeline' | 'details' | 'financials' | 'activity' | 'admin'>('timeline');
 
-  // Search Logic with Shypfy API fallback
+  // Search Logic with Real CustomerShipmentService & Shypfy API fallback
   const activeRecord = useMemo(() => {
     if (!searchInput.trim()) return DEMO_TRACKING_DATABASE[0];
-    const q = searchInput.toLowerCase().trim();
+    const q = searchInput.trim();
+
+    // 1. Check Real Booked Shipments from CustomerShipmentService
+    const realShipment = CustomerShipmentService.getShipmentById(q);
+    if (realShipment) {
+      const stepIdx =
+        realShipment.bookingStatus === 'DELIVERED'
+          ? 6
+          : realShipment.bookingStatus === 'OUT_FOR_DELIVERY'
+          ? 5
+          : realShipment.bookingStatus === 'IN_TRANSIT'
+          ? 3
+          : realShipment.bookingStatus === 'PICKED_UP'
+          ? 2
+          : realShipment.bookingStatus === 'PICKUP_REQUESTED'
+          ? 1
+          : 0;
+
+      const events: TrackingTimelineEvent[] = realShipment.trackingTimeline?.map((t, idx) => ({
+        id: `real-evt-${idx}`,
+        date: t.timestamp ? String(t.timestamp).split(',')[0] : new Date().toLocaleDateString(),
+        time: t.timestamp ? String(t.timestamp).split(',')[1] || '' : new Date().toLocaleTimeString(),
+        location: t.location || 'Sorting Facility',
+        statusTitle: t.statusTitle || 'Status Update',
+        remarks: t.description || 'Shipment scanned and updated',
+        source: 'API Auto-Sync' as const,
+      })) || [
+        {
+          id: 'real-evt-1',
+          date: new Date().toLocaleDateString(),
+          time: new Date().toLocaleTimeString(),
+          location: realShipment.pickupCity || 'Origin Hub',
+          statusTitle: 'Shipment Booked & Confirmed',
+          remarks: 'Order dispatched with courier partner',
+          source: 'API Auto-Sync' as const,
+        },
+      ];
+
+      return {
+        id: realShipment.id,
+        awbNumber: realShipment.awbNumber || realShipment.shipmentId,
+        orderId: realShipment.orderId,
+        customerName: realShipment.deliveryContact || 'Customer',
+        customerPhone: realShipment.deliveryPhone || '',
+        customerEmail: (realShipment as any).deliveryEmail || 'customer@example.com',
+        deliveryAddress: realShipment.deliveryAddress || '',
+        deliveryCity: realShipment.deliveryCity || '',
+        deliveryState: (realShipment as any).deliveryState || '',
+        deliveryPincode: realShipment.deliveryPincode || '',
+        courierName: realShipment.courierName || 'Logistics Network',
+        courierLogoBg: realShipment.courierName.toLowerCase().includes('blue') ? '#0284c7' : '#059669',
+        serviceType: (realShipment.serviceName?.includes('Air') ? 'Air' : realShipment.serviceName?.includes('Cargo') ? 'Cargo' : 'Express') as any,
+        mode: (realShipment.mode || 'B2C') as any,
+        zoneRoute: `${realShipment.pickupPincode} → ${realShipment.deliveryPincode}`,
+        transitSlaDays: '2-4 Days',
+        deadWeightKg: realShipment.actualWeightKg || 0.5,
+        volumetricWeightKg: realShipment.chargeableWeightKg || 0.5,
+        chargeableWeightKg: realShipment.chargeableWeightKg || 0.5,
+        dimensionsCm: realShipment.dimensionsCm || '20 × 15 × 10 CM',
+        packageCount: realShipment.packages?.length || 1,
+        contentsDescription: 'E-Commerce Package',
+        baseFreight: realShipment.baseFreightINR || 0,
+        fuelSurcharge: realShipment.fuelSurchargeINR || 0,
+        docketCharges: 15,
+        codCharges: realShipment.codFeeINR || 0,
+        rovCharges: 0,
+        insuranceCharges: 0,
+        gstAmount: Math.round((realShipment.totalCustomerChargeINR || 0) * 0.18 * 100) / 100,
+        finalAmount: realShipment.totalCustomerChargeINR || 0,
+        walletReferenceId: realShipment.transactionId || `TXN-${realShipment.shipmentId}`,
+        status: (realShipment.bookingStatus === 'DELIVERED'
+          ? 'Delivered'
+          : realShipment.bookingStatus === 'NDR'
+          ? 'NDR'
+          : realShipment.bookingStatus.startsWith('RTO')
+          ? 'RTO'
+          : realShipment.bookingStatus === 'CANCELLED'
+          ? 'Cancelled'
+          : realShipment.bookingStatus === 'IN_TRANSIT'
+          ? 'In Transit'
+          : 'Booked') as any,
+        stepIndex: stepIdx,
+        etaDate: '2-3 Business Days',
+        transitDaysCount: '1 Day',
+        lastUpdatedTime: realShipment.bookingDate || new Date().toLocaleString(),
+        timelineEvents: events,
+        activityLogs: [
+          {
+            id: 'act-1',
+            timestamp: realShipment.bookingDate || new Date().toLocaleString(),
+            action: `Order ${realShipment.orderId} booked with AWB ${realShipment.awbNumber}`,
+            user: 'Seller Portal',
+          },
+        ],
+      };
+    }
+
+    const qLower = q.toLowerCase();
     const match = DEMO_TRACKING_DATABASE.find(
       (r) =>
-        r.awbNumber.toLowerCase().includes(q) ||
-        r.orderId.toLowerCase().includes(q) ||
-        r.customerPhone.includes(q)
+        r.awbNumber.toLowerCase().includes(qLower) ||
+        r.orderId.toLowerCase().includes(qLower) ||
+        r.customerPhone.includes(qLower)
     );
     if (match) return match;
 

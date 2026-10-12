@@ -180,6 +180,7 @@ export function lookupPincodeDetails(pincode: string): { city: string; state: st
 
 export const CustomerWarehouseService = {
   getWarehouses: (tenantId = 'tenant-demo-01', statusFilter = 'all'): CustomerWarehouse[] => {
+    CustomerWarehouseService.getActiveWarehouses(tenantId);
     return WAREHOUSE_STORE.filter((w) => {
       if (w.tenantId !== tenantId) return false;
       if (statusFilter !== 'all' && w.status !== statusFilter) return false;
@@ -188,7 +189,34 @@ export const CustomerWarehouseService = {
   },
 
   getActiveWarehouses: (tenantId = 'tenant-demo-01'): CustomerWarehouse[] => {
-    return WAREHOUSE_STORE.filter((w) => w.tenantId === tenantId && w.status === 'ACTIVE');
+    let list = WAREHOUSE_STORE.filter((w) => w.tenantId === tenantId && w.status === 'ACTIVE');
+    if (list.length === 0 && tenantId && tenantId !== 'all') {
+      const defaultWh: CustomerWarehouse = {
+        id: `wh-${tenantId}-primary`,
+        tenantId,
+        warehouseCode: 'PRI-WH-01',
+        warehouseName: 'Primary Dispatch Hub',
+        contactPerson: 'Dispatch Manager',
+        phone: '+91 98765 43210',
+        email: 'dispatch@seller.com',
+        addressLine1: 'Ground Floor, Sector 18',
+        pincode: '110001',
+        city: 'New Delhi',
+        state: 'Delhi',
+        country: 'India',
+        pickupStartTime: '10:00 AM',
+        pickupEndTime: '06:00 PM',
+        isDefault: true,
+        status: 'ACTIVE',
+        totalShipmentsCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      WAREHOUSE_STORE.push(defaultWh);
+      saveWarehousesToStorage(WAREHOUSE_STORE);
+      list = [defaultWh];
+    }
+    return list;
   },
 
   getDefaultWarehouse: (tenantId = 'tenant-demo-01'): CustomerWarehouse => {

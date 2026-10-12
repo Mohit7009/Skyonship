@@ -38,6 +38,11 @@ export const ShipmentDetailPage: React.FC = () => {
   const { shipmentId } = useParams<{ shipmentId: string }>();
   const navigate = useNavigate();
 
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
+
   const [shipment, setShipment] = useState<CustomerShipmentDetail | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [, setDiscrepancy] = useState<WeightDiscrepancyRecord | null>(null);
@@ -46,14 +51,14 @@ export const ShipmentDetailPage: React.FC = () => {
 
   useEffect(() => {
     const targetId = shipmentId || 'SHP-ORD-2026-9041';
-    const detail = CustomerShipmentService.getShipmentById(targetId, 'tenant-demo-01');
+    const detail = CustomerShipmentService.getShipmentById(targetId, tenantId) || CustomerShipmentService.getShipmentById(targetId);
     setShipment(detail);
 
     if (detail && detail.awbNumber) {
       const disc = WeightDiscrepancyService.getDiscrepancyByAwb(detail.awbNumber);
       setDiscrepancy(disc);
     }
-  }, [shipmentId]);
+  }, [shipmentId, tenantId]);
 
   const handleCopyAwb = (awb: string) => {
     navigator.clipboard.writeText(awb);
@@ -63,10 +68,10 @@ export const ShipmentDetailPage: React.FC = () => {
 
   const handleConfirmCancel = () => {
     if (!shipment) return;
-    const res = CustomerShipmentService.cancelShipment(shipment.shipmentId, 'Merchant requested cancellation');
+    const res = CustomerShipmentService.cancelShipment(shipment.shipmentId, 'Merchant requested cancellation', tenantId);
     setIsCancelModalOpen(false);
     if (res.success) {
-      const updated = CustomerShipmentService.getShipmentById(shipment.shipmentId, 'tenant-demo-01');
+      const updated = CustomerShipmentService.getShipmentById(shipment.shipmentId, tenantId) || CustomerShipmentService.getShipmentById(shipment.shipmentId);
       setShipment(updated);
     }
     setActionAlert(res.message);

@@ -13,6 +13,19 @@ export interface CourierBookingInput {
   sellingPriceINR: number;
   estimatedDays: string;
   declaredValue?: number;
+  pickupLocation?: string;
+  pickupContactName?: string;
+  pickupPhone?: string;
+  pickupAddress?: string;
+  pickupCity?: string;
+  deliveryContactName?: string;
+  deliveryPhone?: string;
+  deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
+  length?: number;
+  width?: number;
+  height?: number;
 }
 
 export interface CourierBookingResponse {
@@ -40,14 +53,14 @@ export const CourierBookingAdapter = {
           body: JSON.stringify({
             order_id: input.orderId || `ORD-${Date.now()}`,
             order_date: new Date().toISOString().replace('T', ' ').slice(0, 19),
-            pickup_location: 'Primary',
-            billing_customer_name: 'Customer',
-            billing_address: 'Address Details',
-            billing_city: 'City',
+            pickup_location: input.pickupLocation || 'Primary',
+            billing_customer_name: input.deliveryContactName || 'Customer',
+            billing_address: input.deliveryAddress || 'Address Details',
+            billing_city: input.deliveryCity || 'City',
             billing_pincode: input.destinationPincode,
-            billing_state: 'State',
+            billing_state: input.deliveryState || 'State',
             billing_country: 'India',
-            billing_phone: '9876543210',
+            billing_phone: input.deliveryPhone || '9876543210',
             shipping_is_billing: true,
             order_items: [
               {
@@ -59,9 +72,9 @@ export const CourierBookingAdapter = {
             ],
             payment_method: input.paymentMode === 'COD' ? 'COD' : 'Prepaid',
             sub_total: input.sellingPriceINR || 500,
-            length: 10,
-            width: 10,
-            height: 10,
+            length: input.length || 10,
+            width: input.width || 10,
+            height: input.height || 10,
             weight: input.actualWeight || 0.5,
           }),
         });

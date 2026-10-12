@@ -9,7 +9,14 @@ export const ShipmentLabelPage: React.FC = () => {
   const { shipmentId } = useParams<{ shipmentId: string }>();
   const navigate = useNavigate();
 
-  const shipment = CustomerShipmentService.getShipmentById(shipmentId || '', 'tenant-demo-01') || {
+  const tenantId =
+    typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
+      : 'tenant-demo-01';
+
+  const shipment =
+    CustomerShipmentService.getShipmentById(shipmentId || '', tenantId) ||
+    CustomerShipmentService.getShipmentById(shipmentId || '') || {
     shipmentId: shipmentId || 'SHP-ORD-2026-9041',
     awbNumber: 'DEL847192031',
     orderId: 'ORD-2026-9041',
