@@ -16,6 +16,12 @@ import {
   BarChart3,
   PieChart,
   X,
+  Copy,
+  Check,
+  ExternalLink,
+  Clock,
+  MapPin,
+  Calendar,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import {
@@ -25,8 +31,10 @@ import {
   Table,
   CardSkeleton,
 } from '../../components/ui';
+import { Drawer } from '../../components/ui/Drawer';
+import { AnimatedCounter } from '../../components/common/AnimatedCounter';
 import { WalletService } from '../../mocks/wallet.mock';
-import { CustomerShipmentService } from '../../services/customerShipmentService';
+import { CustomerShipmentService, type CustomerShipmentDetail } from '../../services/customerShipmentService';
 import { formatNumber } from '../../utils/formatters';
 
 import { OnboardingTrackerCard } from '../../components/app/OnboardingTrackerCard';
@@ -39,6 +47,25 @@ export const CustomerDashboard: React.FC = () => {
   const [showDisputesAlert, setShowDisputesAlert] = useState(false);
   const [showNdrAlert, setShowNdrAlert] = useState(false);
   const [showWalletAlert, setShowWalletAlert] = useState(true);
+
+  // 5-Stage Interactive Shipment Pipeline Filter ('all' | 'created' | 'inTransit' | 'delivered' | 'rto')
+  const [activeStageFilter, setActiveStageFilter] = useState<'all' | 'created' | 'inTransit' | 'delivered' | 'rto'>('all');
+
+  // Slide-over Order Peek Drawer
+  const [selectedDrawerOrder, setSelectedDrawerOrder] = useState<CustomerShipmentDetail | null>(null);
+
+  // 1-Click Copy AWB with temporary feedback
+  const [copiedAwb, setCopiedAwb] = useState<string | null>(null);
+  const handleCopyAwb = (e: React.MouseEvent, awb: string) => {
+    e.stopPropagation();
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(awb);
+    }
+    setCopiedAwb(awb);
+    setTimeout(() => {
+      setCopiedAwb((prev) => (prev === awb ? null : prev));
+    }, 2000);
+  };
 
   // Date Range Filter State for Charts & Metrics
   const [chartDateRange, setChartDateRange] = useState<'today' | '7d' | '30d'>('7d');
@@ -78,13 +105,20 @@ export const CustomerDashboard: React.FC = () => {
   // Real-time Tenant Shipments Data
   const tenantShipments = CustomerShipmentService.queryShipments({ tenantId: activeTenantId });
 
+  const totalShipmentsCount = tenantShipments.length;
   const todaysOrdersCount = tenantShipments.length;
-  const inTransitCount = tenantShipments.filter((s) =>
-    ['IN_TRANSIT', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'PICKUP_REQUESTED', 'BOOKING_CONFIRMED', 'AWB_ASSIGNED'].includes(
+  const createdCount = tenantShipments.filter((s) =>
+    ['CREATED', 'DRAFT', 'BOOKING_CONFIRMED', 'AWB_ASSIGNED', 'PICKUP_REQUESTED', 'PENDING_API', 'API_PROCESSING'].includes(
       s.bookingStatus
     )
   ).length;
+  const inTransitCount = tenantShipments.filter((s) =>
+    ['IN_TRANSIT', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(s.bookingStatus)
+  ).length;
   const deliveredCount = tenantShipments.filter((s) => s.bookingStatus === 'DELIVERED').length;
+  const rtoCount = tenantShipments.filter((s) =>
+    ['NDR', 'RTO_INITIATED', 'RTO_IN_TRANSIT', 'RTO_DELIVERED', 'CANCELLED', 'CANCEL_REQUESTED'].includes(s.bookingStatus)
+  ).length;
   const codPendingTotal = tenantShipments
     .filter((s) => s.paymentMode === 'COD' && s.bookingStatus !== 'DELIVERED')
     .reduce((acc, curr) => acc + (curr.codAmountINR || 0), 0);
@@ -95,12 +129,14 @@ export const CustomerDashboard: React.FC = () => {
     { label: 'Dashboard', path: '/app' },
   ];
 
-  // 1. TOP 5 KPI CARDS CONFIGURATION
+  // 1. TOP 5 KPI CARDS CONFIGURATION (Animated Counters)
   const kpiCardsList = [
     {
       id: 'wallet-balance',
       title: 'Wallet Balance',
-      count: `₹${formatNumber(parseFloat(walletBalanceINR))}`,
+      numericValue: parseFloat(walletBalanceINR) || 0,
+      prefix: '₹',
+      decimals: 2,
       trend: parseFloat(walletBalanceINR) > 0 ? 'Active Prepaid Funds' : 'Recharge Required',
       isTrendPositive: parseFloat(walletBalanceINR) > 0,
       subtitle: 'Available shipping funds',
@@ -113,7 +149,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'todays-orders',
       title: "Today's Orders",
-      count: todaysOrdersCount,
+      numericValue: todaysOrdersCount,
+      prefix: '',
+      decimals: 0,
       trend: todaysOrdersCount === 0 ? '0 orders today' : `${todaysOrdersCount} total booked`,
       isTrendPositive: todaysOrdersCount > 0,
       subtitle: 'Dispatched today',
@@ -126,7 +164,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'in-transit',
       title: 'In Transit',
-      count: inTransitCount,
+      numericValue: inTransitCount,
+      prefix: '',
+      decimals: 0,
       trend: inTransitCount === 0 ? '0 in transit' : `${inTransitCount} on route`,
       isTrendPositive: inTransitCount > 0,
       subtitle: 'Parcels on the move',
@@ -139,7 +179,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'delivered',
       title: 'Delivered',
-      count: deliveredCount,
+      numericValue: deliveredCount,
+      prefix: '',
+      decimals: 0,
       trend: deliveredCount === 0 ? '0 delivered' : `${deliveredCount} fulfilled`,
       isTrendPositive: true,
       subtitle: 'Successfully fulfilled',
@@ -152,7 +194,9 @@ export const CustomerDashboard: React.FC = () => {
     {
       id: 'cod-pending',
       title: 'COD Pending',
-      count: `₹${formatNumber(codPendingTotal)}`,
+      numericValue: codPendingTotal,
+      prefix: '₹',
+      decimals: 2,
       trend: codPendingTotal === 0 ? 'No pending COD' : `₹${codPendingTotal.toFixed(2)} in pipeline`,
       isTrendPositive: true,
       subtitle: 'Pending cash payouts',
@@ -216,21 +260,50 @@ export const CustomerDashboard: React.FC = () => {
     },
   ];
 
-  // 2. RECENT ORDERS DATA (Dynamic from Real Merchant Shipments)
-  const recentOrdersData: Array<{
+  // 3. RECENT ORDERS DATA (Filtered dynamically by active pipeline funnel stage)
+  const filteredShipments = tenantShipments.filter((s) => {
+    if (activeStageFilter === 'all') return true;
+    if (activeStageFilter === 'created') {
+      return ['CREATED', 'DRAFT', 'BOOKING_CONFIRMED', 'AWB_ASSIGNED', 'PICKUP_REQUESTED', 'PENDING_API', 'API_PROCESSING'].includes(
+        s.bookingStatus
+      );
+    }
+    if (activeStageFilter === 'inTransit') {
+      return ['IN_TRANSIT', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(s.bookingStatus);
+    }
+    if (activeStageFilter === 'delivered') {
+      return s.bookingStatus === 'DELIVERED';
+    }
+    if (activeStageFilter === 'rto') {
+      return ['NDR', 'RTO_INITIATED', 'RTO_IN_TRANSIT', 'RTO_DELIVERED', 'CANCELLED', 'CANCEL_REQUESTED'].includes(
+        s.bookingStatus
+      );
+    }
+    return true;
+  });
+
+  interface RecentOrderRow extends Record<string, unknown> {
     awb: string;
+    orderId: string;
     customer: string;
+    destinationCity: string;
     courier: string;
     status: string;
     statusVariant: 'success' | 'info' | 'warning' | 'danger' | 'brand' | 'neutral';
     amount: string;
-  }> = tenantShipments.slice(0, 5).map((s) => ({
+    rawShipment: CustomerShipmentDetail;
+  }
+
+  const recentOrdersData: RecentOrderRow[] = filteredShipments.slice(0, 6).map((s) => ({
     awb: s.awbNumber || 'PENDING',
+    orderId: s.orderId || s.id,
     customer: s.deliveryContact || 'Customer',
+    destinationCity: s.deliveryCity || '',
     courier: s.courierName || 'Shypfy Live',
     status: CustomerShipmentService.getCustomerFacingStatus(s.bookingStatus),
     statusVariant: (s.bookingStatus === 'DELIVERED' ? 'success' : s.bookingStatus === 'CANCELLED' ? 'danger' : 'brand') as any,
     amount: `₹${(s.totalCustomerChargeINR || 0).toFixed(2)}`,
+    rawShipment: s,
   }));
 
   // 3. LIVE OPERATIONAL ACTIVITY FEED DATA
@@ -452,7 +525,11 @@ export const CustomerDashboard: React.FC = () => {
 
               <div>
                 <div style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', lineHeight: 1.1 }}>
-                  {typeof card.count === 'number' ? formatNumber(card.count) : card.count}
+                  <AnimatedCounter
+                    value={card.numericValue}
+                    prefix={card.prefix}
+                    decimals={card.decimals}
+                  />
                 </div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#334155', marginTop: '4px' }}>
                   {card.title}
@@ -537,78 +614,105 @@ export const CustomerDashboard: React.FC = () => {
       {/* 5. SECOND ROW: SHIPMENT PERFORMANCE CHART & WALLET SUMMARY CARD */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px', alignItems: 'stretch' }}>
         
-        {/* LEFT: SHIPMENT PERFORMANCE CHART PANEL */}
+        {/* LEFT: SHIPMENT PERFORMANCE & PIPELINE FUNNEL FILTER PANEL */}
         <Card style={{ padding: '20px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
               <div>
                 <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <BarChart3 size={18} style={{ color: '#0284c7' }} /> Shipment Performance
+                  <BarChart3 size={18} style={{ color: '#0284c7' }} /> Shipment Pipeline Funnel
                 </h3>
-                <span style={{ fontSize: '12px', color: '#64748b' }}>Order fulfillment breakdown across stages</span>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>Click any stage to live-filter recent orders</span>
               </div>
 
-              {/* Date Filters: Today, 7 Days, 30 Days */}
-              <div style={{ display: 'flex', gap: '4px', backgroundColor: '#f1f5f9', padding: '3px', borderRadius: '6px' }}>
-                {(['today', '7d', '30d'] as const).map((rangeKey) => (
-                  <button
-                    key={rangeKey}
-                    onClick={() => handleDateRangeChange(rangeKey)}
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: '4px',
-                      border: 'none',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      cursor: 'pointer',
-                      backgroundColor: chartDateRange === rangeKey ? '#ffffff' : 'transparent',
-                      color: chartDateRange === rangeKey ? '#0284c7' : '#64748b',
-                      boxShadow: chartDateRange === rangeKey ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
-                    }}
-                  >
-                    {rangeKey === 'today' ? 'Today' : rangeKey === '7d' ? '7 Days' : '30 Days'}
-                  </button>
-                ))}
-              </div>
+              {/* Reset filter badge if not 'all' */}
+              {activeStageFilter !== 'all' && (
+                <button
+                  type="button"
+                  onClick={() => setActiveStageFilter('all')}
+                  style={{
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    border: '1px solid #bae6fd',
+                    backgroundColor: '#f0f9ff',
+                    color: '#0284c7',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                  title="Show all shipments"
+                >
+                  Clear Filter (Show All) <X size={12} />
+                </button>
+              )}
             </div>
 
             {/* Visual Performance Progress Bar */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ height: '14px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '7px', overflow: 'hidden', display: 'flex' }}>
-                <div style={{ width: '85%', backgroundColor: '#16a34a' }} title="Delivered: 85%" />
-                <div style={{ width: '10%', backgroundColor: '#0284c7' }} title="In Transit: 10%" />
-                <div style={{ width: '4%', backgroundColor: '#d97706' }} title="NDR: 4%" />
-                <div style={{ width: '1%', backgroundColor: '#dc2626' }} title="RTO: 1%" />
+            <div style={{ marginBottom: '14px' }}>
+              <div style={{ height: '12px', width: '100%', backgroundColor: '#f1f5f9', borderRadius: '6px', overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: totalShipmentsCount > 0 ? `${Math.round((deliveredCount / totalShipmentsCount) * 100)}%` : '0%', backgroundColor: '#16a34a', transition: 'width 0.4s ease' }} title={`Delivered: ${deliveredCount}`} />
+                <div style={{ width: totalShipmentsCount > 0 ? `${Math.round((inTransitCount / totalShipmentsCount) * 100)}%` : '0%', backgroundColor: '#0284c7', transition: 'width 0.4s ease' }} title={`In Transit: ${inTransitCount}`} />
+                <div style={{ width: totalShipmentsCount > 0 ? `${Math.round((createdCount / totalShipmentsCount) * 100)}%` : '100%', backgroundColor: '#38bdf8', transition: 'width 0.4s ease' }} title={`Created: ${createdCount}`} />
+                <div style={{ width: totalShipmentsCount > 0 ? `${Math.round((rtoCount / totalShipmentsCount) * 100)}%` : '0%', backgroundColor: '#ef4444', transition: 'width 0.4s ease' }} title={`RTO / NDR: ${rtoCount}`} />
               </div>
             </div>
 
-            {/* 4 Metrics Stage Cards Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-              <div style={{ padding: '10px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: '8px', textAlign: 'center' }}>
-                <span style={{ fontSize: '10px', color: '#0369a1', fontWeight: '700', display: 'block', textTransform: 'uppercase' }}>Created</span>
-                <span style={{ fontSize: '18px', fontWeight: '800', color: '#0c4a6e' }}>{formatNumber(performanceChartStats.created)}</span>
-              </div>
-
-              <div style={{ padding: '10px', backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '8px', textAlign: 'center' }}>
-                <span style={{ fontSize: '10px', color: '#15803d', fontWeight: '700', display: 'block', textTransform: 'uppercase' }}>In Transit</span>
-                <span style={{ fontSize: '18px', fontWeight: '800', color: '#14532d' }}>{formatNumber(performanceChartStats.inTransit)}</span>
-              </div>
-
-              <div style={{ padding: '10px', backgroundColor: '#ecfdf5', border: '1px solid #a7f3d0', borderRadius: '8px', textAlign: 'center' }}>
-                <span style={{ fontSize: '10px', color: '#047857', fontWeight: '700', display: 'block', textTransform: 'uppercase' }}>Delivered</span>
-                <span style={{ fontSize: '18px', fontWeight: '800', color: '#064e3b' }}>{formatNumber(performanceChartStats.delivered)}</span>
-              </div>
-
-              <div style={{ padding: '10px', backgroundColor: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', textAlign: 'center' }}>
-                <span style={{ fontSize: '10px', color: '#b91c1c', fontWeight: '700', display: 'block', textTransform: 'uppercase' }}>RTO</span>
-                <span style={{ fontSize: '18px', fontWeight: '800', color: '#7f1d1d' }}>{formatNumber(performanceChartStats.rto)}</span>
-              </div>
+            {/* Interactive 5-Stage Funnel Cards Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(95px, 1fr))', gap: '8px' }}>
+              {[
+                { key: 'all' as const, label: 'All Orders', count: totalShipmentsCount, color: '#0369a1', bg: '#f8fafc', activeBg: '#e0f2fe', border: '#e2e8f0', activeBorder: '#0284c7' },
+                { key: 'created' as const, label: 'Created', count: createdCount, color: '#0284c7', bg: '#f0f9ff', activeBg: '#e0f2fe', border: '#bae6fd', activeBorder: '#0284c7' },
+                { key: 'inTransit' as const, label: 'In Transit', count: inTransitCount, color: '#15803d', bg: '#f0fdf4', activeBg: '#dcfce7', border: '#bbf7d0', activeBorder: '#16a34a' },
+                { key: 'delivered' as const, label: 'Delivered', count: deliveredCount, color: '#047857', bg: '#ecfdf5', activeBg: '#d1fae5', border: '#a7f3d0', activeBorder: '#059669' },
+                { key: 'rto' as const, label: 'NDR / RTO', count: rtoCount, color: '#b91c1c', bg: '#fef2f2', activeBg: '#fee2e2', border: '#fecaca', activeBorder: '#dc2626' },
+              ].map((stage) => {
+                const isActive = activeStageFilter === stage.key;
+                return (
+                  <button
+                    key={stage.key}
+                    type="button"
+                    onClick={() => setActiveStageFilter(stage.key)}
+                    style={{
+                      padding: '10px 6px',
+                      backgroundColor: isActive ? stage.activeBg : stage.bg,
+                      border: `2px solid ${isActive ? stage.activeBorder : stage.border}`,
+                      borderRadius: '10px',
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.18s ease',
+                      boxShadow: isActive ? '0 4px 12px rgba(2, 132, 199, 0.18)' : 'none',
+                      transform: isActive ? 'translateY(-2px)' : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.transform = 'none';
+                    }}
+                  >
+                    <span style={{ fontSize: '10px', color: stage.color, fontWeight: '800', display: 'block', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                      {stage.label}
+                    </span>
+                    <span style={{ fontSize: '17px', fontWeight: '900', color: '#0f172a', display: 'block', marginTop: '2px' }}>
+                      <AnimatedCounter value={stage.count} />
+                    </span>
+                    {isActive && (
+                      <span style={{ fontSize: '9px', fontWeight: '800', color: stage.color, display: 'inline-block', marginTop: '2px', textTransform: 'uppercase' }}>
+                        Active Filter
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
           <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-            <span>Success Rate: <strong style={{ color: '#16a34a' }}>100%</strong></span>
-            <span>Average Transit Time: <strong style={{ color: '#0f172a' }}>Ready</strong></span>
+            <span>Success Rate: <strong style={{ color: '#16a34a' }}>{totalShipmentsCount > 0 ? `${Math.round((deliveredCount / totalShipmentsCount) * 100)}%` : '100%'}</strong></span>
+            <span>Active Filter: <strong style={{ color: '#0284c7', textTransform: 'uppercase' }}>{activeStageFilter}</strong></span>
           </div>
         </Card>
 
@@ -625,13 +729,17 @@ export const CustomerDashboard: React.FC = () => {
               <Badge variant="brand">Prepaid Merchant</Badge>
             </div>
 
-            {/* Big Current Balance Readout */}
+            {/* Big Current Balance Readout with AnimatedCounter */}
             <div style={{ backgroundColor: '#faf5ff', border: '1px solid #e9d5ff', borderRadius: '8px', padding: '16px', marginBottom: '14px' }}>
               <span style={{ fontSize: '11px', fontWeight: '700', color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                 Current Balance
               </span>
               <div style={{ fontSize: '28px', fontWeight: '900', color: '#5b21b6', marginTop: '2px' }}>
-                ₹ {formatNumber(parseFloat(walletBalanceINR))}
+                <AnimatedCounter
+                  value={parseFloat(walletBalanceINR) || 0}
+                  prefix="₹ "
+                  decimals={2}
+                />
               </div>
             </div>
 
@@ -668,10 +776,17 @@ export const CustomerDashboard: React.FC = () => {
         
         {/* LEFT: RECENT ORDERS TABLE */}
         <Card style={{ padding: '20px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Package size={18} style={{ color: '#0284c7' }} /> Recent Orders
-            </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Package size={18} style={{ color: '#0284c7' }} /> Recent Orders
+              </h3>
+              {activeStageFilter !== 'all' && (
+                <Badge variant="brand">
+                  Filtered: {activeStageFilter.toUpperCase()} ({recentOrdersData.length})
+                </Badge>
+              )}
+            </div>
             <button
               onClick={() => navigate('/app/shipments')}
               style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
@@ -683,44 +798,96 @@ export const CustomerDashboard: React.FC = () => {
           {recentOrdersData.length === 0 ? (
             <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1' }}>
               <Package size={32} style={{ color: '#94a3b8', margin: '0 auto 8px' }} />
-              <strong style={{ fontSize: '14px', color: '#1e293b', display: 'block' }}>No Recent Shipments</strong>
-              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px 0' }}>Your orders will appear here automatically once you book dispatches.</p>
-              <Button variant="primary" size="sm" onClick={() => navigate('/app/orders/create')} style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}>
-                Book Your First Shipment
-              </Button>
+              <strong style={{ fontSize: '14px', color: '#1e293b', display: 'block' }}>
+                {activeStageFilter !== 'all' ? `No shipments in "${activeStageFilter.toUpperCase()}" stage` : 'No Recent Shipments'}
+              </strong>
+              <p style={{ fontSize: '12px', color: '#64748b', margin: '4px 0 16px 0' }}>
+                {activeStageFilter !== 'all' ? 'Try switching to another pipeline stage or clear the filter.' : 'Your orders will appear here automatically once you book dispatches.'}
+              </p>
+              {activeStageFilter !== 'all' ? (
+                <Button variant="outline" size="sm" onClick={() => setActiveStageFilter('all')}>
+                  Show All Orders
+                </Button>
+              ) : (
+                <Button variant="primary" size="sm" onClick={() => navigate('/app/orders/create')} style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}>
+                  Book Your First Shipment
+                </Button>
+              )}
             </div>
           ) : (
             <Table
               columns={[
                 {
                   key: 'awb',
-                  header: 'AWB',
-                  render: (r) => (
-                    <span
-                      onClick={() => navigate('/app/orders')}
-                      style={{
-                        fontFamily: 'monospace',
-                        color: '#0284c7',
-                        fontSize: '12px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        textDecoration: 'underline',
-                      }}
-                      title="View Order Details"
-                    >
-                      {r.awb}
-                    </span>
+                  header: 'AWB / Tracking',
+                  render: (r: RecentOrderRow) => (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedDrawerOrder(r.rawShipment)}
+                        style={{
+                          fontFamily: 'monospace',
+                          color: '#0284c7',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                        }}
+                        title="Open Quick Peek Drawer"
+                      >
+                        {r.awb}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => handleCopyAwb(e, r.awb)}
+                        style={{
+                          background: copiedAwb === r.awb ? '#dcfce7' : '#f1f5f9',
+                          border: `1px solid ${copiedAwb === r.awb ? '#86efac' : '#e2e8f0'}`,
+                          borderRadius: '4px',
+                          padding: '2px 4px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title={copiedAwb === r.awb ? 'Copied to clipboard!' : 'Copy AWB'}
+                      >
+                        {copiedAwb === r.awb ? (
+                          <Check size={11} style={{ color: '#16a34a' }} />
+                        ) : (
+                          <Copy size={11} style={{ color: '#64748b' }} />
+                        )}
+                      </button>
+                      {copiedAwb === r.awb && (
+                        <span style={{ fontSize: '10px', color: '#16a34a', fontWeight: '700' }}>Copied!</span>
+                      )}
+                    </div>
                   ),
                 },
                 {
                   key: 'customer',
                   header: 'Customer',
-                  render: (r) => <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px', whiteSpace: 'nowrap' }}>{r.customer}</span>,
+                  render: (r: RecentOrderRow) => (
+                    <div>
+                      <span style={{ fontWeight: '600', color: '#1e293b', fontSize: '12px', whiteSpace: 'nowrap', display: 'block' }}>
+                        {r.customer}
+                      </span>
+                      {r.destinationCity && (
+                        <span style={{ fontSize: '10px', color: '#64748b', display: 'block' }}>
+                          📍 {r.destinationCity}
+                        </span>
+                      )}
+                    </div>
+                  ),
                 },
                 {
                   key: 'courier',
                   header: 'Courier',
-                  render: (r) => (
+                  render: (r: RecentOrderRow) => (
                     <span
                       style={{
                         fontSize: '11px',
@@ -744,13 +911,49 @@ export const CustomerDashboard: React.FC = () => {
                 {
                   key: 'status',
                   header: 'Status',
-                  render: (r) => <Badge variant={r.statusVariant}>{r.status}</Badge>,
+                  render: (r: RecentOrderRow) => <Badge variant={r.statusVariant}>{r.status}</Badge>,
                 },
                 {
                   key: 'amount',
                   header: 'Amount',
                   align: 'right',
-                  render: (r) => <strong style={{ color: '#0f172a', fontSize: '12px' }}>{r.amount}</strong>,
+                  render: (r: RecentOrderRow) => <strong style={{ color: '#0f172a', fontSize: '12px' }}>{r.amount}</strong>,
+                },
+                {
+                  key: 'action',
+                  header: 'Quick Action',
+                  align: 'center',
+                  render: (r: RecentOrderRow) => (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDrawerOrder(r.rawShipment)}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '3px 8px',
+                        cursor: 'pointer',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        color: '#0284c7',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f0f9ff';
+                        e.currentTarget.style.borderColor = '#0284c7';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                        e.currentTarget.style.borderColor = '#cbd5e1';
+                      }}
+                      title="Open Peek Drawer"
+                    >
+                      Peek <ExternalLink size={10} />
+                    </button>
+                  ),
                 },
               ]}
               data={recentOrdersData}
@@ -859,6 +1062,203 @@ export const CustomerDashboard: React.FC = () => {
           ))}
         </div>
       </Card>
+
+      {/* 7. SLIDE-OVER ORDER PEEK DRAWER */}
+      <Drawer
+        isOpen={Boolean(selectedDrawerOrder)}
+        onClose={() => setSelectedDrawerOrder(null)}
+        position="right"
+        title={selectedDrawerOrder ? `Order: ${selectedDrawerOrder.orderId || selectedDrawerOrder.awbNumber || 'Details'}` : 'Shipment Details'}
+      >
+        {selectedDrawerOrder && (
+          <div style={{ display: 'flex', flexDirection: 'column', height: '100%', boxSizing: 'border-box' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              
+              {/* AWB & Status Banner */}
+              <div style={{ backgroundColor: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                    Airway Bill (AWB)
+                  </span>
+                  <Badge variant={selectedDrawerOrder.bookingStatus === 'DELIVERED' ? 'success' : selectedDrawerOrder.bookingStatus === 'CANCELLED' ? 'danger' : 'brand'}>
+                    {CustomerShipmentService.getCustomerFacingStatus(selectedDrawerOrder.bookingStatus)}
+                  </Badge>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
+                    {selectedDrawerOrder.awbNumber || 'PENDING ASSIGNMENT'}
+                  </span>
+                  {selectedDrawerOrder.awbNumber && (
+                    <button
+                      type="button"
+                      onClick={(e) => handleCopyAwb(e, selectedDrawerOrder.awbNumber!)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '11px',
+                        fontWeight: '700',
+                        border: '1px solid #cbd5e1',
+                        backgroundColor: '#ffffff',
+                        color: copiedAwb === selectedDrawerOrder.awbNumber ? '#16a34a' : '#0284c7',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                      }}
+                      title="Copy AWB number"
+                    >
+                      {copiedAwb === selectedDrawerOrder.awbNumber ? (
+                        <>
+                          <Check size={12} color="#16a34a" /> Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={12} /> Copy
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 4-Step Tracking Stepper */}
+              <div style={{ backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Clock size={14} style={{ color: '#0284c7' }} /> Shipment Journey Stepper
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', paddingLeft: '4px' }}>
+                  {[
+                    {
+                      label: 'Booked / Manifested',
+                      sub: 'AWB generated on Shypfy Live',
+                      isDone: true,
+                      isCurrent: ['BOOKING_CONFIRMED', 'AWB_ASSIGNED', 'PICKUP_REQUESTED'].includes(selectedDrawerOrder.bookingStatus),
+                    },
+                    {
+                      label: 'Pickup Completed',
+                      sub: selectedDrawerOrder.pickupCity ? `Picked from ${selectedDrawerOrder.pickupCity}` : 'Origin Hub Dispatched',
+                      isDone: ['PICKED_UP', 'IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(selectedDrawerOrder.bookingStatus),
+                      isCurrent: selectedDrawerOrder.bookingStatus === 'PICKED_UP',
+                    },
+                    {
+                      label: 'In Transit / Out for Delivery',
+                      sub: 'Linehaul connection active',
+                      isDone: ['IN_TRANSIT', 'OUT_FOR_DELIVERY', 'DELIVERED'].includes(selectedDrawerOrder.bookingStatus),
+                      isCurrent: ['IN_TRANSIT', 'OUT_FOR_DELIVERY'].includes(selectedDrawerOrder.bookingStatus),
+                    },
+                    {
+                      label: 'Delivered',
+                      sub: selectedDrawerOrder.bookingStatus === 'DELIVERED' ? 'Successfully handed to customer' : 'Pending destination handover',
+                      isDone: selectedDrawerOrder.bookingStatus === 'DELIVERED',
+                      isCurrent: selectedDrawerOrder.bookingStatus === 'DELIVERED',
+                    },
+                  ].map((step, idx) => (
+                    <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', position: 'relative' }}>
+                      <div
+                        style={{
+                          width: '22px',
+                          height: '22px',
+                          borderRadius: '50%',
+                          backgroundColor: step.isDone ? '#16a34a' : step.isCurrent ? '#0284c7' : '#e2e8f0',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          flexShrink: 0,
+                          marginTop: '1px',
+                        }}
+                      >
+                        {step.isDone ? <Check size={13} /> : idx + 1}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '12px', fontWeight: '700', color: step.isDone || step.isCurrent ? '#0f172a' : '#94a3b8' }}>
+                          {step.label}
+                        </div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '1px' }}>
+                          {step.sub}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery Destination */}
+              <div style={{ backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapPin size={14} style={{ color: '#0284c7' }} /> Destination Address
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+                  {selectedDrawerOrder.deliveryContact || 'Customer'}
+                </div>
+                {selectedDrawerOrder.deliveryPhone && (
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '2px' }}>
+                    Phone: {selectedDrawerOrder.deliveryPhone}
+                  </div>
+                )}
+                <div style={{ fontSize: '12px', color: '#475569', marginTop: '4px', lineHeight: 1.4 }}>
+                  {selectedDrawerOrder.deliveryAddress}
+                  <br />
+                  {selectedDrawerOrder.deliveryCity} - {selectedDrawerOrder.deliveryPincode}
+                </div>
+              </div>
+
+              {/* Package Specs & Charges */}
+              <div style={{ backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                <div style={{ fontSize: '12px', fontWeight: '800', color: '#0f172a', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Package size={14} style={{ color: '#0284c7' }} /> Package Specs & Billing
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+                  <div style={{ padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                    <span style={{ color: '#64748b', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Courier</span>
+                    <strong style={{ color: '#0f172a' }}>{selectedDrawerOrder.courierName || 'Shypfy Live'}</strong>
+                  </div>
+                  <div style={{ padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                    <span style={{ color: '#64748b', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Mode</span>
+                    <strong style={{ color: '#0f172a' }}>{selectedDrawerOrder.paymentMode || 'Prepaid'}</strong>
+                  </div>
+                  <div style={{ padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                    <span style={{ color: '#64748b', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Weight</span>
+                    <strong style={{ color: '#0f172a' }}>{selectedDrawerOrder.actualWeightKg ?? 0.5} kg</strong>
+                  </div>
+                  <div style={{ padding: '8px 10px', backgroundColor: '#f8fafc', borderRadius: '6px', border: '1px solid #f1f5f9' }}>
+                    <span style={{ color: '#64748b', fontSize: '10px', display: 'block', textTransform: 'uppercase' }}>Charge</span>
+                    <strong style={{ color: '#0284c7' }}>₹{(selectedDrawerOrder.totalCustomerChargeINR || 0).toFixed(2)}</strong>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Sticky Drawer Footer Actions */}
+            <div style={{ padding: '12px 20px', borderTop: '1px solid #e2e8f0', backgroundColor: '#ffffff', display: 'flex', gap: '10px' }}>
+              <Button
+                variant="primary"
+                size="sm"
+                style={{ flex: 1, backgroundColor: '#0284c7', borderColor: '#0284c7', fontWeight: '700' }}
+                onClick={() => {
+                  const awb = selectedDrawerOrder.awbNumber;
+                  setSelectedDrawerOrder(null);
+                  navigate(`/app/tracking${awb ? `?awb=${awb}` : ''}`);
+                }}
+              >
+                Full Tracking Page →
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDrawerOrder(null)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        )}
+      </Drawer>
 
     </div>
   );

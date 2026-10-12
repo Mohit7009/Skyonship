@@ -3,6 +3,7 @@ import { Sidebar, type NavGroupConfig } from './Sidebar';
 import { Topbar } from './Topbar';
 import { Drawer } from '../ui/Drawer';
 import { useBreakpoints } from '../../hooks/useBreakpoints';
+import { FloatingQuickAction } from './FloatingQuickAction';
 
 export interface AppShellProps {
   navigationGroups: NavGroupConfig[];
@@ -126,6 +127,9 @@ export const AppShell: React.FC<AppShellProps> = ({
           {children}
         </main>
       </div>
+
+      {/* Floating Quick Action Button across portal */}
+      <FloatingQuickAction />
     </div>
   );
 };
