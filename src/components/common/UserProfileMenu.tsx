@@ -16,6 +16,7 @@ import {
   BadgeCheck,
 } from 'lucide-react';
 import { useTenant } from '../../context/TenantContext';
+import { authService } from '../../services/auth.service';
 
 export interface UserProfileMenuProps {
   userName?: string;
@@ -38,11 +39,27 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
   const isAdmin = portalName.toLowerCase().includes('admin');
   const { activeTenant, activeTenantId } = useTenant();
 
-  const resolvedName = userName || (isAdmin ? 'Platform Super Admin' : 'Mohit');
-  const resolvedCompany = isAdmin ? 'Super Admin Portal' : (activeTenant?.companyName || 'Priya Logistics');
-  const resolvedMerchantId = isAdmin ? 'SUPER-ADMIN' : (activeTenantId ? activeTenantId.replace('TENANT-', 'SKYON') : 'SKYON3328');
-  const resolvedEmail = userEmail || (isAdmin ? 'admin@skyonship.com' : 'mohit@skyonship.com');
-  const resolvedRole = userRole || (isAdmin ? 'Super Admin' : 'Account Owner');
+  const currentUser = (() => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const raw = localStorage.getItem('courrier3_current_user');
+        if (raw) return JSON.parse(raw);
+      }
+    } catch {}
+    return null;
+  })();
+
+  const resolvedName = userName || currentUser?.fullName || (isAdmin ? 'Platform Super Admin' : 'Merchant');
+  const resolvedCompany = isAdmin ? 'Super Admin Portal' : (currentUser?.businessName || activeTenant?.companyName || 'My Business');
+  const resolvedMerchantId = isAdmin
+    ? 'SUPER-ADMIN'
+    : (activeTenantId
+      ? (activeTenantId.startsWith('tenant-')
+        ? activeTenantId.replace('tenant-', 'SKYON-').toUpperCase()
+        : `SKYON-${activeTenantId.slice(0, 8).toUpperCase()}`)
+      : 'SKYON-NEW');
+  const resolvedEmail = userEmail || currentUser?.workEmail || (isAdmin ? 'admin@skyonship.com' : 'merchant@skyonship.com');
+  const resolvedRole = userRole || currentUser?.role || (isAdmin ? 'Super Admin' : 'Account Owner');
 
   // Click outside to close
   useEffect(() => {
@@ -156,10 +173,11 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
 
   const menuItems = isAdmin ? adminMenuItems : customerMenuItems;
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsOpen(false);
-    localStorage.removeItem('courrier3_active_portal');
-    localStorage.removeItem('courrier3_current_user');
+    try {
+      await authService.signOut();
+    } catch {}
     navigate(isAdmin ? '/admin/login' : '/login');
   };
 

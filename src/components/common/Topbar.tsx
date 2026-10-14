@@ -9,6 +9,7 @@ import { LiveToastContainer } from './LiveToastContainer';
 import { useBreakpoints } from '../../hooks/useBreakpoints';
 import { APP_CONFIG } from '../../config/app.config';
 import { WalletService } from '../../mocks/wallet.mock';
+import { useTenant } from '../../context/TenantContext';
 
 export interface TopbarProps {
   portalName?: string;
@@ -21,13 +22,9 @@ export const Topbar: React.FC<TopbarProps> = ({
 }) => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoints();
+  const { activeTenantId } = useTenant();
 
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-
-  const activeTenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
 
   const currentUser = (() => {
     try {
@@ -40,7 +37,9 @@ export const Topbar: React.FC<TopbarProps> = ({
   })();
 
   const isCustomerPortal = !portalName.toLowerCase().includes('admin');
-  const walletBalancePaise = WalletService.getWallet(activeTenantId).availableBalanceMinor ?? 0;
+  const walletBalancePaise = activeTenantId
+    ? (WalletService.getWallet(activeTenantId).availableBalanceMinor ?? 0)
+    : 0;
   const walletBalanceINR = (walletBalancePaise / 100).toFixed(2);
 
   // Global Keyboard Shortcut: Ctrl + K / Cmd + K

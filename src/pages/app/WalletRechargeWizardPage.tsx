@@ -12,14 +12,13 @@ import { WalletService } from '../../mocks/wallet.mock';
 import { WalletRechargeService, type WalletRechargeRecord } from '../../services/walletRechargeService';
 import { OnboardingService } from '../../services/onboardingService';
 import { useRbac } from '../../context/RbacContext';
+import { useTenant } from '../../context/TenantContext';
 
 export const WalletRechargeWizardPage: React.FC = () => {
   const navigate = useNavigate();
   const { logActivity } = useRbac();
-  const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
 
   // Step 1: Select Amount
   const [selectedPreset, setSelectedPreset] = useState<number | null>(1000);

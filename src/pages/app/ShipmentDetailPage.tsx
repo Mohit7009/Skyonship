@@ -23,6 +23,7 @@ import {
 } from '../../components/ui';
 import { CustomerShipmentService, type CustomerShipmentDetail } from '../../services/customerShipmentService';
 import { WeightDiscrepancyService, type WeightDiscrepancyRecord } from '../../services/weightDiscrepancyService';
+import { useTenant } from '../../context/TenantContext';
 
 export const JOURNEY_STEPS = [
   'Order Created',
@@ -37,11 +38,8 @@ export const JOURNEY_STEPS = [
 export const ShipmentDetailPage: React.FC = () => {
   const { shipmentId } = useParams<{ shipmentId: string }>();
   const navigate = useNavigate();
-
-  const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
 
   const [shipment, setShipment] = useState<CustomerShipmentDetail | null>(null);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);

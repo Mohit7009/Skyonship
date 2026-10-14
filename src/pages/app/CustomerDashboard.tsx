@@ -39,6 +39,7 @@ import { formatNumber } from '../../utils/formatters';
 
 import { OnboardingTrackerCard } from '../../components/app/OnboardingTrackerCard';
 import { ThreeDIcon } from '../../components/common/ThreeDIcon';
+import { useTenant } from '../../context/TenantContext';
 
 export const CustomerDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -80,10 +81,7 @@ export const CustomerDashboard: React.FC = () => {
   const [, setSyncVersion] = useState<number>(0);
 
   // Active Tenant & Wallet Data
-  const activeTenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
 
   // Synchronize shipments and wallet from Supabase Cloud DB on mount
   useEffect(() => {

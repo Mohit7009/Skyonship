@@ -4,15 +4,13 @@ import { ArrowLeft, Printer, Download, QrCode } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { Button, Card, Alert, Badge } from '../../components/ui';
 import { CustomerShipmentService } from '../../services/customerShipmentService';
+import { useTenant } from '../../context/TenantContext';
 
 export const ShipmentLabelPage: React.FC = () => {
   const { shipmentId } = useParams<{ shipmentId: string }>();
   const navigate = useNavigate();
-
-  const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
 
   const shipment =
     CustomerShipmentService.getShipmentById(shipmentId || '', tenantId) ||

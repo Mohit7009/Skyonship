@@ -31,10 +31,12 @@ import {
 import { CustomerShipmentService } from '../../services/customerShipmentService';
 import { mapShipmentToOrderRecord, type OrderRecord } from './CustomerOrdersPage';
 import { formatCurrency } from '../../utils/formatters';
+import { useTenant } from '../../context/TenantContext';
 
 export const ShipmentControlCenterPage: React.FC = () => {
   const { id, shipmentId } = useParams<{ id?: string; shipmentId?: string }>();
   const navigate = useNavigate();
+  const { activeTenantId } = useTenant();
 
   const [activeTab, setActiveTab] = useState<
     'OVERVIEW' | 'TIMELINE' | 'CHARGES' | 'DOCUMENTS' | 'BILLING' | 'ACTIVITY'
@@ -52,11 +54,6 @@ export const ShipmentControlCenterPage: React.FC = () => {
       setIsLoading(false);
       return;
     }
-
-    const activeTenantId =
-      typeof window !== 'undefined' && window.localStorage
-        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-        : 'tenant-demo-01';
 
     setIsLoading(true);
 

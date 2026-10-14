@@ -91,8 +91,29 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           return profile;
         }
       } catch (_err) {
-        // Query failed, fall back to checking local demo registry
+        // Query failed, fall back to checking local demo registry or current user metadata
       }
+
+      // If valid UUID but no DB row yet (e.g. before SQL trigger migration is executed), construct a clean merchant profile
+      try {
+        const raw = typeof window !== 'undefined' ? localStorage.getItem('courrier3_current_user') : null;
+        if (raw) {
+          const u = JSON.parse(raw);
+          return {
+            tenantId,
+            companyName: u.businessName || 'My Logistics Hub',
+            slug: (u.businessName || 'merchant').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+            status: 'ACTIVE',
+            planTier: 'Growth',
+            createdAt: new Date().toISOString().split('T')[0],
+            assignedRateCards: ['RC-STANDARD'],
+            assignedManager: 'Support Desk',
+            contactEmail: u.workEmail || '',
+            contactMobile: u.phoneNumber || '',
+            gstNumber: '',
+          };
+        }
+      } catch {}
     }
 
     // 2. Check local demo mock registry if present (for test tenants like TENANT-1001)
@@ -103,6 +124,33 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Fail-Closed: Never fall back to Apex Logistics for unknown IDs
     return null;
+  }, []);
+
+  // Synchronize active tenant directly from Supabase session
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        const u = data.user;
+        const isAdmin = u.email?.includes('admin') || u.app_metadata?.role === 'super_admin';
+        const tId = u.app_metadata?.tenant_id || (isAdmin ? 'ALL' : u.id);
+        setActiveTenantIdState((prev) => (prev !== tId ? tId : prev));
+        localStorage.setItem('courrier3_active_tenant_id', tId);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        const isAdmin = u.email?.includes('admin') || u.app_metadata?.role === 'super_admin';
+        const tId = u.app_metadata?.tenant_id || (isAdmin ? 'ALL' : u.id);
+        setActiveTenantIdState((prev) => (prev !== tId ? tId : prev));
+        localStorage.setItem('courrier3_active_tenant_id', tId);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {

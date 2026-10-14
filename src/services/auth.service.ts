@@ -62,7 +62,7 @@ export class AuthService implements IAuthService {
         }
       }
 
-      const resolvedTenantId = tenantId || (isAdmin ? 'ALL' : '');
+      const resolvedTenantId = tenantId || (isAdmin ? 'ALL' : user.id);
 
       const authUser: AuthUser = {
         id: user.id,
@@ -77,9 +77,7 @@ export class AuthService implements IAuthService {
 
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem('courrier3_active_portal', isAdmin ? 'ADMIN' : 'CUSTOMER');
-        if (resolvedTenantId) {
-          localStorage.setItem('courrier3_active_tenant_id', resolvedTenantId);
-        }
+        localStorage.setItem('courrier3_active_tenant_id', resolvedTenantId);
         localStorage.setItem('courrier3_current_user', JSON.stringify(authUser));
       }
 
@@ -151,6 +149,8 @@ export class AuthService implements IAuthService {
         }
       }
 
+      const userTenantId = tenantId || data.user.id;
+
       const authUser: AuthUser = {
         id: data.user.id,
         fullName: payload.fullName,
@@ -159,14 +159,12 @@ export class AuthService implements IAuthService {
         businessName: payload.businessName,
         phoneNumber: payload.phoneNumber,
         businessType: payload.businessType,
-        tenantId: tenantId || '',
+        tenantId: userTenantId,
       };
 
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
-        if (tenantId) {
-          localStorage.setItem('courrier3_active_tenant_id', tenantId);
-        }
+        localStorage.setItem('courrier3_active_tenant_id', userTenantId);
         localStorage.setItem('courrier3_current_user', JSON.stringify(authUser));
       }
 
@@ -234,7 +232,7 @@ export class AuthService implements IAuthService {
           businessName: user.user_metadata?.business_name || (isAdmin ? 'Skyonship Super Admin' : 'Skyonship Merchant'),
           phoneNumber: user.user_metadata?.phone_number,
           businessType: user.user_metadata?.business_type,
-          tenantId: tenantId || (isAdmin ? 'ALL' : ''),
+          tenantId: tenantId || (isAdmin ? 'ALL' : user.id),
         };
 
         if (typeof window !== 'undefined' && window.localStorage) {

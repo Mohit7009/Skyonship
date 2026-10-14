@@ -29,12 +29,11 @@ import {
 } from '../../types/wallet';
 import { WalletService } from '../../mocks/wallet.mock';
 import { formatCurrency } from '../../utils/formatters';
+import { useTenant } from '../../context/TenantContext';
 
 export const WalletPage: React.FC = () => {
-  const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
 
   const [wallet, setWallet] = useState<Wallet>(() => WalletService.getWallet(tenantId));
   const [rechargeAmount, setRechargeAmount] = useState<string>('1000');
