@@ -1,5 +1,5 @@
-import React from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Package,
   PlusCircle,
@@ -13,11 +13,19 @@ import {
   Warehouse,
   LayoutDashboard,
   FileText,
+  RotateCcw,
+  Scale,
+  Truck,
+  MapPin,
+  Settings,
+  ShieldCheck,
 } from 'lucide-react';
 import { AppShell } from '../components/common/AppShell';
 import type { NavGroupConfig } from '../components/common/Sidebar';
 import { useRbac } from '../context/RbacContext';
 import { useTenant } from '../context/TenantContext';
+import { authService } from '../services/auth.service';
+import { Spinner } from '../components/ui';
 
 export const BASE_ENTERPRISE_B2B_NAV_GROUPS: NavGroupConfig[] = [
   {
@@ -34,22 +42,26 @@ export const BASE_ENTERPRISE_B2B_NAV_GROUPS: NavGroupConfig[] = [
       { label: 'Create Shipment', path: '/app/orders/create', icon: PlusCircle },
       { label: 'All Orders', path: '/app/orders', icon: Package },
       { label: 'Bulk Upload', path: '/app/bulk/upload', icon: FileSpreadsheet },
+      { label: 'Pickups & Manifests', path: '/app/pickups', icon: Truck },
     ],
   },
   {
-    sectionLabel: 'TRACKING',
+    sectionLabel: 'TRACKING & NDR',
     categoryIcon: Search,
     items: [
-      { label: 'Tracking & NDR', path: '/app/ndr', icon: AlertTriangle },
+      { label: 'Live Tracking', path: '/app/tracking', icon: Search },
+      { label: 'NDR Exceptions', path: '/app/ndr', icon: AlertTriangle },
+      { label: 'RTO Returns', path: '/app/rto', icon: RotateCcw },
+      { label: 'Weight Disputes', path: '/app/weight-discrepancies', icon: Scale },
     ],
   },
   {
     sectionLabel: 'FINANCE',
     categoryIcon: Wallet,
     items: [
-      { label: 'Wallet', path: '/app/wallet', icon: Wallet },
+      { label: 'Wallet & Recharge', path: '/app/wallet', icon: Wallet },
       { label: 'COD Remittance', path: '/app/cod', icon: IndianRupee },
-      { label: 'Invoices', path: '/app/billing', icon: CreditCard },
+      { label: 'GST Invoices', path: '/app/billing', icon: CreditCard },
     ],
   },
   {
@@ -58,21 +70,71 @@ export const BASE_ENTERPRISE_B2B_NAV_GROUPS: NavGroupConfig[] = [
     items: [
       { label: 'Rate Calculator', path: '/app/rates', icon: Calculator },
       { label: 'My Rate Card', path: '/app/my-rate-card', icon: FileText },
+      { label: 'Pincode Checker', path: '/app/serviceability', icon: MapPin },
       { label: 'Warehouses', path: '/app/warehouses', icon: Warehouse },
+    ],
+  },
+  {
+    sectionLabel: 'SETTINGS',
+    categoryIcon: Settings,
+    items: [
+      { label: 'Company Profile', path: '/app/settings/company', icon: Settings },
+      { label: 'KYC & Bank Details', path: '/app/settings/kyc', icon: ShieldCheck },
     ],
   },
 ];
 
 export const AppLayout: React.FC = () => {
   const location = useLocation();
-  const { canAccessPath, currentRole, roles, setActiveRoleId } = useRbac();
-  const { activeTenantId, activeTenant } = useTenant();
+  const navigate = useNavigate();
+  const { canAccessPath } = useRbac();
+  const { activeTenantId } = useTenant();
+  const [isVerifying, setIsVerifying] = useState(true);
 
-  // Filter navigation groups dynamically
+  // Enforce authentic Supabase session on all merchant portal routes
+  useEffect(() => {
+    let isMounted = true;
+    authService.getCurrentUser().then((user) => {
+      if (isMounted) {
+        if (!user) {
+          navigate('/login', { replace: true });
+        } else {
+          setIsVerifying(false);
+        }
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
+
+  // Filter navigation groups dynamically based on RBAC permissions
   const filteredNavGroups = BASE_ENTERPRISE_B2B_NAV_GROUPS.map((group) => {
     const allowedItems = group.items.filter((item) => canAccessPath(item.path));
     return { ...group, items: allowedItems };
   }).filter((group) => group.items.length > 0);
+
+  if (isVerifying) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          minHeight: '100vh',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f8fafc',
+          flexDirection: 'column',
+          gap: '16px',
+        }}
+      >
+        <Spinner size="lg" />
+        <span style={{ fontSize: '13px', color: '#64748b', fontWeight: '500' }}>
+          Verifying secure session...
+        </span>
+      </div>
+    );
+  }
 
   return (
     <AppShell

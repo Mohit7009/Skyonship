@@ -67,6 +67,7 @@ export interface CustomerShipmentDetail extends Record<string, unknown> {
   courierName: string;
   serviceName: string;
   mode: 'B2C' | 'B2B';
+  pickupWarehouseId?: string;
   pickupContact: string;
   pickupPhone: string;
   pickupAddress: string;
@@ -315,20 +316,16 @@ export const CustomerShipmentService = {
       s.awbNumber?.toLowerCase() === target ||
       s.orderId?.toLowerCase() === target;
 
-    // 1. Try matching with tenantId
-    let found = SHIPMENT_STORE.find(
-      (s) => (!tenantId || tenantId === 'all' || s.tenantId === tenantId) && matches(s)
-    );
+    const isTenantMatch = (s: CustomerShipmentDetail) =>
+      !tenantId || tenantId === 'all' || s.tenantId === tenantId;
 
-    // 2. Fallback: match without tenantId
-    if (!found) {
-      found = SHIPMENT_STORE.find(matches);
-    }
+    // 1. Try matching with strict tenantId boundary
+    let found = SHIPMENT_STORE.find((s) => isTenantMatch(s) && matches(s));
 
-    // 3. Fallback: reload from storage in case another tab saved it
+    // 2. Fallback: reload from storage in case another tab saved it (still enforcing tenantId)
     if (!found) {
       const fresh = loadShipmentsFromStorage();
-      found = fresh.find(matches);
+      found = fresh.find((s) => isTenantMatch(s) && matches(s));
       if (found) {
         SHIPMENT_STORE = fresh;
       }

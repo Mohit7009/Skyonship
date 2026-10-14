@@ -11,6 +11,7 @@ export interface CustomerBookingInput {
   customerPhone: string;
   customerEmail?: string;
   shipmentType: 'b2c' | 'b2b';
+  pickupWarehouseId?: string;
   pickupContactName: string;
   pickupPhone: string;
   pickupAddressLine1: string;
@@ -83,9 +84,26 @@ export const CustomerBookingService = {
     };
   },
 
+  checkWalletSufficiencyAsync: async (tenantId: string, amountINR: number) => {
+    if (!tenantId) {
+      return {
+        isSufficient: false,
+        availableINR: 0,
+        requiredINR: amountINR,
+        shortfallINR: amountINR,
+        walletStatus: 'SUSPENDED' as const,
+      };
+    }
+    await WalletService.syncFromSupabase(tenantId).catch(() => {});
+    return CustomerBookingService.checkWalletSufficiency(tenantId, amountINR);
+  },
+
   // Execute Shipment Booking with strict backend validation and atomic wallet debit
   bookShipmentWithWalletDebit: async (input: CustomerBookingInput): Promise<CustomerBookingResult> => {
-    const tenantId = input.tenantId || 'tenant-demo-01';
+    if (!input.tenantId) {
+      return { success: false, reason: 'VALIDATION_FAILED', message: 'Tenant session missing. Please log in again.' };
+    }
+    const tenantId = input.tenantId;
     const totalChargeINR = input.shippingChargeINR;
 
     // 1. Strict Server-Side Field Validation
@@ -215,6 +233,7 @@ export const CustomerBookingService = {
       courierName: input.courierName,
       serviceName: input.serviceName,
       mode: input.shipmentType === 'b2b' ? 'B2B' : 'B2C',
+      pickupWarehouseId: input.pickupWarehouseId,
       pickupContact: input.pickupContactName,
       pickupPhone: input.pickupPhone,
       pickupAddress: input.pickupAddressLine1,

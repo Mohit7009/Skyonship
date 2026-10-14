@@ -208,6 +208,7 @@ export const ShipmentTrackingNdrRtoService = {
     description: string;
     eventTime?: string;
     source?: 'MANUAL' | 'COURIER_API' | 'SYSTEM';
+    tenantId?: string;
   }): { success: boolean; message: string; event?: TrackingEventRecord } => {
     const eventTime = input.eventTime || new Date().toLocaleString();
     const eventHash = `${input.shipmentId}_${input.rawStatus}_${eventTime}_${input.location}`;
@@ -242,7 +243,7 @@ export const ShipmentTrackingNdrRtoService = {
       ShipmentTrackingNdrRtoService.createNdrRecord({
         shipmentId: input.shipmentId,
         awbNumber: input.awbNumber,
-        tenantId: 'tenant-demo-01',
+        tenantId: input.tenantId || 'tenant-demo-01',
         courierId: input.courierId,
         courierName: input.courierId.toUpperCase(),
         ndrReason: 'Customer unavailable',
@@ -253,7 +254,7 @@ export const ShipmentTrackingNdrRtoService = {
       ShipmentTrackingNdrRtoService.initiateRto({
         shipmentId: input.shipmentId,
         awbNumber: input.awbNumber,
-        tenantId: 'tenant-demo-01',
+        tenantId: input.tenantId || 'tenant-demo-01',
         courierId: input.courierId,
         courierName: input.courierId.toUpperCase(),
         rtoReason: 'Maximum delivery attempts reached',
@@ -280,7 +281,7 @@ export const ShipmentTrackingNdrRtoService = {
     courierFilter?: string;
   }): NdrRecord[] => {
     const {
-      tenantId = 'tenant-demo-01',
+      tenantId,
       searchQuery = '',
       statusFilter = 'all',
       reasonFilter = 'all',
@@ -321,8 +322,8 @@ export const ShipmentTrackingNdrRtoService = {
     });
   },
 
-  getNdrSummaryStats: (tenantId = 'tenant-demo-01') => {
-    const list = NDR_STORE.filter((n) => n.tenantId === tenantId);
+  getNdrSummaryStats: (tenantId?: string) => {
+    const list = NDR_STORE.filter((n) => !tenantId || tenantId === 'all' || n.tenantId === tenantId);
     let actionRequired = 0;
     let reattemptRequested = 0;
     let rtoRiskHigh = 0;
@@ -346,9 +347,9 @@ export const ShipmentTrackingNdrRtoService = {
     };
   },
 
-  addInternalNote: (ndrId: string, noteText: string, user = 'Merchant'): { success: boolean; message: string } => {
-    const ndr = ShipmentTrackingNdrRtoService.getNdrById(ndrId);
-    if (!ndr) return { success: false, message: 'NDR record not found.' };
+  addInternalNote: (ndrId: string, noteText: string, user = 'Merchant', tenantId?: string): { success: boolean; message: string } => {
+    const ndr = ShipmentTrackingNdrRtoService.getNdrById(ndrId, tenantId);
+    if (!ndr) return { success: false, message: 'NDR record not found or unauthorized.' };
 
     if (!(ndr as any).internalNotes) {
       (ndr as any).internalNotes = [];
@@ -364,8 +365,14 @@ export const ShipmentTrackingNdrRtoService = {
     return { success: true, message: 'Internal contact note saved successfully.' };
   },
 
-  getNdrById: (ndrId: string): NdrRecord | null => {
-    return NDR_STORE.find((n) => n.ndrId === ndrId || n.id === ndrId) || null;
+  getNdrById: (ndrId: string, tenantId?: string): NdrRecord | null => {
+    return (
+      NDR_STORE.find(
+        (n) =>
+          (n.ndrId === ndrId || n.id === ndrId) &&
+          (!tenantId || tenantId === 'all' || n.tenantId === tenantId)
+      ) || null
+    );
   },
 
   createNdrRecord: (input: {
@@ -443,9 +450,10 @@ export const ShipmentTrackingNdrRtoService = {
     recipientName?: string;
     preferredDeliveryDate?: string;
     deliveryInstructions?: string;
+    tenantId?: string;
   }): { success: boolean; message: string; paymentUrl?: string } => {
-    const ndr = ShipmentTrackingNdrRtoService.getNdrById(input.ndrId);
-    if (!ndr) return { success: false, message: 'NDR record not found.' };
+    const ndr = ShipmentTrackingNdrRtoService.getNdrById(input.ndrId, input.tenantId);
+    if (!ndr) return { success: false, message: 'NDR record not found or unauthorized.' };
 
     if (input.actionType === 'RTO') {
       ndr.status = 'RTO_INITIATED';
@@ -522,6 +530,24 @@ export const ShipmentTrackingNdrRtoService = {
     });
   },
 
+  updateRtoStatus: (
+    rtoId: string,
+    newStatus: RtoStatus,
+    tenantId?: string
+  ): { success: boolean; message: string; record?: RtoRecord } => {
+    const record = RTO_STORE.find(
+      (r) => (r.rtoId === rtoId || r.id === rtoId) && (!tenantId || tenantId === 'all' || r.tenantId === tenantId)
+    );
+    if (!record) {
+      return { success: false, message: 'RTO record not found or unauthorized.' };
+    }
+    record.status = newStatus;
+    if (newStatus === 'RTO_DELIVERED') {
+      record.completedAt = new Date().toLocaleString();
+    }
+    return { success: true, message: `RTO status updated to ${newStatus}.`, record };
+  },
+
   initiateRto: (input: {
     shipmentId: string;
     awbNumber: string;
@@ -562,5 +588,12 @@ export const ShipmentTrackingNdrRtoService = {
     });
 
     return newRto;
+  },
+
+  _resetStoreForTesting: () => {
+    TRACKING_STORE = [...INITIAL_TRACKING_EVENTS];
+    NDR_STORE = [...INITIAL_NDR_RECORDS];
+    RTO_STORE = [...INITIAL_RTO_RECORDS];
+    PROCESSED_TRACKING_HASHES.clear();
   },
 };

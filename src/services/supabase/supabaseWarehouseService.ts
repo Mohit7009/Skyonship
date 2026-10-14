@@ -160,6 +160,7 @@ export const SupabaseWarehouseService = {
       if (updates.pickupStartTime) updatePayload.pickup_start_time = updates.pickupStartTime;
       if (updates.pickupEndTime) updatePayload.pickup_end_time = updates.pickupEndTime;
       if (updates.isDefault !== undefined) updatePayload.is_default = updates.isDefault;
+      if (updates.status) updatePayload.status = updates.status;
 
       const { error } = await supabase
         .from('warehouses')
@@ -174,6 +175,36 @@ export const SupabaseWarehouseService = {
       return { success: true, message: 'Warehouse updated in Supabase cloud DB.' };
     } catch (err: any) {
       return { success: false, message: err.message || 'Database error updating warehouse.' };
+    }
+  },
+
+  /**
+   * Deactivate a warehouse in Supabase (soft-delete preserving historical shipment references).
+   */
+  async deactivateWarehouse(id: string, tenantId?: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const validTid = toValidTenantUUID(tenantId);
+      if (!isValidUUID(id)) {
+        return { success: false, message: 'Invalid warehouse UUID for database deactivation.' };
+      }
+
+      const { error } = await supabase
+        .from('warehouses')
+        .update({
+          status: 'INACTIVE',
+          is_default: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('tenant_id', validTid);
+
+      if (error) {
+        return { success: false, message: error.message };
+      }
+
+      return { success: true, message: 'Warehouse facility deactivated in Supabase cloud DB.' };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Database error deactivating warehouse.' };
     }
   },
 };

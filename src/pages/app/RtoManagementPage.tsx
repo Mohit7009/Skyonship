@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { RotateCcw, Truck, CheckCircle2 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import { StatCard } from '../../components/common/StatCard';
@@ -8,12 +8,14 @@ import {
   Table,
 } from '../../components/ui';
 import { ShipmentTrackingNdrRtoService, type RtoRecord } from '../../services/shipmentTrackingNdrRtoService';
+import { useTenant } from '../../context/TenantContext';
 
 export const RtoManagementPage: React.FC = () => {
-  const tenantId = 'tenant-demo-01';
-  const [rtoRecords] = useState<RtoRecord[]>(() =>
-    ShipmentTrackingNdrRtoService.getRtoRecords(tenantId)
-  );
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
+  const rtoRecords = useMemo(() => {
+    return ShipmentTrackingNdrRtoService.getRtoRecords(tenantId);
+  }, [tenantId]);
 
   const breadcrumbs = [
     { label: 'Customer Portal', path: '/app' },

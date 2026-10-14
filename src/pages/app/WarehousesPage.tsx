@@ -26,18 +26,22 @@ import {
   lookupPincodeDetails,
   type CustomerWarehouse,
 } from '../../services/customerWarehouseService';
+import { useTenant } from '../../context/TenantContext';
 
 export const WarehousesPage: React.FC = () => {
+  const { activeTenantId } = useTenant();
   const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+    activeTenantId ||
+    (typeof window !== 'undefined' && window.localStorage
+      ? localStorage.getItem('courrier3_active_tenant_id') || ''
+      : '');
 
   const [warehouses, setWarehouses] = useState<CustomerWarehouse[]>(() =>
     CustomerWarehouseService.getWarehouses(tenantId)
   );
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Modals
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
@@ -64,17 +68,26 @@ export const WarehousesPage: React.FC = () => {
 
   // Automatically sync with Supabase Cloud DB on mount
   useEffect(() => {
+    if (!tenantId) {
+      setWarehouses([]);
+      return;
+    }
+
     CustomerWarehouseService.syncFromSupabase(tenantId)
       .then((cloudList) => {
-        if (cloudList && cloudList.length > 0) {
-          setWarehouses([...cloudList]);
-          setIsCloudSynced(true);
-        }
+        setWarehouses([...cloudList]);
+        setIsCloudSynced(true);
       })
-      .catch(() => {});
+      .catch(() => {
+        setWarehouses(CustomerWarehouseService.getWarehouses(tenantId));
+      });
   }, [tenantId]);
 
   const refreshData = () => {
+    if (!tenantId) {
+      setWarehouses([]);
+      return;
+    }
     CustomerWarehouseService.syncFromSupabase(tenantId)
       .then((cloudList) => {
         setWarehouses([...cloudList]);
@@ -143,70 +156,83 @@ export const WarehousesPage: React.FC = () => {
   };
 
   // Save Warehouse Handler
-  const handleSaveWarehouse = () => {
+  const handleSaveWarehouse = async () => {
+    if (!tenantId) {
+      alert('Tenant session unassigned. Please log in again.');
+      return;
+    }
     if (!formName.trim() || !formContact.trim() || !formPhone.trim() || !formAddress1.trim() || !formPincode.trim()) {
       alert('Please fill in all mandatory fields marked with (*).');
       return;
     }
 
-    if (editingWarehouse) {
-      const res = CustomerWarehouseService.updateWarehouse(editingWarehouse.id, {
-        warehouseName: formName,
-        contactPerson: formContact,
-        phone: formPhone,
-        email: formEmail,
-        addressLine1: formAddress1,
-        addressLine2: formAddress2,
-        landmark: formLandmark,
-        pincode: formPincode,
-        city: formCity,
-        state: formState,
-        pickupStartTime: formStartTime,
-        pickupEndTime: formEndTime,
-        isDefault: formIsDefault,
-      }, tenantId);
+    try {
+      setIsSaving(true);
+      if (editingWarehouse) {
+        const res = await CustomerWarehouseService.updateWarehouseAsync(editingWarehouse.id, {
+          warehouseName: formName,
+          contactPerson: formContact,
+          phone: formPhone,
+          email: formEmail,
+          addressLine1: formAddress1,
+          addressLine2: formAddress2,
+          landmark: formLandmark,
+          pincode: formPincode,
+          city: formCity,
+          state: formState,
+          pickupStartTime: formStartTime,
+          pickupEndTime: formEndTime,
+          isDefault: formIsDefault,
+        }, tenantId);
 
-      setToastMsg(res.message);
-    } else {
-      const res = CustomerWarehouseService.addWarehouse({
-        tenantId,
-        warehouseName: formName,
-        contactPerson: formContact,
-        phone: formPhone,
-        email: formEmail,
-        addressLine1: formAddress1,
-        addressLine2: formAddress2,
-        landmark: formLandmark,
-        pincode: formPincode,
-        city: formCity,
-        state: formState,
-        pickupStartTime: formStartTime,
-        pickupEndTime: formEndTime,
-        isDefault: formIsDefault,
-      });
+        setToastMsg(res.message);
+      } else {
+        const res = await CustomerWarehouseService.addWarehouseAsync({
+          tenantId,
+          warehouseName: formName,
+          contactPerson: formContact,
+          phone: formPhone,
+          email: formEmail,
+          addressLine1: formAddress1,
+          addressLine2: formAddress2,
+          landmark: formLandmark,
+          pincode: formPincode,
+          city: formCity,
+          state: formState,
+          pickupStartTime: formStartTime,
+          pickupEndTime: formEndTime,
+          isDefault: formIsDefault,
+        });
 
-      setToastMsg(res.message);
+        setToastMsg(res.message);
+      }
+
+      setIsAddEditModalOpen(false);
+      refreshData();
+      setTimeout(() => setToastMsg(null), 4000);
+    } catch (err: any) {
+      alert(`Error saving warehouse: ${err?.message || 'Database error'}`);
+    } finally {
+      setIsSaving(false);
     }
-
-    setIsAddEditModalOpen(false);
-    refreshData();
-    setTimeout(() => setToastMsg(null), 4000);
   };
 
   // Set Default Action
-  const handleSetDefault = (wh: CustomerWarehouse) => {
-    const res = CustomerWarehouseService.setDefaultWarehouse(wh.id, tenantId);
+  const handleSetDefault = async (wh: CustomerWarehouse) => {
+    const res = await CustomerWarehouseService.setDefaultWarehouseAsync(wh.id, tenantId);
     refreshData();
     setToastMsg(res.message);
     setTimeout(() => setToastMsg(null), 4000);
   };
 
   // Deactivate Action
-  const handleDeactivate = (wh: CustomerWarehouse) => {
-    const res = CustomerWarehouseService.deactivateWarehouse(wh.id, tenantId);
-    refreshData();
-    setToastMsg(res.message);
-    setTimeout(() => setToastMsg(null), 4000);
+  const handleDeactivate = async (wh: CustomerWarehouse) => {
+    if (confirm(`Are you sure you want to deactivate ${wh.warehouseName}? Past shipments will retain their pickup records, but this hub cannot be selected for new bookings.`)) {
+      const res = await CustomerWarehouseService.deactivateWarehouseAsync(wh.id, tenantId);
+      refreshData();
+      setToastMsg(res.message);
+      setTimeout(() => setToastMsg(null), 4000);
+    }
   };
 
   // Filtered List
@@ -223,6 +249,7 @@ export const WarehousesPage: React.FC = () => {
 
   const activeCount = warehouses.filter((w) => w.status === 'ACTIVE').length;
   const defaultWarehouse = warehouses.find((w) => w.isDefault);
+  const totalShipments = warehouses.reduce((sum, w) => sum + (w.totalShipmentsCount || 0), 0);
 
   const breadcrumbs = [
     { label: 'Customer Portal', path: '/app' },
@@ -261,7 +288,7 @@ export const WarehousesPage: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-4)' }}>
         <StatCard label="Active Pickup Warehouses" value={activeCount} subtext="Configured physical locations" icon={Building2} />
         <StatCard label="Primary Default Facility" value={defaultWarehouse ? defaultWarehouse.warehouseCode : 'None'} subtext={defaultWarehouse ? defaultWarehouse.city : 'Assign default'} badgeText="DEFAULT" badgeVariant="success" icon={Star} />
-        <StatCard label="Origin Shipments Dispatched" value="880" subtext="Combined multi-warehouse dispatches" icon={Package} />
+        <StatCard label="Origin Shipments Dispatched" value={totalShipments.toString()} subtext="Combined multi-warehouse dispatches" icon={Package} />
       </div>
 
       {/* Deactivation Protection Notice */}
@@ -283,7 +310,38 @@ export const WarehousesPage: React.FC = () => {
         </div>
 
         {/* Warehouse Cards Display Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
+        {filteredWarehouses.length === 0 ? (
+          <div
+            style={{
+              padding: 'var(--space-8) var(--space-4)',
+              textAlign: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 'var(--space-3)',
+              backgroundColor: 'var(--color-bg-secondary)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px dashed var(--color-border-main)',
+            }}
+          >
+            <Building2 size={44} style={{ color: 'var(--color-text-muted)' }} />
+            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: 'var(--color-text-primary)' }}>
+              {warehouses.length === 0 ? 'No Pickup Warehouses Configured' : 'No Warehouses Found'}
+            </h4>
+            <p style={{ margin: 0, fontSize: '13px', color: 'var(--color-text-secondary)', maxWidth: '420px', lineHeight: 1.5 }}>
+              {warehouses.length === 0
+                ? 'Configure your primary origin facility or dispatch hub. Couriers will pick up shipments from these physical addresses.'
+                : `No pickup locations matched "${searchQuery}". Try searching for another name, city, or pincode.`}
+            </p>
+            {warehouses.length === 0 && (
+              <Button variant="primary" size="sm" onClick={handleOpenAddModal} style={{ marginTop: 'var(--space-2)' }}>
+                <PlusCircle size={14} style={{ marginRight: '6px' }} /> + Add Primary Pickup Warehouse
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
           {filteredWarehouses.map((wh) => (
             <Card
               key={wh.id}
@@ -366,6 +424,7 @@ export const WarehousesPage: React.FC = () => {
             </Card>
           ))}
         </div>
+        )}
       </Card>
 
       {/* ADD / EDIT WAREHOUSE MODAL */}
@@ -452,8 +511,10 @@ export const WarehousesPage: React.FC = () => {
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 'var(--space-2)', marginTop: 'var(--space-3)' }}>
-            <Button variant="outline" onClick={() => setIsAddEditModalOpen(false)}>Cancel</Button>
-            <Button variant="primary" onClick={handleSaveWarehouse}>Save Warehouse Location</Button>
+            <Button variant="outline" onClick={() => setIsAddEditModalOpen(false)} disabled={isSaving}>Cancel</Button>
+            <Button variant="primary" onClick={handleSaveWarehouse} isLoading={isSaving}>
+              {editingWarehouse ? 'Update Warehouse' : 'Save Warehouse Location'}
+            </Button>
           </div>
         </div>
       </Modal>

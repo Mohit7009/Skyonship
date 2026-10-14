@@ -23,6 +23,7 @@ export const SignupPage: React.FC = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -37,6 +38,7 @@ export const SignupPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     if (!businessName.trim()) {
       setErrorMessage('Please enter your company or business name.');
@@ -80,10 +82,19 @@ export const SignupPage: React.FC = () => {
       });
 
       if (res.user) {
-        navigate('/auth/verify');
+        if (!res.token) {
+          // If Supabase project has email confirmation enabled, no immediate session token is returned
+          setSuccessMessage(
+            'Registration successful! A verification link has been sent to your email. Please verify your email before logging in.'
+          );
+          return;
+        }
+        navigate('/app');
+      } else {
+        setErrorMessage(res.message || 'Registration failed. Please check your details and try again.');
       }
     } catch (err: any) {
-      setErrorMessage('Registration failed. Please check your details and try again.');
+      setErrorMessage(err.message || 'Registration failed. Please check your details and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +136,20 @@ export const SignupPage: React.FC = () => {
         {errorMessage && (
           <Alert variant="danger" title="Registration Notice">
             {errorMessage}
+          </Alert>
+        )}
+
+        {/* Success Alert Banner (for email confirmation flow) */}
+        {successMessage && (
+          <Alert variant="success" title="Check Your Inbox">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span>{successMessage}</span>
+              <div>
+                <Link to="/login" style={{ color: '#15803d', fontWeight: '800', textDecoration: 'underline' }}>
+                  Proceed to Sign In →
+                </Link>
+              </div>
+            </div>
           </Alert>
         )}
 

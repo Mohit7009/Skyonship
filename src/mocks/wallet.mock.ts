@@ -46,6 +46,9 @@ function getTxStorageKey(tenantId: string) {
   return tenantId === 'tenant-demo-01' ? 'COURRIER3_TX_STORE' : `COURRIER3_TX_STORE_${tenantId}`;
 }
 
+const MEMORY_WALLET_CACHE: Map<string, Wallet> = new Map();
+const MEMORY_TX_CACHE: Map<string, WalletTransaction[]> = new Map();
+
 function loadWalletFromStorage(tenantId: string): Wallet {
   const key = getWalletStorageKey(tenantId);
   try {
@@ -54,10 +57,15 @@ function loadWalletFromStorage(tenantId: string): Wallet {
       if (raw) return JSON.parse(raw);
     }
   } catch {}
-  if (tenantId === 'tenant-demo-01') {
-    return { ...INITIAL_WALLET };
+  if (MEMORY_WALLET_CACHE.has(tenantId)) {
+    return MEMORY_WALLET_CACHE.get(tenantId)!;
   }
-  return {
+  if (tenantId === 'tenant-demo-01') {
+    const demo = { ...INITIAL_WALLET };
+    MEMORY_WALLET_CACHE.set(tenantId, demo);
+    return demo;
+  }
+  const fresh: Wallet = {
     id: `wal-${tenantId}`,
     tenantId,
     currency: 'INR',
@@ -70,9 +78,12 @@ function loadWalletFromStorage(tenantId: string): Wallet {
     createdAt: new Date().toLocaleString(),
     updatedAt: new Date().toLocaleString(),
   };
+  MEMORY_WALLET_CACHE.set(tenantId, fresh);
+  return fresh;
 }
 
 function saveWalletToStorage(wallet: Wallet) {
+  MEMORY_WALLET_CACHE.set(wallet.tenantId, wallet);
   const key = getWalletStorageKey(wallet.tenantId);
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
@@ -92,10 +103,16 @@ function loadTxsFromStorage(tenantId: string): WalletTransaction[] {
       }
     }
   } catch {}
-  return tenantId === 'tenant-demo-01' ? [...INITIAL_TRANSACTIONS] : [];
+  if (MEMORY_TX_CACHE.has(tenantId)) {
+    return MEMORY_TX_CACHE.get(tenantId)!;
+  }
+  const initial = tenantId === 'tenant-demo-01' ? [...INITIAL_TRANSACTIONS] : [];
+  MEMORY_TX_CACHE.set(tenantId, initial);
+  return initial;
 }
 
 function saveTxsToStorage(tenantId: string, txs: WalletTransaction[]) {
+  MEMORY_TX_CACHE.set(tenantId, txs);
   const key = getTxStorageKey(tenantId);
   try {
     if (typeof window !== 'undefined' && window.localStorage) {

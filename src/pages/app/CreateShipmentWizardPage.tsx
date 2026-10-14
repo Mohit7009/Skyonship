@@ -37,6 +37,7 @@ import { CustomerRateAssignmentService, type EligibleCourierResult } from '../..
 import { CustomerWarehouseService, type CustomerWarehouse } from '../../services/customerWarehouseService';
 import { OnboardingService } from '../../services/onboardingService';
 import { useRbac } from '../../context/RbacContext';
+import { useTenant } from '../../context/TenantContext';
 import { formatCurrency } from '../../utils/formatters';
 
 export interface MultiPackageFormItem {
@@ -84,10 +85,8 @@ export const CreateShipmentWizardPage: React.FC = () => {
   const location = useLocation();
   const navState = (location.state as any) || {};
 
-  const tenantId =
-    typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-      : 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
   const { logActivity } = useRbac();
 
   // Step State (1 to 6)
@@ -99,12 +98,38 @@ export const CreateShipmentWizardPage: React.FC = () => {
 
   // 1. Pickup Warehouses Engine
   const [warehouses, setWarehouses] = useState<CustomerWarehouse[]>(() =>
-    CustomerWarehouseService.getActiveWarehouses(tenantId)
+    tenantId ? CustomerWarehouseService.getActiveWarehouses(tenantId) : []
   );
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<string>(() => {
+    if (!tenantId) return '';
     const active = CustomerWarehouseService.getActiveWarehouses(tenantId);
     return active.find((w) => w.isDefault)?.id || active[0]?.id || '';
   });
+
+  // Wallet Balance
+  const [walletBalanceINR, setWalletBalanceINR] = useState<number>(() => {
+    if (!tenantId) return 0;
+    const wal = WalletService.getWallet(tenantId);
+    return wal.availableBalanceMinor / 100;
+  });
+
+  // Sync latest warehouses & wallet balance from Supabase Cloud on mount/tenantId change
+  useEffect(() => {
+    if (!tenantId) return;
+
+    CustomerWarehouseService.syncFromSupabase(tenantId).then((whs) => {
+      const active = whs.filter((w) => w.status === 'ACTIVE');
+      setWarehouses(active);
+      setSelectedWarehouseId((prev) => {
+        if (prev && active.some((w) => w.id === prev)) return prev;
+        return active.find((w) => w.isDefault)?.id || active[0]?.id || '';
+      });
+    }).catch(() => {});
+
+    WalletService.syncFromSupabase(tenantId).then((wal) => {
+      setWalletBalanceINR(wal.availableBalanceMinor / 100);
+    }).catch(() => {});
+  }, [tenantId]);
 
   // In-flow Add Warehouse Modal State
   const [isAddWhModalOpen, setIsAddWhModalOpen] = useState(false);
@@ -199,13 +224,9 @@ export const CreateShipmentWizardPage: React.FC = () => {
     packageCount: number;
   } | null>(null);
 
-  // Wallet Balance
-  const wallet = WalletService.getWallet(tenantId);
-  const walletBalanceINR = wallet.availableBalanceMinor / 100;
-
   // Selected Warehouse Object
   const currentWarehouse = useMemo(() => {
-    return warehouses.find((w) => w.id === selectedWarehouseId) || warehouses[0];
+    return warehouses.find((w) => w.id === selectedWarehouseId) || warehouses[0] || null;
   }, [warehouses, selectedWarehouseId]);
 
   // Pincode Auto-Fill for Receiver
@@ -529,6 +550,7 @@ export const CreateShipmentWizardPage: React.FC = () => {
         customerPhone: receiverPhone.trim(),
         customerEmail: receiverEmail.trim(),
         shipmentType: modeStr as 'b2b' | 'b2c',
+        pickupWarehouseId: currentWarehouse.id,
         pickupContactName: currentWarehouse.contactPerson as string,
         pickupPhone: currentWarehouse.phone as string,
         pickupAddressLine1: currentWarehouse.addressLine1 as string,

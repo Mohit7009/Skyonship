@@ -14,10 +14,10 @@ export function isValidUUID(str?: string | null): boolean {
 }
 
 /**
- * Deterministic hash-based UUID generator for non-UUID strings.
+ * Deterministic hash-based UUID generator for legacy non-UUID strings.
  * Ensures the same tenant string always produces the exact same UUID.
  */
-function stringToDeterministicUUID(input: string): string {
+export function stringToDeterministicUUID(input: string): string {
   let hash1 = 5381;
   let hash2 = 52711;
   for (let i = 0; i < input.length; i++) {
@@ -35,6 +35,7 @@ function stringToDeterministicUUID(input: string): string {
 
 /**
  * Normalizes any tenant string to a verified, valid PostgreSQL UUID.
+ * Never defaults anonymous or null tenant to the demo tenant.
  */
 export function toValidTenantUUID(tenantId?: string | null): string {
   if (!tenantId || tenantId === 'all' || tenantId === 'ALL') {

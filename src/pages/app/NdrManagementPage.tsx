@@ -30,9 +30,11 @@ import {
   ShipmentTrackingNdrRtoService,
   type NdrRecord,
 } from '../../services/shipmentTrackingNdrRtoService';
+import { useTenant } from '../../context/TenantContext';
 
 export const NdrManagementPage: React.FC = () => {
-  const tenantId = 'tenant-demo-01';
+  const { activeTenantId } = useTenant();
+  const tenantId = activeTenantId;
 
   // Filters State
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,7 +67,7 @@ export const NdrManagementPage: React.FC = () => {
   // Operational Summary Stats
   const summaryStats = useMemo(() => {
     return ShipmentTrackingNdrRtoService.getNdrSummaryStats(tenantId);
-  }, []);
+  }, [tenantId]);
 
   // Query Filtered NDR Cases
   const filteredRecords = useMemo(() => {
@@ -117,7 +119,7 @@ export const NdrManagementPage: React.FC = () => {
         setTimeout(() => setToastMessage(null), 4000);
         return;
       }
-      const res = ShipmentTrackingNdrRtoService.addInternalNote(selectedNdr.ndrId, internalNoteText.trim(), 'Merchant Agent');
+      const res = ShipmentTrackingNdrRtoService.addInternalNote(selectedNdr.ndrId, internalNoteText.trim(), 'Merchant Agent', tenantId);
       setSelectedNdr({ ...selectedNdr });
       setInternalNoteText('');
       setToastMessage(res.message);
@@ -133,6 +135,7 @@ export const NdrManagementPage: React.FC = () => {
       recipientName,
       updatedPhone,
       updatedAddress,
+      tenantId,
     });
 
     setSelectedNdr(null);

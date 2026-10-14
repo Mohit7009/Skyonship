@@ -40,6 +40,7 @@ import {
   TableSkeleton,
 } from '../../components/ui';
 import { CustomerShipmentService, type CustomerShipmentDetail } from '../../services/customerShipmentService';
+import { useTenant } from '../../context/TenantContext';
 
 export interface OrderRecord extends Record<string, unknown> {
   id: string;
@@ -189,6 +190,7 @@ export function mapShipmentToOrderRecord(s: CustomerShipmentDetail): OrderRecord
 
 export const CustomerOrdersPage: React.FC = () => {
   const navigate = useNavigate();
+  const { activeTenantId } = useTenant();
 
   // Filter & Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -215,12 +217,9 @@ export const CustomerOrdersPage: React.FC = () => {
   const [isCloudSynced, setIsCloudSynced] = useState<boolean>(false);
   const [syncVersion, setSyncVersion] = useState<number>(0);
 
-  // Automatically synchronize with Supabase Cloud DB on mount
+  // Automatically synchronize with Supabase Cloud DB on mount or when activeTenantId changes
   useEffect(() => {
-    const activeTenantId =
-      typeof window !== 'undefined' && window.localStorage
-        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-        : 'tenant-demo-01';
+    if (!activeTenantId) return;
 
     setIsLoadingData(true);
     CustomerShipmentService.syncFromSupabase(activeTenantId)
@@ -231,15 +230,12 @@ export const CustomerOrdersPage: React.FC = () => {
       .finally(() => {
         setIsLoadingData(false);
       });
-  }, []);
+  }, [activeTenantId]);
 
   // Trigger data refresh and re-sync from Supabase Cloud DB
   const handleRefreshData = () => {
+    if (!activeTenantId) return;
     setIsLoadingData(true);
-    const activeTenantId =
-      typeof window !== 'undefined' && window.localStorage
-        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-        : 'tenant-demo-01';
 
     CustomerShipmentService.syncFromSupabase(activeTenantId)
       .then(() => {
@@ -288,14 +284,11 @@ export const CustomerOrdersPage: React.FC = () => {
 
   // Filtered & Sorted Orders
   const filteredOrders = useMemo(() => {
-    const activeTenantId =
-      typeof window !== 'undefined' && window.localStorage
-        ? localStorage.getItem('courrier3_active_tenant_id') || 'tenant-demo-01'
-        : 'tenant-demo-01';
+    if (!activeTenantId) return [];
     const dynamicShipments = CustomerShipmentService.getShipments(activeTenantId);
     const dynamicOrders: OrderRecord[] = dynamicShipments.map(mapShipmentToOrderRecord);
 
-    const combinedList = [...dynamicOrders, ...DEMO_ORDERS_DATA];
+    const combinedList = activeTenantId === 'tenant-demo-01' ? [...dynamicOrders, ...DEMO_ORDERS_DATA] : dynamicOrders;
 
     let list = combinedList.filter((item) => {
       // Global Search

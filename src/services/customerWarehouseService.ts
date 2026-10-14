@@ -58,6 +58,7 @@ export interface CustomerWarehouseInput extends Record<string, unknown> {
   pickupStartTime?: string;
   pickupEndTime?: string;
   isDefault?: boolean;
+  status?: 'ACTIVE' | 'INACTIVE';
 }
 
 // Initial Demo Multi-Warehouse Locations (Delhi, Mumbai, Bangalore)
@@ -181,8 +182,8 @@ export function lookupPincodeDetails(pincode: string): { city: string; state: st
 }
 
 export const CustomerWarehouseService = {
-  getWarehouses: (tenantId = 'tenant-demo-01', statusFilter = 'all'): CustomerWarehouse[] => {
-    CustomerWarehouseService.getActiveWarehouses(tenantId);
+  getWarehouses: (tenantId: string, statusFilter = 'all'): CustomerWarehouse[] => {
+    if (!tenantId) return [];
     return WAREHOUSE_STORE.filter((w) => {
       if (w.tenantId !== tenantId) return false;
       if (statusFilter !== 'all' && w.status !== statusFilter) return false;
@@ -190,47 +191,24 @@ export const CustomerWarehouseService = {
     });
   },
 
-  getActiveWarehouses: (tenantId = 'tenant-demo-01'): CustomerWarehouse[] => {
-    let list = WAREHOUSE_STORE.filter((w) => w.tenantId === tenantId && w.status === 'ACTIVE');
-    if (list.length === 0 && tenantId && tenantId !== 'all') {
-      const defaultWh: CustomerWarehouse = {
-        id: `wh-${tenantId}-primary`,
-        tenantId,
-        warehouseCode: 'PRI-WH-01',
-        warehouseName: 'Primary Dispatch Hub',
-        contactPerson: 'Dispatch Manager',
-        phone: '+91 98765 43210',
-        email: 'dispatch@seller.com',
-        addressLine1: 'Ground Floor, Sector 18',
-        pincode: '110001',
-        city: 'New Delhi',
-        state: 'Delhi',
-        country: 'India',
-        pickupStartTime: '10:00 AM',
-        pickupEndTime: '06:00 PM',
-        isDefault: true,
-        status: 'ACTIVE',
-        totalShipmentsCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      WAREHOUSE_STORE.push(defaultWh);
-      saveWarehousesToStorage(WAREHOUSE_STORE);
-      list = [defaultWh];
-    }
-    return list;
+  getActiveWarehouses: (tenantId: string): CustomerWarehouse[] => {
+    if (!tenantId) return [];
+    return WAREHOUSE_STORE.filter((w) => w.tenantId === tenantId && w.status === 'ACTIVE');
   },
 
-  getDefaultWarehouse: (tenantId = 'tenant-demo-01'): CustomerWarehouse => {
+  getDefaultWarehouse: (tenantId: string): CustomerWarehouse | null => {
+    if (!tenantId) return null;
     const active = CustomerWarehouseService.getActiveWarehouses(tenantId);
-    return active.find((w) => w.isDefault) || active[0] || INITIAL_CUSTOMER_WAREHOUSES[0];
+    return active.find((w) => w.isDefault) || active[0] || null;
   },
 
-  getWarehouseById: (id: string, tenantId = 'tenant-demo-01'): CustomerWarehouse | null => {
+  getWarehouseById: (id: string, tenantId: string): CustomerWarehouse | null => {
+    if (!tenantId) return null;
     return WAREHOUSE_STORE.find((w) => (w.id === id || w.warehouseCode === id) && (tenantId === 'all' || w.tenantId === tenantId)) || null;
   },
 
   checkDuplicateWarehouse: (tenantId: string, pincode: string, addressLine1: string): boolean => {
+    if (!tenantId) return false;
     return WAREHOUSE_STORE.some(
       (w) =>
         w.tenantId === tenantId &&
@@ -243,7 +221,7 @@ export const CustomerWarehouseService = {
   addWarehouse: (input: CustomerWarehouseInput): { success: boolean; message: string; warehouse: CustomerWarehouse } => {
     const existingForTenant = WAREHOUSE_STORE.filter((w) => w.tenantId === input.tenantId);
 
-    // Auto-generate Warehouse Code (e.g., MUM-WH-02 or WH-004)
+    // Auto-generate Warehouse Code (e.g., DEL-WH-01 or MUM-WH-02)
     const prefix = input.city ? input.city.slice(0, 3).toUpperCase() : 'WH';
     const code = `${prefix}-WH-${(existingForTenant.length + 1).toString().padStart(2, '0')}`;
 
@@ -258,7 +236,7 @@ export const CustomerWarehouseService = {
     }
 
     const newWh: CustomerWarehouse = {
-      id: `wh-${Date.now()}`,
+      id: `wh-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
       tenantId: input.tenantId,
       warehouseCode: code,
       warehouseName: input.warehouseName,
@@ -299,10 +277,31 @@ export const CustomerWarehouseService = {
     };
   },
 
+  addWarehouseAsync: async (input: CustomerWarehouseInput): Promise<{ success: boolean; message: string; warehouse?: CustomerWarehouse }> => {
+    if (!input.tenantId) {
+      return { success: false, message: 'Invalid tenant identifier.' };
+    }
+
+    const cloudRes = await SupabaseWarehouseService.saveWarehouse(input);
+    if (cloudRes.success && cloudRes.warehouse) {
+      if (cloudRes.warehouse.isDefault) {
+        WAREHOUSE_STORE.forEach((w) => {
+          if (w.tenantId === input.tenantId) w.isDefault = false;
+        });
+      }
+      WAREHOUSE_STORE.unshift(cloudRes.warehouse);
+      saveWarehousesToStorage(WAREHOUSE_STORE);
+      return { success: true, message: cloudRes.message, warehouse: cloudRes.warehouse };
+    }
+
+    // Fallback to local store if cloud error
+    return CustomerWarehouseService.addWarehouse(input);
+  },
+
   updateWarehouse: (
     id: string,
     updates: Partial<CustomerWarehouseInput>,
-    tenantId = 'tenant-demo-01'
+    tenantId: string
   ): { success: boolean; message: string; warehouse?: CustomerWarehouse } => {
     const wh = CustomerWarehouseService.getWarehouseById(id, tenantId);
     if (!wh) return { success: false, message: 'Warehouse record not found.' };
@@ -322,12 +321,23 @@ export const CustomerWarehouseService = {
 
     return {
       success: true,
-      message: `Warehouse ${wh.warehouseCode} updated successfully. (Historical shipments preserve original snapshot).`,
+      message: `Warehouse ${wh.warehouseCode} updated successfully.`,
       warehouse: wh,
     };
   },
 
-  setDefaultWarehouse: (id: string, tenantId = 'tenant-demo-01'): { success: boolean; message: string } => {
+  updateWarehouseAsync: async (
+    id: string,
+    updates: Partial<CustomerWarehouseInput>,
+    tenantId: string
+  ): Promise<{ success: boolean; message: string; warehouse?: CustomerWarehouse }> => {
+    if (!tenantId) return { success: false, message: 'Invalid tenant identifier.' };
+
+    await SupabaseWarehouseService.updateWarehouse(id, updates, tenantId);
+    return CustomerWarehouseService.updateWarehouse(id, updates, tenantId);
+  },
+
+  setDefaultWarehouse: (id: string, tenantId: string): { success: boolean; message: string } => {
     const target = CustomerWarehouseService.getWarehouseById(id, tenantId);
     if (!target) return { success: false, message: 'Warehouse not found.' };
 
@@ -345,7 +355,13 @@ export const CustomerWarehouseService = {
     };
   },
 
-  deactivateWarehouse: (id: string, tenantId = 'tenant-demo-01'): { success: boolean; message: string } => {
+  setDefaultWarehouseAsync: async (id: string, tenantId: string): Promise<{ success: boolean; message: string }> => {
+    if (!tenantId) return { success: false, message: 'Invalid tenant identifier.' };
+    await SupabaseWarehouseService.updateWarehouse(id, { isDefault: true }, tenantId);
+    return CustomerWarehouseService.setDefaultWarehouse(id, tenantId);
+  },
+
+  deactivateWarehouse: (id: string, tenantId: string): { success: boolean; message: string } => {
     const wh = CustomerWarehouseService.getWarehouseById(id, tenantId);
     if (!wh) return { success: false, message: 'Warehouse record not found.' };
 
@@ -359,14 +375,23 @@ export const CustomerWarehouseService = {
     }
 
     saveWarehousesToStorage(WAREHOUSE_STORE);
+    SupabaseWarehouseService.deactivateWarehouse(id, tenantId).catch(() => {});
+
     return {
       success: true,
       message: `Warehouse ${wh.warehouseCode} deactivated. It can no longer be selected for new bookings, but historical shipments remain intact.`,
     };
   },
 
+  deactivateWarehouseAsync: async (id: string, tenantId: string): Promise<{ success: boolean; message: string }> => {
+    if (!tenantId) return { success: false, message: 'Invalid tenant identifier.' };
+    await SupabaseWarehouseService.deactivateWarehouse(id, tenantId);
+    return CustomerWarehouseService.deactivateWarehouse(id, tenantId);
+  },
+
   // Sync latest warehouse records from Supabase PostgreSQL Cloud DB
-  syncFromSupabase: async (tenantId = 'tenant-demo-01'): Promise<CustomerWarehouse[]> => {
+  syncFromSupabase: async (tenantId: string): Promise<CustomerWarehouse[]> => {
+    if (!tenantId) return [];
     try {
       const cloudWarehouses = await SupabaseWarehouseService.fetchWarehouses(tenantId);
       if (cloudWarehouses && cloudWarehouses.length > 0) {
@@ -381,8 +406,9 @@ export const CustomerWarehouseService = {
   },
 
   // Freeze Pickup Warehouse Snapshot for Shipment Booking
-  createWarehouseSnapshot: (warehouseId: string, tenantId = 'tenant-demo-01'): PickupWarehouseSnapshot => {
+  createWarehouseSnapshot: (warehouseId: string, tenantId: string): PickupWarehouseSnapshot | null => {
     const wh = CustomerWarehouseService.getWarehouseById(warehouseId, tenantId) || CustomerWarehouseService.getDefaultWarehouse(tenantId);
+    if (!wh) return null;
     return {
       warehouseId: wh.id,
       warehouseCode: wh.warehouseCode,
