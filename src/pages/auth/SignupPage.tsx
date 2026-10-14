@@ -91,10 +91,24 @@ export const SignupPage: React.FC = () => {
         }
         navigate('/app');
       } else {
-        setErrorMessage(res.message || 'Registration failed. Please check your details and try again.');
+        const rawMsg = res.message || '';
+        if (rawMsg.toLowerCase().includes('rate limit')) {
+          setErrorMessage(
+            'Email rate limit reached for Supabase verification emails (max 3/hour). If you already registered, please proceed to Sign In. Otherwise, please wait a few minutes or disable "Confirm email" in Supabase Auth.'
+          );
+        } else {
+          setErrorMessage(rawMsg || 'Registration failed. Please check your details and try again.');
+        }
       }
     } catch (err: any) {
-      setErrorMessage(err.message || 'Registration failed. Please check your details and try again.');
+      const rawMsg = err.message || '';
+      if (rawMsg.toLowerCase().includes('rate limit')) {
+        setErrorMessage(
+          'Email rate limit reached for Supabase verification emails (max 3/hour). If you already registered, please proceed to Sign In. Otherwise, please wait a few minutes or disable "Confirm email" in Supabase Auth.'
+        );
+      } else {
+        setErrorMessage(rawMsg || 'Registration failed. Please check your details and try again.');
+      }
     } finally {
       setIsLoading(false);
     }
