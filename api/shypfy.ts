@@ -80,6 +80,18 @@ export class ShypfyAuthError extends Error {
   }
 }
 
+export class ShypfyApiError extends Error {
+  public httpStatus: number;
+  public details: any;
+
+  constructor(message: string, httpStatus: number, details?: any) {
+    super(message);
+    this.name = 'ShypfyApiError';
+    this.httpStatus = httpStatus;
+    this.details = details;
+  }
+}
+
 export function resetShypfyTokenCache(): void {
   cachedToken = null;
 }
@@ -481,8 +493,14 @@ export async function trackShypfyShipment(trackingId: string): Promise<any> {
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Shypfy Track Shipment failed (${response.status}): ${errText}`);
+    const rawText = await response.text();
+    let desc = rawText;
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(rawText);
+      desc = parsed.description || parsed.message || rawText;
+    } catch {}
+    throw new ShypfyApiError(`Shypfy Track Shipment failed (${response.status}): ${desc}`, response.status, parsed);
   }
 
   return await response.json();
@@ -617,11 +635,12 @@ export async function handleShypfyTrackEndpoint(trackingId: string): Promise<Shy
       data,
     };
   } catch (err: any) {
+    const httpStatus = err instanceof ShypfyApiError ? err.httpStatus : 500;
     return {
       success: false,
       provider: 'Shypfy',
-      message: 'Tracking request failed',
-      httpStatus: 500,
+      message: httpStatus === 404 ? 'Shipment not found on carrier network' : 'Tracking request failed',
+      httpStatus,
       error: err.message,
     };
   }

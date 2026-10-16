@@ -7,6 +7,7 @@ import {
   PhoneCall,
   MessageSquare,
   AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import {
   Button,
@@ -30,6 +31,8 @@ export const PublicTrackingPage: React.FC = () => {
     BrandingService.getBrandingBySlug(merchantSlug || 'acme-store')
   );
   const [trackingData, setTrackingData] = useState<ShipmentTrackingSummary | null>(null);
+  const [trackingSource, setTrackingSource] = useState<'LIVE_CARRIER' | 'PORTAL_DB' | 'DEMO' | 'NOT_FOUND'>('DEMO');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Delivery Issue Modal
@@ -39,21 +42,40 @@ export const PublicTrackingPage: React.FC = () => {
   const [issueToastMsg, setIssueToastMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     if (merchantSlug) {
       const b = BrandingService.getBrandingBySlug(merchantSlug);
       setBranding(b);
     }
 
     const targetQuery = awb || 'DEL847192031';
-    const res = TrackingService.getPublicTracking(targetQuery);
+    setIsLoading(true);
+    setErrorMsg(null);
 
-    if (res) {
-      setTrackingData(res as ShipmentTrackingSummary);
-      setErrorMsg(null);
-    } else {
-      setErrorMsg(`No active shipment tracking record found for query: ${targetQuery}`);
-      setTrackingData(null);
-    }
+    TrackingService.fetchLiveTracking(targetQuery)
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.success && res.data) {
+          setTrackingData(res.data);
+          setTrackingSource(res.source);
+          setErrorMsg(null);
+        } else {
+          setErrorMsg(res.message || `No active shipment tracking record found for query: ${targetQuery}`);
+          setTrackingData(null);
+        }
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setErrorMsg(`Failed to connect to courier tracking network for: ${targetQuery}`);
+        setTrackingData(null);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [merchantSlug, awb]);
 
   const handleSearch = () => {
@@ -123,14 +145,22 @@ export const PublicTrackingPage: React.FC = () => {
           </div>
         </Card>
 
-        {errorMsg && (
+        {isLoading && (
+          <Card style={{ padding: '36px 20px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
+            <RefreshCw size={28} className="animate-spin" style={{ color: branding.primaryColor, margin: '0 auto 12px' }} />
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', margin: 0 }}>Connecting to Courier Tracking Network...</h3>
+            <p style={{ fontSize: '13px', color: '#64748b', margin: '4px 0 0 0' }}>Fetching real-time scan events and delivery ETA from courier API.</p>
+          </Card>
+        )}
+
+        {errorMsg && !isLoading && (
           <Alert variant="danger" title="Tracking Information Not Available">
             {errorMsg}
           </Alert>
         )}
 
         {/* 3. SHIPMENT TRACKING DETAILS CARD */}
-        {trackingData && (
+        {trackingData && !isLoading && (
           <>
             {/* EVENT SPECIFIC PROMINENT ALERT BANNERS */}
             {trackingData.currentStatus === 'OUT_FOR_DELIVERY' ? (
@@ -157,7 +187,19 @@ export const PublicTrackingPage: React.FC = () => {
               {/* Header Info */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', borderBottom: '1px solid #e2e8f0', paddingBottom: '16px' }}>
                 <div>
-                  <div style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: '700' }}>ORDER REF #{trackingData.orderId}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', textTransform: 'uppercase', fontWeight: '700' }}>ORDER REF #{trackingData.orderId}</span>
+                    {trackingSource === 'LIVE_CARRIER' ? (
+                      <span style={{ fontSize: '11px', backgroundColor: '#dcfce7', color: '#15803d', fontWeight: '700', padding: '2px 8px', borderRadius: '9999px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22c55e', display: 'inline-block' }}></span>
+                        Verified Carrier Live Feed
+                      </span>
+                    ) : trackingSource === 'PORTAL_DB' ? (
+                      <span style={{ fontSize: '11px', backgroundColor: '#e0f2fe', color: '#0369a1', fontWeight: '700', padding: '2px 8px', borderRadius: '9999px' }}>
+                        Portal Booked Order
+                      </span>
+                    ) : null}
+                  </div>
                   <h2 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', margin: '2px 0 0 0' }}>
                     AWB: {trackingData.awb}
                   </h2>

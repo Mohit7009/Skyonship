@@ -21,6 +21,7 @@ import {
   Card,
   Badge,
   Input,
+  Alert,
 } from '../../components/ui';
 import { CustomerShipmentService } from '../../services/customerShipmentService';
 
@@ -392,10 +393,26 @@ export const TrackingPage: React.FC = () => {
   const [copiedAwb, setCopiedAwb] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'timeline' | 'details' | 'financials' | 'activity' | 'admin'>('timeline');
 
+  // Real-Time Carrier Sync State
+  const [liveRecordOverride, setLiveRecordOverride] = useState<TrackingShipmentRecord | null>(null);
+  const [isSyncingLive, setIsSyncingLive] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'info' | 'error'; message: string } | null>(null);
+
   // Search Logic with Real CustomerShipmentService & Shypfy API fallback
   const activeRecord = useMemo<TrackingShipmentRecord | null>(() => {
     if (!searchInput.trim()) return DEMO_TRACKING_DATABASE[0];
     const q = searchInput.trim();
+    const qLower = q.toLowerCase();
+
+    // 0. Check Live Carrier Synced Record
+    if (
+      liveRecordOverride &&
+      (liveRecordOverride.awbNumber.toLowerCase() === qLower ||
+        liveRecordOverride.orderId.toLowerCase() === qLower ||
+        liveRecordOverride.id.toLowerCase() === qLower)
+    ) {
+      return liveRecordOverride;
+    }
 
     // 1. Check Real Booked Shipments from CustomerShipmentService
     const realShipment = CustomerShipmentService.getShipmentById(q);
@@ -492,7 +509,6 @@ export const TrackingPage: React.FC = () => {
       };
     }
 
-    const qLower = q.toLowerCase();
     const match = DEMO_TRACKING_DATABASE.find(
       (r) =>
         r.awbNumber.toLowerCase().includes(qLower) ||
@@ -501,94 +517,162 @@ export const TrackingPage: React.FC = () => {
     );
     if (match) return match;
 
-    const queryAwb = searchInput.trim().toUpperCase();
-    return {
-      id: `shypfy-${queryAwb}`,
-      awbNumber: queryAwb,
-      orderId: `ORD-${queryAwb}`,
-      customerName: 'Rahul Sharma',
-      customerPhone: '+91 98765 43210',
-      customerEmail: 'rahul.sharma@example.com',
-      deliveryAddress: 'Flat 402, Sunshine Heights, Koramangala',
-      deliveryCity: 'Bengaluru',
-      deliveryState: 'Karnataka',
-      deliveryPincode: '560038',
-      courierName: 'Shypfy Logistics Network (Live API)',
-      courierLogoBg: '#6366f1',
-      serviceType: 'Express',
-      mode: 'B2C',
-      zoneRoute: 'N1 → S2',
-      transitSlaDays: '24-48 Hours',
-      deadWeightKg: 1.5,
-      volumetricWeightKg: 1.2,
-      chargeableWeightKg: 1.5,
-      dimensionsCm: '30 × 20 × 15 CM',
-      packageCount: 1,
-      contentsDescription: 'E-Commerce Package',
-      baseFreight: 65.0,
-      fuelSurcharge: 6.5,
-      docketCharges: 10.0,
-      codCharges: 0.0,
-      rovCharges: 0.0,
-      insuranceCharges: 0.0,
-      gstAmount: 14.67,
-      finalAmount: 96.17,
-      walletReferenceId: `TXN-SHYPFY-${queryAwb}`,
-      status: 'In Transit',
-      stepIndex: 3,
-      etaDate: 'Tomorrow, 06:00 PM',
-      transitDaysCount: '1 Day',
-      lastUpdatedTime: new Date().toLocaleString(),
-      timelineEvents: [
-        {
-          id: 'st-03',
-          date: new Date().toLocaleDateString(),
-          time: new Date().toLocaleTimeString(),
-          location: 'Shypfy Regional Sorting Center',
-          statusTitle: 'In Transit',
-          remarks: 'Package scanned & loaded into Shypfy express feeder truck',
-          source: 'API Auto-Sync',
-        },
-        {
-          id: 'st-02',
-          date: new Date().toLocaleDateString(),
-          time: new Date().toLocaleTimeString(),
-          location: 'Origin Warehouse Delhi',
-          statusTitle: 'Picked Up',
-          remarks: 'First mile pickup scan completed by Shypfy associate',
-          source: 'Carrier Webhook',
-        },
-        {
-          id: 'st-01',
-          date: new Date().toLocaleDateString(),
-          time: new Date().toLocaleTimeString(),
-          location: 'Courrier3 Merchant Portal',
-          statusTitle: 'Order Created',
-          remarks: `Live Shypfy AWB ${queryAwb} allocated`,
-          source: 'Manual Override',
-        },
-      ],
-      activityLogs: [
-        { id: 'l1', timestamp: new Date().toLocaleString(), action: `AWB ${queryAwb} generated via Shypfy Live API`, user: 'System Merchant' },
-        { id: 'l2', timestamp: new Date().toLocaleString(), action: 'Shypfy API Track status sync succeeded', user: 'Shypfy API Poller' },
-      ],
-      adminLogs: {
-        courierApiPayload: `{"provider":"Shypfy","awb":"${queryAwb}","httpStatus":200,"status":"IN_TRANSIT"}`,
-        webhookLog: 'HTTP 200 GET /api/integrations/shypfy/track?id=' + queryAwb,
-        syncHistory: 'Live REST API Sync via Shypfy V1 Track Endpoint',
-        errorLogs: 'No errors logged.',
-      },
-    } as TrackingShipmentRecord;
-  }, [searchInput]);
+    return null;
+  }, [searchInput, liveRecordOverride]);
+
+  const syncLiveShypfy = async (targetQuery: string) => {
+    const q = targetQuery.trim();
+    if (!q) return;
+
+    setIsSyncingLive(true);
+    setSyncStatusMsg(null);
+
+    try {
+      const resp = await fetch(`/api/integrations/shypfy/track?id=${encodeURIComponent(q)}`);
+      const json = await resp.json();
+
+      if (json?.success && json?.data?.track) {
+        const raw = json.data;
+        const track = raw.track;
+        const rawEvents: any[] = Array.isArray(track.details) && track.details.length > 0 ? track.details : [track];
+
+        const stepIdx =
+          track.status === 'Delivered'
+            ? 6
+            : track.status === 'Out for Delivery'
+            ? 5
+            : track.status === 'In Transit'
+            ? 3
+            : track.status === 'Picked Up'
+            ? 2
+            : track.status?.toLowerCase().includes('pickup')
+            ? 1
+            : 0;
+
+        const events: TrackingTimelineEvent[] = rawEvents.map((e, idx) => ({
+          id: `carrier-evt-${idx}-${e.ctime || Date.now()}`,
+          date: e.ctime ? new Date(e.ctime).toLocaleDateString() : new Date().toLocaleDateString(),
+          time: e.ctime ? new Date(e.ctime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          location: e.location || 'Regional Sorting Hub',
+          statusTitle: e.status || 'Carrier Scan',
+          remarks: e.desc || `Scan: ${e.status}`,
+          source: 'Carrier Webhook' as const,
+        }));
+
+        const matchedShipment = CustomerShipmentService.getShipmentById(q);
+
+        const updated: TrackingShipmentRecord = {
+          id: raw._id || matchedShipment?.id || `shypfy-${q}`,
+          awbNumber: q.toUpperCase(),
+          orderId: raw.order_number || matchedShipment?.orderId || `ORD-${q}`,
+          customerName: matchedShipment?.deliveryContact || 'Customer',
+          customerPhone: matchedShipment?.deliveryPhone || '',
+          customerEmail: (matchedShipment as any)?.deliveryEmail || 'customer@example.com',
+          deliveryAddress: matchedShipment?.deliveryAddress || 'Delivery Address Details',
+          deliveryCity: matchedShipment?.deliveryCity || 'Destination',
+          deliveryState: (matchedShipment as any)?.deliveryState || '',
+          deliveryPincode: matchedShipment?.deliveryPincode || '',
+          courierName: matchedShipment?.courierName || 'Delhivery / Shypfy Partner',
+          courierLogoBg: '#0284c7',
+          serviceType: 'Express',
+          mode: (matchedShipment?.mode || 'B2C') as any,
+          zoneRoute: matchedShipment ? `${matchedShipment.pickupPincode} → ${matchedShipment.deliveryPincode}` : 'Interstate Network',
+          transitSlaDays: '2-4 Days',
+          deadWeightKg: matchedShipment?.actualWeightKg || 0.5,
+          volumetricWeightKg: matchedShipment?.chargeableWeightKg || 0.5,
+          chargeableWeightKg: matchedShipment?.chargeableWeightKg || 0.5,
+          dimensionsCm: matchedShipment?.dimensionsCm || '20 × 15 × 10 CM',
+          packageCount: matchedShipment?.packages?.length || 1,
+          contentsDescription: 'E-Commerce Package',
+          baseFreight: matchedShipment?.baseFreightINR || 65,
+          fuelSurcharge: matchedShipment?.fuelSurchargeINR || 6.5,
+          docketCharges: 15,
+          codCharges: matchedShipment?.codFeeINR || 0,
+          rovCharges: 0,
+          insuranceCharges: 0,
+          gstAmount: Math.round(((matchedShipment?.totalCustomerChargeINR || 71.5) * 0.18) * 100) / 100,
+          finalAmount: matchedShipment?.totalCustomerChargeINR || 84.37,
+          walletReferenceId: matchedShipment?.transactionId || `TXN-SHYPFY-${q}`,
+          status: (track.status === 'Delivered'
+            ? 'Delivered'
+            : track.status === 'Out for Delivery'
+            ? 'OFD'
+            : track.status === 'In Transit'
+            ? 'In Transit'
+            : track.status === 'Picked Up'
+            ? 'Picked Up'
+            : 'Booked') as any,
+          stepIndex: stepIdx,
+          etaDate: raw.edd ? new Date(raw.edd).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : '2-3 Business Days',
+          transitDaysCount: '1-2 Days',
+          lastUpdatedTime: track.ctime ? new Date(track.ctime).toLocaleString() : new Date().toLocaleString(),
+          timelineEvents: events,
+          activityLogs: [
+            {
+              id: `act-sync-${Date.now()}`,
+              timestamp: new Date().toLocaleString(),
+              action: `Live carrier sync retrieved ${events.length} real scan(s) from carrier API`,
+              user: 'Courier API Sync Engine',
+            },
+          ],
+          adminLogs: {
+            courierApiPayload: JSON.stringify(raw, null, 2),
+            webhookLog: `HTTP 200 GET /api/integrations/shypfy/track?id=${q}`,
+            syncHistory: `Live Carrier API Synced at ${new Date().toLocaleTimeString()}`,
+            errorLogs: 'No carrier exceptions recorded.',
+          },
+        };
+
+        setLiveRecordOverride(updated);
+        setSyncStatusMsg({
+          type: 'success',
+          message: `Live carrier sync successful! Current status: ${track.status} (${events.length} scans)`,
+        });
+      } else {
+        const errorDetail = json?.error || 'No updates available from carrier network';
+        if (json?.httpStatus === 404 || errorDetail.includes('404') || errorDetail.includes('SWIFT_RESOURCE')) {
+          setSyncStatusMsg({
+            type: 'info',
+            message: 'Carrier has not logged any hub scans for this AWB yet.',
+          });
+        } else {
+          setSyncStatusMsg({
+            type: 'error',
+            message: `Carrier check: ${errorDetail}`,
+          });
+        }
+      }
+    } catch (err: any) {
+      setSyncStatusMsg({
+        type: 'error',
+        message: `Failed to connect to carrier API: ${err.message || 'Unknown error'}`,
+      });
+    } finally {
+      setIsSyncingLive(false);
+      setTimeout(() => setSyncStatusMsg(null), 7000);
+    }
+  };
 
   useEffect(() => {
     const q = searchParams.get('query');
-    if (q) setSearchInput(q);
+    if (q) {
+      setSearchInput(q);
+      const qLower = q.toLowerCase();
+      const isDemo = DEMO_TRACKING_DATABASE.some((d) => d.awbNumber.toLowerCase() === qLower);
+      if (!isDemo) {
+        syncLiveShypfy(q);
+      }
+    }
   }, [searchParams]);
 
   const handleSearchSubmit = () => {
     if (searchInput.trim()) {
       setSearchParams({ query: searchInput.trim() });
+      const qLower = searchInput.trim().toLowerCase();
+      const isDemo = DEMO_TRACKING_DATABASE.some((d) => d.awbNumber.toLowerCase() === qLower);
+      if (!isDemo) {
+        syncLiveShypfy(searchInput.trim());
+      }
     }
   };
 
@@ -678,6 +762,16 @@ export const TrackingPage: React.FC = () => {
         </div>
       </Card>
 
+      {/* 2.5 SYNC STATUS NOTIFICATION */}
+      {syncStatusMsg && (
+        <Alert
+          variant={syncStatusMsg.type === 'success' ? 'success' : syncStatusMsg.type === 'error' ? 'danger' : 'info'}
+          title="Carrier Live Sync Status"
+        >
+          {syncStatusMsg.message}
+        </Alert>
+      )}
+
       {/* 3. TRACKING RESULT CONTENT */}
       {!activeRecord ? (
         <Card style={{ padding: '48px 20px', textAlign: 'center', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px' }}>
@@ -763,8 +857,15 @@ export const TrackingPage: React.FC = () => {
                   <HelpCircle size={13} style={{ marginRight: '4px' }} /> Support Ticket
                 </Button>
 
-                <Button variant="primary" size="sm" leftIcon={<RefreshCw size={13} />} onClick={() => alert('Refreshing live API tracking data...')} style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}>
-                  Track Live
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={isSyncingLive}
+                  leftIcon={<RefreshCw size={13} className={isSyncingLive ? 'animate-spin' : ''} />}
+                  onClick={() => syncLiveShypfy(activeRecord.awbNumber)}
+                  style={{ backgroundColor: '#0284c7', borderColor: '#0284c7' }}
+                >
+                  {isSyncingLive ? 'Syncing...' : 'Sync Live Status'}
                 </Button>
               </div>
             </div>

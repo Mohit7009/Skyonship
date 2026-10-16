@@ -4,6 +4,7 @@ import type {
   ShipmentTrackingSummary,
 } from '../types/tracking';
 import { DEMO_TRACKING_DATA, deriveCurrentTrackingStatus } from '../mocks/tracking.mock';
+import { CustomerShipmentService } from './customerShipmentService';
 
 const TRACKING_STORE: Map<string, ShipmentTrackingSummary> = new Map();
 DEMO_TRACKING_DATA.forEach((t) => TRACKING_STORE.set(t.shipmentId, t));
@@ -150,6 +151,170 @@ export const TrackingService = {
         source: 'COURIER',
         createdAt: e.createdAt,
       })),
+    };
+  },
+
+  // Real-Time Carrier Tracking from Shypfy Live API & CustomerShipmentService
+  fetchLiveTracking: async (
+    query: string
+  ): Promise<{
+    success: boolean;
+    data: ShipmentTrackingSummary | null;
+    source: 'LIVE_CARRIER' | 'PORTAL_DB' | 'DEMO' | 'NOT_FOUND';
+    message?: string;
+  }> => {
+    const q = (query || '').trim();
+    if (!q) {
+      return { success: false, data: null, source: 'NOT_FOUND', message: 'Please enter a valid tracking number or AWB.' };
+    }
+
+    const qLower = q.toLowerCase();
+    const bookedShipment = CustomerShipmentService.getShipmentById(q);
+
+    // 1. Live Shypfy Carrier API Call
+    try {
+      const resp = await fetch(`/api/integrations/shypfy/track?id=${encodeURIComponent(q)}`);
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json?.success && json?.data?.track) {
+          const raw = json.data;
+          const track = raw.track;
+          const status = TrackingStatusMapper.normalize(track.status);
+          const rawDetails: any[] = Array.isArray(track.details) && track.details.length > 0
+            ? track.details
+            : [
+                {
+                  status: track.status,
+                  ctime: track.ctime,
+                  desc: track.desc || `Status: ${track.status}`,
+                  location: track.location || 'Carrier Hub',
+                },
+              ];
+
+          const events: TrackingEvent[] = rawDetails.map((e, idx) => ({
+            id: `live-ev-${idx}-${e.ctime || Date.now()}`,
+            shipmentId: raw._id || bookedShipment?.shipmentId || q,
+            awb: q,
+            courierId: bookedShipment?.courierId || 'shypfy-carrier',
+            courierName: bookedShipment?.courierName || 'Delhivery / Logistics Network',
+            status: TrackingStatusMapper.normalize(e.status),
+            providerStatus: e.status,
+            description: e.desc || `Carrier scan: ${e.status}`,
+            location: e.location || 'Regional Sorting Hub',
+            eventTime: e.ctime ? new Date(e.ctime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : new Date().toLocaleString(),
+            source: 'COURIER_API',
+            createdAt: e.ctime ? new Date(e.ctime).toISOString() : new Date().toISOString(),
+          }));
+
+          // Sort chronologically descending
+          events.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+          const summary: ShipmentTrackingSummary = {
+            shipmentId: raw._id || bookedShipment?.shipmentId || `SHP-${q}`,
+            orderId: raw.order_number || bookedShipment?.orderId || `ORD-${q}`,
+            awb: q,
+            courierId: bookedShipment?.courierId || 'shypfy-partner',
+            courierName: bookedShipment?.courierName || 'Delhivery Surface / Express',
+            courierLogo: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=100',
+            originCity: bookedShipment?.pickupCity || 'Origin Hub',
+            destinationCity: bookedShipment?.deliveryCity || 'Destination Hub',
+            recipientName: bookedShipment?.deliveryContact || 'Customer',
+            currentStatus: status,
+            lastUpdated: track.ctime ? new Date(track.ctime).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : new Date().toLocaleString(),
+            estimatedDeliveryDate: raw.edd ? new Date(raw.edd).toLocaleDateString('en-IN', { dateStyle: 'medium' }) : (bookedShipment ? '2-3 Business Days' : 'Pending Carrier ETA'),
+            events,
+            tenantId: bookedShipment?.tenantId || 'tenant-demo-01',
+          };
+
+          TRACKING_STORE.set(summary.shipmentId, summary);
+          return {
+            success: true,
+            data: summary,
+            source: 'LIVE_CARRIER',
+            message: 'Live carrier scans retrieved successfully.',
+          };
+        }
+      }
+    } catch (err) {
+      console.warn('[TrackingService] Carrier live track fetch notice:', err);
+    }
+
+    // 2. Check local merchant portal shipments (CustomerShipmentService)
+    if (bookedShipment) {
+      const stepStatus = TrackingStatusMapper.normalize(bookedShipment.bookingStatus);
+      const events: TrackingEvent[] = bookedShipment.trackingTimeline?.map((t, idx) => ({
+        id: `local-ev-${idx}`,
+        shipmentId: bookedShipment.shipmentId,
+        awb: bookedShipment.awbNumber || q,
+        courierId: bookedShipment.courierId,
+        courierName: bookedShipment.courierName,
+        status: TrackingStatusMapper.normalize(t.statusKey),
+        providerStatus: t.statusTitle,
+        description: t.description || 'Order processed',
+        location: t.location || bookedShipment.pickupCity || 'Origin Hub',
+        eventTime: t.timestamp || new Date().toLocaleString(),
+        source: 'MERCHANT',
+        createdAt: new Date().toISOString(),
+      })) || [
+        {
+          id: 'local-ev-0',
+          shipmentId: bookedShipment.shipmentId,
+          awb: bookedShipment.awbNumber || q,
+          courierId: bookedShipment.courierId,
+          courierName: bookedShipment.courierName,
+          status: stepStatus,
+          providerStatus: bookedShipment.customerFacingStatus,
+          description: 'Shipment booked. Awaiting first carrier pickup scan.',
+          location: bookedShipment.pickupCity || 'Origin Hub',
+          eventTime: bookedShipment.bookingDate || new Date().toLocaleString(),
+          source: 'MERCHANT',
+          createdAt: new Date().toISOString(),
+        },
+      ];
+
+      const summary: ShipmentTrackingSummary = {
+        shipmentId: bookedShipment.shipmentId,
+        orderId: bookedShipment.orderId,
+        awb: bookedShipment.awbNumber || q,
+        courierId: bookedShipment.courierId,
+        courierName: bookedShipment.courierName,
+        courierLogo: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=100',
+        originCity: bookedShipment.pickupCity || 'Origin Hub',
+        destinationCity: bookedShipment.deliveryCity || 'Destination Hub',
+        recipientName: bookedShipment.deliveryContact || 'Customer',
+        currentStatus: stepStatus,
+        lastUpdated: bookedShipment.bookingDate || new Date().toLocaleString(),
+        estimatedDeliveryDate: '2-4 Business Days',
+        events,
+        tenantId: bookedShipment.tenantId,
+      };
+
+      return {
+        success: true,
+        data: summary,
+        source: 'PORTAL_DB',
+        message: 'Order booked in portal. Carrier hub scan in progress.',
+      };
+    }
+
+    // 3. Fallback to Demo Tracking Database
+    const demoMatch = Array.from(TRACKING_STORE.values()).find(
+      (t) => t.awb.toLowerCase() === qLower || t.shipmentId.toLowerCase() === qLower || t.orderId.toLowerCase() === qLower
+    );
+    if (demoMatch) {
+      return {
+        success: true,
+        data: demoMatch,
+        source: 'DEMO',
+        message: 'Loaded demo tracking preview record.',
+      };
+    }
+
+    return {
+      success: false,
+      data: null,
+      source: 'NOT_FOUND',
+      message: `No active shipment found with tracking ID or AWB: "${q}". Please check the number or wait a few minutes after booking for carrier indexing.`,
     };
   },
 };
