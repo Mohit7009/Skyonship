@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search,
   MapPin,
@@ -387,6 +387,7 @@ export const JOURNEY_STEPS = [
 
 export const TrackingPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const initialQuery = searchParams.get('query') || 'DEL98401928';
   const [searchInput, setSearchInput] = useState(initialQuery);
@@ -838,10 +839,20 @@ export const TrackingPage: React.FC = () => {
             {/* TRACKING ACTION BUTTONS TOOLBAR */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <Button variant="outline" size="sm" leftIcon={<Printer size={13} />} onClick={() => alert(`Printing Shipping Label for AWB ${activeRecord.awbNumber}...`)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Printer size={13} />}
+                  onClick={() => navigate(`/app/shipments/${activeRecord.id || activeRecord.awbNumber}/label`)}
+                >
                   Print Label
                 </Button>
-                <Button variant="outline" size="sm" leftIcon={<Download size={13} />} onClick={() => alert(`Downloading Label PDF...`)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  leftIcon={<Download size={13} />}
+                  onClick={() => navigate(`/app/shipments/${activeRecord.id || activeRecord.awbNumber}/label`)}
+                >
                   Download Label PDF
                 </Button>
                 <Button variant="outline" size="sm" leftIcon={<FileText size={13} />} onClick={() => alert(`Downloading GST Invoice...`)}>

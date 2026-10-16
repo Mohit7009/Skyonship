@@ -190,7 +190,7 @@ export const ShipmentDetailPage: React.FC = () => {
               variant="outline"
               size="sm"
               leftIcon={<Printer size={13} />}
-              onClick={() => alert(`Printing Shipping Label for AWB ${shipment.awbNumber}...`)}
+              onClick={() => navigate(`/app/shipments/${shipment.shipmentId || shipment.id}/label`)}
             >
               Print Label
             </Button>

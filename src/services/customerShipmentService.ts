@@ -427,6 +427,16 @@ export const CustomerShipmentService = {
     // Update Status & History
     CustomerShipmentService.updateStatus(shipmentId, 'CANCELLED', `Cancelled by merchant: ${reason}`, 'SYSTEM', 'Merchant User');
 
+    // Notify Shypfy / Carrier API
+    const targetAwb = shipment.awbNumber || shipment.shipmentId;
+    if (targetAwb && typeof window !== 'undefined') {
+      fetch(`/api/integrations/shypfy/cancel?tracking_id=${encodeURIComponent(targetAwb)}`, {
+        method: 'DELETE',
+      }).catch((err) => {
+        console.warn('[CustomerShipmentService] Carrier cancellation notification notice:', err);
+      });
+    }
+
     // Perform Wallet Refund
     const refundAmountINR = shipment.totalCustomerChargeINR;
     const targetTxId = shipment.transactionId || `tx-${shipment.shipmentId}`;

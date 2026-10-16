@@ -476,17 +476,35 @@ export async function getShypfyLabel(ids: string[]): Promise<any> {
   });
 
   if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Shypfy Label download failed (${response.status}): ${errText}`);
+    const rawText = await response.text();
+    let desc = rawText;
+    let parsed: any = null;
+    try {
+      parsed = JSON.parse(rawText);
+      desc = parsed.description || parsed.message || rawText;
+    } catch {}
+    throw new ShypfyApiError(`Shypfy Label download failed (${response.status}): ${desc}`, response.status, parsed);
   }
 
-  return await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  if (contentType.includes('application/json')) {
+    return await response.json();
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  const pdfBase64 = Buffer.from(arrayBuffer).toString('base64');
+  return {
+    success: true,
+    format: 'pdf',
+    contentType: 'application/pdf',
+    pdfBase64,
+  };
 }
 
-export async function trackShypfyShipment(trackingId: string): Promise<any> {
+export async function cancelShypfyShipment(trackingId: string): Promise<any> {
   const token = await getShypfyAccessToken();
-  const response = await fetch(`${SHYPFY_BASE_URL}/api/v1/track/${encodeURIComponent(trackingId)}`, {
-    method: 'GET',
+  const response = await fetch(`${SHYPFY_BASE_URL}/api/v1/package/cancel?tracking_id=${encodeURIComponent(trackingId)}`, {
+    method: 'DELETE',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -500,24 +518,7 @@ export async function trackShypfyShipment(trackingId: string): Promise<any> {
       parsed = JSON.parse(rawText);
       desc = parsed.description || parsed.message || rawText;
     } catch {}
-    throw new ShypfyApiError(`Shypfy Track Shipment failed (${response.status}): ${desc}`, response.status, parsed);
-  }
-
-  return await response.json();
-}
-
-export async function cancelShypfyShipment(trackingId: string): Promise<any> {
-  const token = await getShypfyAccessToken();
-  const response = await fetch(`${SHYPFY_BASE_URL}/api/v1/package/cancel?tracking_id=${encodeURIComponent(trackingId)}`, {
-    method: 'DELETE',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`Shypfy Cancel Shipment failed (${response.status}): ${errText}`);
+    throw new ShypfyApiError(`Shypfy Cancel Shipment failed (${response.status}): ${desc}`, response.status, parsed);
   }
 
   return await response.json();
@@ -614,11 +615,12 @@ export async function handleShypfyLabelEndpoint(ids: string[]): Promise<ShypfyTe
       data,
     };
   } catch (err: any) {
+    const httpStatus = err instanceof ShypfyApiError ? err.httpStatus : 500;
     return {
       success: false,
       provider: 'Shypfy',
-      message: 'Label download failed',
-      httpStatus: 500,
+      message: httpStatus === 404 ? 'Label not found for specified ID(s)' : 'Label download failed',
+      httpStatus,
       error: err.message,
     };
   }
@@ -652,16 +654,17 @@ export async function handleShypfyCancelEndpoint(trackingId: string): Promise<Sh
     return {
       success: true,
       provider: 'Shypfy',
-      message: 'Shipment cancelled successfully',
+      message: 'Shipment cancelled successfully on carrier network',
       httpStatus: 200,
       data,
     };
   } catch (err: any) {
+    const httpStatus = err instanceof ShypfyApiError ? err.httpStatus : 500;
     return {
       success: false,
       provider: 'Shypfy',
-      message: 'Cancellation failed',
-      httpStatus: 500,
+      message: httpStatus === 404 ? 'Shipment not found on carrier network' : 'Cancellation failed',
+      httpStatus,
       error: err.message,
     };
   }

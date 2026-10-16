@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Plus,
   RotateCcw,
+  Printer,
 } from 'lucide-react';
 import { PageHeader } from '../../components/common/PageHeader';
 import {
@@ -224,6 +225,15 @@ export const ShipmentsPage: React.FC = () => {
               header: 'Actions',
               render: (row) => (
                 <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<Printer size={13} />}
+                    onClick={() => navigate(`/app/shipments/${row.id}/label`)}
+                    title="Print Thermal Shipping Label"
+                  >
+                    Label
+                  </Button>
                   <Button variant="outline" size="sm" onClick={() => navigate(`/app/shipments/${row.id}`)}>
                     View Details
                   </Button>
