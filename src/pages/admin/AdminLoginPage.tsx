@@ -39,6 +39,8 @@ export const AdminLoginPage: React.FC = () => {
       if (res.user) {
         localStorage.setItem('courrier3_active_portal', 'ADMIN');
         navigate('/admin');
+      } else {
+        setErrorMessage(res.message || 'Invalid Super Admin credentials. Access denied.');
       }
     } catch (err: any) {
       setErrorMessage('Invalid Super Admin credentials. Access denied.');
