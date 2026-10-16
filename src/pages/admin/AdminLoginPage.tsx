@@ -106,6 +106,52 @@ export const AdminLoginPage: React.FC = () => {
             >
               Sign In to Admin Portal
             </Button>
+
+            {/* Quick Demo Super Admin Button */}
+            <div style={{ marginTop: '4px' }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  setEmail('admin@skyonship.com');
+                  setPassword('demo123');
+                  setIsLoading(true);
+                  setErrorMessage(null);
+                  try {
+                    const res = await authService.signIn({ workEmail: 'admin@skyonship.com', password: 'demo123', rememberMe: true });
+                    if (res.user) {
+                      localStorage.setItem('courrier3_active_portal', 'ADMIN');
+                      navigate('/admin');
+                    } else {
+                      setErrorMessage(res.message || 'Quick admin login failed');
+                    }
+                  } catch {
+                    setErrorMessage('Quick admin login failed');
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  backgroundColor: '#f8fafc',
+                  border: '1px dashed #64748b',
+                  color: '#334155',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span>⚡ One-Click Demo Admin Login (Instant Access)</span>
+              </button>
+              <div style={{ textAlign: 'center', fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+                Instant Admin: <strong>admin@skyonship.com</strong> • Password: <strong>demo123</strong>
+              </div>
+            </div>
           </form>
 
           {/* Link Back to Seller Login */}

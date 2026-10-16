@@ -152,6 +152,52 @@ export const LoginPage: React.FC = () => {
           >
             Sign In To Seller Portal →
           </Button>
+
+          {/* Quick Demo Access Button */}
+          <div style={{ marginTop: '4px' }}>
+            <button
+              type="button"
+              onClick={async () => {
+                setEmail('demo@skyonship.com');
+                setPassword('demo123');
+                setIsLoading(true);
+                setErrorMessage(null);
+                try {
+                  const res = await authService.signIn({ workEmail: 'demo@skyonship.com', password: 'demo123', rememberMe: true });
+                  if (res.user) {
+                    localStorage.setItem('courrier3_active_portal', 'CUSTOMER');
+                    navigate('/app');
+                  } else {
+                    setErrorMessage(res.message || 'Quick login failed');
+                  }
+                } catch {
+                  setErrorMessage('Quick login failed');
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+              style={{
+                width: '100%',
+                backgroundColor: '#f0fdf4',
+                border: '1px dashed #16a34a',
+                color: '#15803d',
+                padding: '11px',
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>⚡ One-Click Demo Seller Login (Instant Access)</span>
+            </button>
+            <div style={{ textAlign: 'center', fontSize: '11px', color: '#64748b', marginTop: '6px' }}>
+              Instant Demo: <strong>demo@skyonship.com</strong> • Password: <strong>demo123</strong>
+            </div>
+          </div>
         </form>
 
         {/* Footer Registration Link */}
